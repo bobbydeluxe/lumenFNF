@@ -13,7 +13,6 @@ import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import shaders.ColorSwap;
 import states.StoryMenuState;
-import states.OutdatedState;
 import states.MainMenuState;
 import mikolka.vslice.components.ScreenshotPlugin;
 #if VIDEOS_ALLOWED
@@ -68,10 +67,6 @@ class TitleState extends MusicBeatState
 	var easterEggKeysBuffer:String = '';
 	#end
 
-	var mustUpdate:Bool = false;
-
-	public static var updateVersion:String = '';
-
 	override public function create():Void
 	{
 		Paths.clearStoredMemory();
@@ -85,33 +80,6 @@ class TitleState extends MusicBeatState
 		}
 
 		curWacky = FlxG.random.getObject(getIntroTextShit());
-
-		#if CHECK_FOR_UPDATES
-		if (ClientPrefs.data.checkForUpdates && !closedState)
-		{
-			trace('checking for update');
-			var http = new haxe.Http("https://raw.githubusercontent.com/mikolka9144/P-Slice/master/gitVersion.txt");
-
-			http.onData = function(data:String)
-			{
-				updateVersion = data.split('\n')[0].trim();
-				var curVersion:String = MainMenuState.pSliceVersion.trim();
-				trace('version online: ' + updateVersion + ', your version: ' + curVersion);
-				if (updateVersion != curVersion)
-				{
-					trace('versions arent matching!');
-					mustUpdate = true;
-				}
-			}
-
-			http.onError = function(error)
-			{
-				trace('error: $error');
-			}
-
-			http.request();
-		}
-		#end
 
 		if(!initialized)
 		{
@@ -238,10 +206,6 @@ class TitleState extends MusicBeatState
 			logoBl.shader = swagShader.shader;
 			titleText.shader = swagShader.shader;
 		}
-
-		var logo:FlxSprite = new FlxSprite().loadGraphic(Paths.image('logo'));
-		logo.antialiasing = ClientPrefs.data.antialiasing;
-		logo.screenCenter();
 
 		blackScreen = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
 		blackScreen.scale.set(FlxG.width, FlxG.height);
@@ -473,20 +437,13 @@ class TitleState extends MusicBeatState
 
 				enterTimer = new FlxTimer().start(1, function(tmr:FlxTimer)
 				{
-					if (mustUpdate)
+					if (cheatActive)
 					{
-						MusicBeatState.switchState(new OutdatedState());
+						FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
+						FlxG.sound.music.fadeIn(4, 0, 0.7);
 					}
-					else
-					{
-						if (cheatActive)
-						{
-							FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-							FlxG.sound.music.fadeIn(4, 0, 0.7);
-						}
-						FlxTransitionableState.skipNextTransIn = true;
-						MusicBeatState.switchState(new MainMenuState());
-					}
+					FlxTransitionableState.skipNextTransIn = true;
+					MusicBeatState.switchState(new MainMenuState());
 
 					closedState = true;
 				});
