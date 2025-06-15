@@ -10,8 +10,8 @@ class CoolUtil
 {
 	public static function checkForUpdates(url:String = null):String {
 		if (url == null || url.length == 0)
-			url = "https://raw.githubusercontent.com/ShadowMario/FNF-PsychEngine/main/gitVersion.txt";
-		var version:String = states.MainMenuState.psychEngineVersion.trim();
+			url = "https://raw.githubusercontent.com/Psych-Slice/P-Slice/master/gitVersion.txt";
+		var version:String = states.MainMenuState.pSliceVersion.trim();
 		if(ClientPrefs.data.checkForUpdates) {
 			trace('checking for updates...');
 			var http = new haxe.Http(url);
@@ -93,12 +93,7 @@ class CoolUtil
 		if(decimals < 1)
 			return Math.floor(value);
 
-		var tempMult:Float = 1;
-		for (i in 0...decimals)
-			tempMult *= 10;
-
-		var newValue:Float = Math.floor(value * tempMult);
-		return newValue / tempMult;
+		return Math.floor(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
 	}
 	#if linux
 	public static function sortAlphabetically(list:Array<String>):Array<String> {

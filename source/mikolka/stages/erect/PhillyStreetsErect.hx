@@ -288,7 +288,7 @@ class PhillyStreetsErect extends BaseStage
                     rainShaderEndIntensity = 0.4;
             }
             rainShader.intensity = rainShaderStartIntensity;
-            FlxG.camera.setFilters([new ShaderFilter(rainShader)]);
+            FlxG.camera.filters = [new ShaderFilter(rainShader)];
         }
     
         override function update(elapsed:Float)

@@ -661,7 +661,7 @@ class DialogueCharacterEditorState extends MusicBeatState implements PsychUIEven
 			if(FlxG.keys.justPressed.ESCAPE #if android || FlxG.android.justPressed.BACK #end #if TOUCH_CONTROLS_ALLOWED || touchPad.buttonB.justPressed #end) {
 				if(!unsavedProgress)
 				{
-					MusicBeatState.switchState(new states.editors.MasterEditorMenu());
+					MusicBeatState.switchState(new states.MainMenuState(false, true));
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 					transitioning = true;
 				}

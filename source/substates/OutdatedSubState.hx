@@ -10,7 +10,7 @@ import states.TitleState;
 class OutdatedSubState extends MusicBeatSubstate
 {
 	public static var updateVersion:String = CoolUtil.checkForUpdates();
-	public static var leftState:Bool = false;
+	var leftState:Bool = false;
 
 	var bg:FlxSprite;
 	var warnText:FlxText;
@@ -49,7 +49,7 @@ class OutdatedSubState extends MusicBeatSubstate
 		if(!leftState) {
 			if (controls.ACCEPT) {
 				leftState = true;
-				CoolUtil.browserLoad("https://github.com/ShadowMario/FNF-PsychEngine/releases");
+				CoolUtil.browserLoad("https://github.com/Psych-Slice/P-Slice/releases");
 			}
 			else if(controls.BACK) {
 				leftState = true;

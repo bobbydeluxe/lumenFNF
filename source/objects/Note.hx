@@ -7,6 +7,7 @@ import shaders.RGBPalette;
 import shaders.RGBPalette.RGBShaderReference;
 
 import objects.StrumNote;
+import objects.SustainSplash;
 
 import flixel.math.FlxRect;
 
@@ -75,6 +76,7 @@ class Note extends FlxSprite
 	public var blockHit:Bool = false; // only works for player
 
 	public var sustainLength:Float = 0;
+	public var isSustainEnd:Bool = false;
 	public var isSustainNote:Bool = false;
 	public var noteType(default, set):String = null;
 
@@ -109,13 +111,15 @@ class Note extends FlxSprite
 		b: -1,
 		a: ClientPrefs.data.splashAlpha
 	};
+
 	public var noteHoldSplash:SustainSplash;
 
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
 	public var offsetAngle:Float = 0;
+	public var offsetDirection:Float = 0;
 	public var multAlpha:Float = 1;
-	public var multSpeed(default, set):Float = 1;
+	public var multSpeed:Float = 1;
 
 	public var copyX:Bool = true;
 	public var copyY:Bool = true;
@@ -127,6 +131,7 @@ class Note extends FlxSprite
 	public var rating:String = 'unknown';
 	public var ratingMod:Float = 0; //9 = unknown, 0.25 = shit, 0.5 = bad, 0.75 = good, 1 = sick
 	public var ratingDisabled:Bool = false;
+	public var noteSplash:NoteSplash = null;
 
 	public var texture(default, set):String = null;
 
@@ -134,7 +139,8 @@ class Note extends FlxSprite
 	public var noMissAnimation:Bool = false;
 	public var hitCausesMiss:Bool = false;
 	public var distance:Float = 2000; //plan on doing scroll directions soon -bb
-
+	
+	public var playMissSound:Bool = false;
 	public var hitsoundDisabled:Bool = false;
 	public var hitsoundChartEditor:Bool = true;
 	/**
@@ -148,22 +154,6 @@ class Note extends FlxSprite
 		return hitsoundForce ? hitsoundVolume : 0.0;
 	}
 	public var hitsound:String = 'hitsound';
-
-	private function set_multSpeed(value:Float):Float {
-		resizeByRatio(value / multSpeed);
-		multSpeed = value;
-		//trace('fuck cock');
-		return value;
-	}
-
-	public function resizeByRatio(ratio:Float) //haha funny twitter shit
-	{
-		if(isSustainNote && animation.curAnim != null && !animation.curAnim.name.endsWith('end'))
-		{
-			scale.y *= ratio;
-			updateHitbox();
-		}
-	}
 
 	private function set_texture(value:String):String {
 		if(texture != value) reloadNote(value);
@@ -270,10 +260,9 @@ class Note extends FlxSprite
 				var animToPlay:String = '';
 				animToPlay = colArray[noteData % colArray.length];
 				animation.play(animToPlay + 'Scroll');
+				updateHitbox();
 			}
 		}
-
-		// trace(prevNote);
 
 		if(prevNote != null)
 			prevNote.nextNote = this;
@@ -283,40 +272,16 @@ class Note extends FlxSprite
 			alpha = 0.6;
 			multAlpha = 0.6;
 			hitsoundDisabled = true;
-			if(ClientPrefs.data.downScroll) flipY = true;
-
-			offsetX += width / 2;
-			copyAngle = false;
 
 			animation.play(colArray[noteData % colArray.length] + 'holdend');
-
 			updateHitbox();
 
-			offsetX -= width / 2;
-
-			if (PlayState.isPixelStage)
-				offsetX += 30;
-
-			if (prevNote.isSustainNote)
-			{
+			if (prevNote.isSustainNote) {
+				prevNote.isSustainEnd = false;
 				prevNote.animation.play(colArray[prevNote.noteData % colArray.length] + 'hold');
-
-				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.05;
-				if(createdFrom != null && createdFrom.songSpeed != null) prevNote.scale.y *= createdFrom.songSpeed;
-
-				if(PlayState.isPixelStage) {
-					prevNote.scale.y *= 1.19;
-					prevNote.scale.y *= (6 / height); //Auto adjust note size
-				}
-				prevNote.updateHitbox();
-				// prevNote.setGraphicSize();
 			}
-
-			if(PlayState.isPixelStage)
-			{
-				scale.y *= PlayState.daPixelZoom;
-				updateHitbox();
-			}
+			
+			isSustainEnd = true;
 			earlyHitMult = 0;
 		}
 		else if(!isSustainNote)
@@ -355,7 +320,6 @@ class Note extends FlxSprite
 	var _lastNoteOffX:Float = 0;
 	static var _lastValidChecked:String; //optimization
 	public var originalHeight:Float = 6;
-	public var correctionOffset:Float = 0; //dont mess with this
 	public function reloadNote(texture:String = '', postfix:String = '') {
 		if(texture == null) texture = '';
 		if(postfix == null) postfix = '';
@@ -373,13 +337,10 @@ class Note extends FlxSprite
 		if(animation.curAnim != null) {
 			animName = animation.curAnim.name;
 		}
-
-		var skinPixel:String = skin;
-		var lastScaleY:Float = scale.y;
+		
 		var skinPostfix:String = getNoteSkinPostfix();
 		var customSkin:String = skin + skinPostfix;
-		var path:String = PlayState.isPixelStage ? 'pixelUI/' : '';
-		if(customSkin == _lastValidChecked || Paths.fileExists('images/' + path + customSkin + '.png', IMAGE))
+		if(customSkin == _lastValidChecked || Paths.fileExists('images/' + PlayState.uiPrefix + customSkin + '.png', IMAGE))
 		{
 			skin = customSkin;
 			_lastValidChecked = customSkin;
@@ -388,22 +349,17 @@ class Note extends FlxSprite
 
 		if(PlayState.isPixelStage) {
 			if(isSustainNote) {
-				var graphic = Paths.image('pixelUI/' + skinPixel + 'ENDS' + skinPostfix);
+				var graphic = Paths.image('${PlayState.uiPrefix}${customSkin}ENDS$skinPostfix');
 				loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 2));
 				originalHeight = graphic.height / 2;
 			} else {
-				var graphic = Paths.image('pixelUI/' + skinPixel + skinPostfix);
+				var graphic = Paths.image('${PlayState.uiPrefix}$customSkin$skinPostfix');
 				loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
 			}
-			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
 			loadPixelNoteAnims();
 			antialiasing = false;
-
-			if(isSustainNote) {
-				offsetX += _lastNoteOffX;
-				_lastNoteOffX = (width - 7) * (PlayState.daPixelZoom / 2);
-				offsetX -= _lastNoteOffX;
-			}
+			
+			setGraphicSize(Std.int(frameWidth * PlayState.daPixelZoom));
 		} else {
 			frames = Paths.getSparrowAtlas(skin);
 			loadNoteAnims();
@@ -413,10 +369,7 @@ class Note extends FlxSprite
 				centerOrigin();
 			}
 		}
-
-		if(isSustainNote) {
-			scale.y = lastScaleY;
-		}
+		
 		updateHitbox();
 
 		if(animName != null)
@@ -476,9 +429,6 @@ class Note extends FlxSprite
 		{
 			canBeHit = (strumTime > Conductor.songPosition - (Conductor.safeZoneOffset * lateHitMult) &&
 						strumTime < Conductor.songPosition + (Conductor.safeZoneOffset * earlyHitMult));
-
-			if (strumTime < Conductor.songPosition - Conductor.safeZoneOffset && !wasGoodHit)
-				tooLate = true;
 		}
 		else
 		{
@@ -506,63 +456,55 @@ class Note extends FlxSprite
 
 	public function followStrumNote(myStrum:StrumNote, fakeCrochet:Float, songSpeed:Float = 1)
 	{
-		var strumX:Float = myStrum.x;
-		var strumY:Float = myStrum.y;
-		var strumAngle:Float = myStrum.angle;
-		var strumAlpha:Float = myStrum.alpha;
-		var strumDirection:Float = myStrum.direction;
-
-		distance = (0.45 * (Conductor.songPosition - strumTime) * songSpeed * multSpeed);
-		if (!myStrum.downScroll) distance *= -1;
-
-		var angleDir = strumDirection * Math.PI / 180;
-		if (copyAngle)
-			angle = strumDirection - 90 + strumAngle + offsetAngle;
-
+		var noteSpeed:Float = songSpeed * multSpeed;
+		var strumDir:Float = myStrum.direction;
+		
+		distance = getDistance(strumTime - Conductor.songPosition, noteSpeed);
+		var scrollMult:Int = (myStrum.downScroll ? -1 : 1);
+		
 		if(copyAlpha)
-			alpha = strumAlpha * multAlpha;
-
+			alpha = myStrum.alpha * multAlpha;
+		
+		var angleDir:Float = strumDir * Math.PI / 180;
 		if(copyX)
-			x = strumX + offsetX + Math.cos(angleDir) * distance;
-
+			x = myStrum.x + offsetX + Math.cos(angleDir) * distance;
 		if(copyY)
-		{
-			y = strumY + offsetY + correctionOffset + Math.sin(angleDir) * distance;
-			if(myStrum.downScroll && isSustainNote)
-			{
-				if(PlayState.isPixelStage)
-				{
-					y -= PlayState.daPixelZoom * 9.5;
-				}
-				y -= (frameHeight * scale.y) - (Note.swagWidth / 2);
-			}
+			y = myStrum.y + offsetY + Math.sin(angleDir) * distance * scrollMult;
+		if (copyAngle)
+			angle = (isSustainNote ? strumDir - 90 : myStrum.angle) + offsetAngle;
+		
+		if (isSustainNote)
+			updateSustain(myStrum, noteSpeed);
+	}
+	public function updateSustain(myStrum:StrumNote, noteSpeed:Float = 1) {
+		if (!isSustainEnd) {
+			scale.y = Note.getDistance(sustainLength, noteSpeed) / frameHeight;
+			updateHitbox();
 		}
+		origin.set(frameWidth * .5, 0);
+		offset.set();
+		
+		flipX = myStrum.downScroll;
+		x += (myStrum.width - frameWidth) * .5;
+		y += myStrum.height * .5;
+		if (myStrum.downScroll)
+			angle = 180 - angle;
+	}
+	public static function getDistance(time:Float, speed:Float) {
+		return (0.45 * time * speed);
 	}
 
 	public function clipToStrumNote(myStrum:StrumNote)
 	{
-		var center:Float = myStrum.y + offsetY + Note.swagWidth / 2;
 		if((mustPress || !ignoreNote) && (wasGoodHit || (prevNote.wasGoodHit && !canBeHit)))
 		{
-			var swagRect:FlxRect = clipRect;
-			if(swagRect == null) swagRect = new FlxRect(0, 0, frameWidth, frameHeight);
-
-			if (myStrum.downScroll)
-			{
-				if(y - offset.y * scale.y + height >= center)
-				{
-					swagRect.width = frameWidth;
-					swagRect.height = (center - y) / scale.y;
-					swagRect.y = frameHeight - swagRect.height;
-				}
-			}
-			else if (y + offset.y * scale.y <= center)
-			{
-				swagRect.y = (center - y) / scale.y;
-				swagRect.width = width / scale.x;
-				swagRect.height = (height / scale.y) - swagRect.y;
-			}
-			clipRect = swagRect;
+			var clipDistance:Float = Math.max(-distance, 0);
+			clipRect ??= new FlxRect(0, 0, frameWidth);
+			
+			clipRect.y = clipDistance / scale.y;
+			clipRect.height = frameHeight - clipRect.y;
+			
+			clipRect = clipRect;
 		}
 	}
 

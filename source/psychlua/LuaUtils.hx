@@ -72,7 +72,7 @@ class LuaUtils
 			return value;
 		}
 
-		if(MusicBeatState.getVariables().exists(variable))
+		if(instance is MusicBeatState && MusicBeatState.getVariables().exists(variable))
 		{
 			MusicBeatState.getVariables().set(variable, value);
 			return value;
@@ -109,7 +109,7 @@ class LuaUtils
 			return instance.get(variable);
 		}
 
-		if(MusicBeatState.getVariables().exists(variable))
+		if(instance is MusicBeatState && MusicBeatState.getVariables().exists(variable))
 		{
 			var retVal:Dynamic = MusicBeatState.getVariables().get(variable);
 			if(retVal != null)
@@ -262,6 +262,10 @@ class LuaUtils
 		}
 		return false;
 	}
+
+	public static function isLuaSupported(value:Any):Bool {
+		return (value == null || isOfTypes(value, [Bool, Int, Float, String, Array]) || Type.typeof(value) == ValueType.TObject);
+	}
 	
 	public static function getTargetInstance()
 	{
@@ -272,6 +276,7 @@ class LuaUtils
 	public static inline function getLowestCharacterGroup():FlxSpriteGroup
 	{
 		var group:FlxSpriteGroup = PlayState.instance.gfGroup;
+
 		var pos:Int = PlayState.instance.members.indexOf(group);
 
 		var newPos:Int = PlayState.instance.members.indexOf(PlayState.instance.boyfriendGroup);

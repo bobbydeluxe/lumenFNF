@@ -30,25 +30,9 @@ import lime.graphics.Image;
 @:cppFileCode('#define GAMEMODE_AUTO')
 #end
 
-#if windows
-@:buildXml('
-<target id="haxe">
-	<lib name="wininet.lib" if="windows" />
-	<lib name="dwmapi.lib" if="windows" />
-</target>
-')
-@:cppFileCode('
-	#define GAMEMODE_AUTO
-#include <windows.h>
-#include <winuser.h>
-#pragma comment(lib, "Shell32.lib")
-extern "C" HRESULT WINAPI SetCurrentProcessExplicitAppUserModelID(PCWSTR AppID);
-')
-#end
-
 class Main extends Sprite
 {
-	var game = {
+	public static final game = {
 		width: 1280, // WINDOW width
 		height: 720, // WINDOW height
 		initialState: TitleState, // initial game state
@@ -80,11 +64,8 @@ class Main extends Sprite
 		#end
 		backend.CrashHandler.init();
 
-		#if windows
-		// DPI Scaling fix for windows 
-		// this shouldn't be needed for other systems
-		// Credit to YoshiCrafter29 for finding this function
-		untyped __cpp__("SetProcessDPIAware();");
+		#if (cpp && windows)
+		backend.Native.fixScaling();
 		#end
 
 		if (stage != null)

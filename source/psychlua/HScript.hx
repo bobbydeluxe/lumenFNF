@@ -15,6 +15,8 @@ import crowplexus.iris.IrisConfig;
 import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
 
+import haxe.ValueException;
+
 typedef HScriptInfos = {
 	> haxe.PosInfos,
 	var ?funcName:String;
@@ -159,7 +161,6 @@ class HScript extends Iris
 		set('Countdown', backend.BaseStage.Countdown);
 		set('PlayState', PlayState);
 		set('Paths', Paths);
-		set('StorageUtil', StorageUtil);
 		set('Conductor', Conductor);
 		set('ClientPrefs', ClientPrefs);
 		#if ACHIEVEMENTS_ALLOWED
@@ -171,6 +172,7 @@ class HScript extends Iris
 		set('CustomSubstate', CustomSubstate);
 		#if (!flash && sys)
 		set('FlxRuntimeShader', flixel.addons.display.FlxRuntimeShader);
+		set('ErrorHandledRuntimeShader', shaders.ErrorHandledShader.ErrorHandledRuntimeShader);
 		#end
 		set('ShaderFilter', openfl.filters.ShaderFilter);
 		set('StringTools', StringTools);
@@ -206,7 +208,7 @@ class HScript extends Iris
 			{
 				if(this.modFolder == null)
 				{
-					PlayState.instance.addTextToDebug('getModSetting: Argument #2 is null and script is not inside a packed Mod folder!', FlxColor.RED);
+					Iris.error('getModSetting: Argument #2 is null and script is not inside a packed Mod folder!', this.interp.posInfos());
 					return null;
 				}
 				modName = this.modFolder;
@@ -311,7 +313,7 @@ class HScript extends Iris
 			if(funk == null) funk = parentLua;
 			
 			if(funk != null) funk.addLocalCallback(name, func);
-			else FunkinLua.luaTrace('createCallback ($name): 3rd argument is null', false, false, FlxColor.RED);
+			else Iris.error('createCallback ($name): 3rd argument is null', this.interp.posInfos());
 		});
 		#end
 
@@ -332,49 +334,6 @@ class HScript extends Iris
 		#else
 		set('parentLua', null);
 		#end
-		
-		#if TOUCH_CONTROLS_ALLOWED
-		set("addTouchPad", (DPadMode:String, ActionMode:String) -> {
-			PlayState.instance.makeLuaTouchPad(DPadMode, ActionMode);
-			PlayState.instance.addLuaTouchPad();
-		  });
-  
-		set("removeTouchPad", () -> {
-			PlayState.instance.removeLuaTouchPad();
-		});
-  
-		set("addTouchPadCamera", () -> {
-			if(PlayState.instance.luaTouchPad == null){
-				FunkinLua.luaTrace('addTouchPadCamera: TPAD does not exist.');
-				return;
-			}
-			PlayState.instance.addLuaTouchPadCamera();
-		});
-  
-		set("touchPadJustPressed", function(button:Dynamic):Bool {
-			if(PlayState.instance.luaTouchPad == null){
-			  //FunkinLua.luaTrace('touchPadJustPressed: TPAD does not exist.');
-			  return false;
-			}
-		  return PlayState.instance.luaTouchPadJustPressed(button);
-		});
-  
-		set("touchPadPressed", function(button:Dynamic):Bool {
-			if(PlayState.instance.luaTouchPad == null){
-				//FunkinLua.luaTrace('touchPadPressed: TPAD does not exist.');
-				return false;
-			}
-			return PlayState.instance.luaTouchPadPressed(button);
-		});
-  
-		set("touchPadJustReleased", function(button:Dynamic):Bool {
-			if(PlayState.instance.luaTouchPad == null){
-				//FunkinLua.luaTrace('touchPadJustReleased: TPAD does not exist.');
-				return false;
-			}
-			return PlayState.instance.luaTouchPadJustReleased(button);
-		});
-		#end
 		set('this', this);
 		set('game', FlxG.state);
 		set('controls', Controls.instance);
@@ -388,17 +347,6 @@ class HScript extends Iris
 		set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
 		set('Function_StopHScript', LuaUtils.Function_StopHScript);
 		set('Function_StopAll', LuaUtils.Function_StopAll);
-
-		set('add', FlxG.state.add);
-		set('insert', FlxG.state.insert);
-		set('remove', FlxG.state.remove);
-
-		if(PlayState.instance == FlxG.state)
-		{
-			set('addBehindGF', PlayState.instance.addBehindGF);
-			set('addBehindDad', PlayState.instance.addBehindDad);
-			set('addBehindBF', PlayState.instance.addBehindBF);
-		}
 	}
 
 	#if LUA_ALLOWED
@@ -496,6 +444,18 @@ class HScript extends Iris
 			#end
 			Iris.error(Printer.errorToString(e, false), pos);
 		}
+		catch (e:ValueException) {
+			var pos:HScriptInfos = cast this.interp.posInfos();
+			pos.funcName = funcToRun;
+			#if LUA_ALLOWED
+			if (parentLua != null)
+			{
+				pos.isLua = true;
+				if (parentLua.lastCalledFunction != '') pos.funcName = parentLua.lastCalledFunction;
+			}
+			#end
+			Iris.error('$e', pos);
+		}
 		return null;
 	}
 
@@ -584,6 +544,23 @@ class CustomInterp extends crowplexus.hscript.Interp
 	public function new()
 	{
 		super();
+	}
+
+	override function fcall(o:Dynamic, funcToRun:String, args:Array<Dynamic>):Dynamic {
+		for (_using in usings) {
+			var v = _using.call(o, funcToRun, args);
+			if (v != null)
+				return v;
+		}
+
+		var f = get(o, funcToRun);
+
+		if (f == null) {
+			Iris.error('Tried to call null function $funcToRun', posInfos());
+			return null;
+		}
+
+		return Reflect.callMethod(o, f, args);
 	}
 
 	override function resolve(id: String): Dynamic {

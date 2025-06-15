@@ -9,6 +9,8 @@ class LanguageSubState extends MusicBeatSubstate
 	var languages:Array<String> = [];
 	var displayLanguages:Map<String, String> = [];
 	var curSelected:Int = 0;
+	var titleText:Alphabet;
+
 	public function new()
 	{
 		controls.isInSubstate = true;
@@ -20,6 +22,12 @@ class LanguageSubState extends MusicBeatSubstate
 		bg.screenCenter();
 		add(bg);
 		add(grpLanguages);
+
+		titleText = new Alphabet(75, 45, 'Language Select', true);
+		titleText.setScale(.6);
+		titleText.alpha = .4;
+		updateTitleText();
+		add(titleText);
 
 		languages.push(ClientPrefs.defaultData.language); //English (US)
 		displayLanguages.set(ClientPrefs.defaultData.language, Language.defaultLangName);
@@ -133,6 +141,8 @@ class LanguageSubState extends MusicBeatSubstate
 			ClientPrefs.saveSettings();
 			Language.reloadPhrases();
 			changedLanguage = true;
+			updateTitleText();
+			changeSelected();
 		}
 	}
 
@@ -142,10 +152,16 @@ class LanguageSubState extends MusicBeatSubstate
 		for (num => lang in grpLanguages)
 		{
 			lang.targetY = num - curSelected;
-			lang.alpha = 0.6;
-			if(num == curSelected) lang.alpha = 1;
+
+			lang.alpha = (num == curSelected ? 1 : .6);
+			lang.color = (ClientPrefs.data.language == languages[num] ? 0xffffcc33 : FlxColor.WHITE);
 		}
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+		if (change != 0)
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+	}
+
+	function updateTitleText() {
+		titleText.text = Language.getPhrase('language_menu', 'Language Select');
 	}
 	#end
 }

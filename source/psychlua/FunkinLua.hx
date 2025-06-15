@@ -72,7 +72,6 @@ class FunkinLua {
 
 		this.scriptName = scriptName.trim();
 		var game:PlayState = PlayState.instance;
-		if(game != null) game.luaArray.push(this);
 
 		var myFolder:Array<String> = this.scriptName.split('/');
 		#if MODS_ALLOWED
@@ -190,6 +189,7 @@ class FunkinLua {
 		set('framerate', ClientPrefs.data.framerate);
 		set('ghostTapping', ClientPrefs.data.ghostTapping);
 		set('hideHud', ClientPrefs.data.hideHud);
+		set('antialiasing', ClientPrefs.data.antialiasing);
 		set('timeBarType', ClientPrefs.data.timeBarType);
 		set('scoreZoom', ClientPrefs.data.scoreZoom);
 		set('cameraZoomOnBeat', ClientPrefs.data.camZooms);
@@ -512,8 +512,9 @@ class FunkinLua {
 					var myOptions:LuaTweenOptions = LuaUtils.getLuaTween(options);
 					if(tag != null)
 					{
+						var originalTag:String = tag;
 						var variables = MusicBeatState.getVariables();
-						var originalTag:String = 'tween_' + LuaUtils.formatVariable(tag);
+						tag = LuaUtils.formatVariable('tween_$tag');
 						variables.set(tag, FlxTween.tween(penisExam, values, duration, myOptions != null ? {
 							type: myOptions.type,
 							ease: myOptions.ease,
@@ -1135,7 +1136,7 @@ class FunkinLua {
 			return (obj != null && Std.isOfType(obj, FlxText));
 		});
 		Lua_helper.add_callback(lua, "luaSoundExists", function(tag:String) {
-			var obj:FlxSound = MusicBeatState.getVariables().get('sound_$tag');
+			var obj:FlxSound = MusicBeatState.getVariables().get(LuaUtils.formatVariable('sound_$tag'));
 			return (obj != null && Std.isOfType(obj, FlxSound));
 		});
 
@@ -1598,24 +1599,14 @@ class FunkinLua {
 				result = LuaL.dostring(lua, scriptName);
 
 			var resultStr:String = Lua.tostring(lua, result);
-			if(resultStr != null && result != 0) {
-				trace(resultStr);
-				#if (desktop || mobile)
-				CoolUtil.showPopUp(resultStr, 'Error on lua script!');
-				#else
-				luaTrace('$scriptName\n$resultStr', true, false, FlxColor.RED);
-				#end
-				lua = null;
-				return;
+			if (resultStr != null && result != 0) {
+				throw resultStr;
 			}
 			if(isString) scriptName = 'unknown';
 		} catch(e:Dynamic) {
 			trace(e);
-			return;
+			throw e;
 		}
-		trace('lua file loaded succesfully:' + scriptName);
-
-		call('onCreate', []);
 	}
 
 	//main
@@ -1839,12 +1830,15 @@ class FunkinLua {
 			}
 		}
 
-		var foldersToCheck:Array<String> = [Paths.mods('shaders/')];
+		var foldersToCheck:Array<String> = [Paths.getSharedPath('shaders/')];
+		#if MODS_ALLOWED
+		foldersToCheck.push(Paths.mods('shaders/'));
 		if(Mods.currentModDirectory != null && Mods.currentModDirectory.length > 0)
 			foldersToCheck.insert(0, Paths.mods(Mods.currentModDirectory + '/shaders/'));
 
 		for(mod in Mods.getGlobalMods())
 			foldersToCheck.insert(0, Paths.mods(mod + '/shaders/'));
+		#end
 
 		for (folder in foldersToCheck)
 		{
