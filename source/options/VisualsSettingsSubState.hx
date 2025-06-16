@@ -86,7 +86,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		}
 
 		var option:Option = new Option('Note Splash Opacity',
-			'How much transparent should the Note Splashes be.',
+			'Changes the transparency of the Note Splashes.',
 			'splashAlpha',
 			PERCENT);
 		option.scrollSpeed = 1.6;
@@ -128,19 +128,19 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Camera Zooms',
-			"If unchecked, the camera won't zoom in on a beat hit.",
+			"If checked, the camera will pulse on beat hits.",
 			'camZooms',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Score Text Grow on Hit',
-			"If unchecked, disables the Score text growing\neverytime you hit a note.",
+			"If checked, the score display will grow every time you hit a note.",
 			'scoreZoom',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Health Bar Opacity',
-			'How much transparent should the health bar and icons be.',
+			'Changes the transparency of the health bar and icons.',
 			'healthBarAlpha',
 			PERCENT);
 		option.scrollSpeed = 1.6;
@@ -151,7 +151,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		
 		var option:Option = new Option('FPS Counter',
-			'If unchecked, hides FPS Counter.',
+			'If checked, an FPS counter shows at the top left corner of the screen.',
 			'showFPS',
 			BOOL);
 		addOption(option);
@@ -184,14 +184,14 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 
 		#if DISCORD_ALLOWED
 		var option:Option = new Option('Discord Rich Presence',
-			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord",
+			"If checked, the game will show on your Discord Activity Status.",
 			'discordRPC',
 			BOOL);
 		addOption(option);
 		#end
 
 		var option:Option = new Option('Combo Stacking',
-			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read",
+			"If unchecked, Ratings and the Combo Counter won't stack, making them easier to read.",
 			'comboStacking',
 			BOOL);
 		addOption(option);
@@ -250,6 +250,9 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			changeNoteSkin(note);
 			note.centerOffsets();
 			note.centerOrigin();
+
+			note.playAnim('confirm', true);
+			note.resetAnim = note.animation.curAnim.numFrames * note.animation.curAnim.frameDuration;
 		});
 	}
 
@@ -278,6 +281,11 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			var rand:Int = 0;
 			if (splashes.members[0] != null && splashes.members[0].maxAnims > 1)
 				rand = FlxG.random.int(0, splashes.members[0].maxAnims - 1); // For playing the same random animation on all 4 splashes
+
+			notes.forEachAlive(function(note:StrumNote) {
+				note.playAnim('confirm', true);
+				note.resetAnim = note.animation.curAnim.numFrames * note.animation.curAnim.frameDuration;
+			});
 	
 			for (splash in splashes)
 			{

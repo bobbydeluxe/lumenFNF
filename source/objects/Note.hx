@@ -93,7 +93,8 @@ class Note extends FlxSprite
 	public var gfNote:Bool = false;
 	public var earlyHitMult:Float = 1;
 	public var lateHitMult:Float = 1;
-	public var lowPriority:Bool = false;
+	public var hitPriority:Float = 1;
+	public var lowPriority(get, set):Bool;
 
 	public static var SUSTAIN_SIZE:Int = 44;
 	public static var swagWidth:Float = 160 * 0.7;
@@ -112,7 +113,7 @@ class Note extends FlxSprite
 		a: ClientPrefs.data.splashAlpha
 	};
 
-	public var noteHoldSplash:SustainSplash;
+	public var holdNoteSplash:SustainSplash;
 
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
@@ -156,10 +157,19 @@ class Note extends FlxSprite
 	public var hitsound:String = 'hitsound';
 
 	private function set_texture(value:String):String {
-		if(texture != value) reloadNote(value);
-
-		texture = value;
+		if(texture != value) {
+			texture = value;
+			reloadNote(value);
+		}
 		return value;
+	}
+	
+	function set_lowPriority(value:Bool):Bool {
+		hitPriority = (value ? Math.NEGATIVE_INFINITY : 1);
+		return value;
+	}
+	function get_lowPriority():Bool {
+		return (hitPriority == Math.NEGATIVE_INFINITY);
 	}
 
 	public function defaultRGB()
@@ -182,10 +192,10 @@ class Note extends FlxSprite
 	}
 
 	private function set_noteType(value:String):String {
-		noteSplashData.texture = PlayState.SONG != null ? PlayState.SONG.splashSkin : 'noteSplashes/noteSplashes';
-		defaultRGB();
-
 		if(noteData > -1 && noteType != value) {
+			noteSplashData.texture = PlayState.SONG != null ? PlayState.SONG.splashSkin : 'noteSplashes/noteSplashes';
+			defaultRGB();
+			
 			switch(value) {
 				case 'Hurt Note':
 					ignoreNote = mustPress;
@@ -219,9 +229,8 @@ class Note extends FlxSprite
 			}
 			if (value != null && value.length > 1) NoteTypesConfig.applyNoteTypeData(this, value);
 			if (hitsound != 'hitsound' && hitsoundVolume > 0) Paths.sound(hitsound); //precache new sound for being idiot-proof
-			noteType = value;
 		}
-		return value;
+		return noteType = value;
 	}
 
 	public function new(strumTime:Float, noteData:Int, ?prevNote:Note, ?sustainNote:Bool = false, ?inEditor:Bool = false, ?createdFrom:Dynamic = null)
@@ -319,17 +328,15 @@ class Note extends FlxSprite
 
 	var _lastNoteOffX:Float = 0;
 	static var _lastValidChecked:String; //optimization
-	public var originalHeight:Float = 6;
+	
 	public function reloadNote(texture:String = '', postfix:String = '') {
-		if(texture == null) texture = '';
-		if(postfix == null) postfix = '';
-
 		var skin:String = texture + postfix;
 		if(texture.length < 1)
 		{
 			skin = PlayState.SONG != null ? PlayState.SONG.arrowSkin : null;
-			if(skin == null || skin.length < 1)
+			if (skin == null || skin.length < 1)
 				skin = defaultNoteSkin + postfix;
+			skin = PlayState.uiPrefix + skin;
 		}
 		else rgbShader.enabled = false;
 
@@ -340,7 +347,7 @@ class Note extends FlxSprite
 		
 		var skinPostfix:String = getNoteSkinPostfix();
 		var customSkin:String = skin + skinPostfix;
-		if(customSkin == _lastValidChecked || Paths.fileExists('images/' + PlayState.uiPrefix + customSkin + '.png', IMAGE))
+		if(customSkin == _lastValidChecked || Paths.fileExists('images/' + customSkin + '.png', IMAGE))
 		{
 			skin = customSkin;
 			_lastValidChecked = customSkin;
@@ -349,17 +356,20 @@ class Note extends FlxSprite
 
 		if(PlayState.isPixelStage) {
 			if(isSustainNote) {
-				var graphic = Paths.image('${PlayState.uiPrefix}${customSkin}ENDS$skinPostfix');
-				loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 2));
-				originalHeight = graphic.height / 2;
+				loadGraphic(Paths.image('${customSkin}ENDS$skinPostfix'));
+				width = width / 4;
+				height = height / 2;
+				loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
 			} else {
-				var graphic = Paths.image('${PlayState.uiPrefix}$customSkin$skinPostfix');
-				loadGraphic(graphic, true, Math.floor(graphic.width / 4), Math.floor(graphic.height / 5));
+				loadGraphic(Paths.image('$customSkin$skinPostfix'));
+				width = width / 4;
+				height = height / 5;
+				loadGraphic(graphic, true, Math.floor(width), Math.floor(height));
 			}
 			loadPixelNoteAnims();
 			antialiasing = false;
 			
-			setGraphicSize(Std.int(frameWidth * PlayState.daPixelZoom));
+			scale.set(PlayState.daPixelZoom, PlayState.daPixelZoom);
 		} else {
 			frames = Paths.getSparrowAtlas(skin);
 			loadNoteAnims();
@@ -454,7 +464,7 @@ class Note extends FlxSprite
 		_lastValidChecked = '';
 	}
 
-	public function followStrumNote(myStrum:StrumNote, fakeCrochet:Float, songSpeed:Float = 1)
+	public function followStrumNote(myStrum:StrumNote, songSpeed:Float = 1)
 	{
 		var noteSpeed:Float = songSpeed * multSpeed;
 		var strumDir:Float = myStrum.direction;

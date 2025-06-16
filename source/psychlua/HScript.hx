@@ -1,5 +1,26 @@
 package psychlua;
 
+#if macro
+import haxe.macro.Expr;
+import haxe.macro.Type;
+import haxe.macro.Context;
+
+class HScriptMacro {
+	static macro function buildInterp():Array<Field> {
+		var pos:Position = Context.currentPos();
+		var fields:Array<Field> = Context.getBuildFields();
+		
+		for (field in fields) {
+			if (field.name == 'setVar' && field.access != null) // DE-INLINE METHOD
+				field.access.remove(Access.AInline);
+		}
+		
+		return fields;
+	}
+}
+
+#else
+
 import flixel.FlxBasic;
 import objects.Character;
 import psychlua.LuaUtils;
@@ -14,8 +35,6 @@ import crowplexus.iris.Iris;
 import crowplexus.iris.IrisConfig;
 import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
-
-import haxe.ValueException;
 
 typedef HScriptInfos = {
 	> haxe.PosInfos,
@@ -52,11 +71,13 @@ class HScript extends Iris
 			try {
 				parent.hscript = new HScript(parent, code, varsToBring);
 			}
-			catch(e:IrisError) {
+			catch(e:Dynamic) {
 				var pos:HScriptInfos = cast {fileName: parent.scriptName, isLua: true};
 				if(parent.lastCalledFunction != '') pos.funcName = parent.lastCalledFunction;
-				Iris.error(Printer.errorToString(e, false), pos);
 				parent.hscript = null;
+				
+				var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+				Iris.fatal(errorString, pos);
 			}
 		}
 		else
@@ -69,19 +90,22 @@ class HScript extends Iris
 				var ret:Dynamic = hs.execute();
 				hs.returnValue = ret;
 			}
-			catch(e:IrisError)
+			catch(e:Dynamic)
 			{
 				var pos:HScriptInfos = cast hs.interp.posInfos();
 				pos.isLua = true;
 				if(parent.lastCalledFunction != '') pos.funcName = parent.lastCalledFunction;
-				Iris.error(Printer.errorToString(e, false), pos);
 				hs.returnValue = null;
+				
+				var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+				Iris.fatal(errorString, pos);
 			}
 		}
 	}
 	#end
 
 	public var origin:String;
+	public var unsafe:Bool = false;
 	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false)
 	{
 		if (file == null)
@@ -111,7 +135,9 @@ class HScript extends Iris
 		if (scriptName == null && parent != null)
 			scriptName = parent.scriptName;
 		#end
+		
 		super(scriptThing, new IrisConfig(scriptName, false, false));
+		Iris.instances.set(scriptName, this); // idgaf
 		var customInterp:CustomInterp = new CustomInterp();
 		customInterp.parentInstance = FlxG.state;
 		customInterp.showPosOnLog = false;
@@ -130,7 +156,7 @@ class HScript extends Iris
 			try {
 				var ret:Dynamic = execute();
 				returnValue = ret;
-			} catch(e:IrisError) {
+			} catch(e:Dynamic) {
 				returnValue = null;
 				this.destroy();
 				throw e;
@@ -300,16 +326,27 @@ class HScript extends Iris
 		#if LUA_ALLOWED
 		set('createGlobalCallback', function(name:String, func:Dynamic)
 		{
-			for (script in PlayState.instance.luaArray)
+			if (!Reflect.isFunction(func)) {
+				Iris.error('createGlobalCallback ($name): 2nd argument is not a function', this.interp.posInfos());
+				return;
+			}
+			
+			for (script in PlayState.instance.luaArray) {
 				if(script != null && script.lua != null && !script.closed)
 					Lua_helper.add_callback(script.lua, name, func);
-
+			}
+			
 			FunkinLua.customFunctions.set(name, func);
 		});
 
 		// this one was tested
 		set('createCallback', function(name:String, func:Dynamic, ?funk:FunkinLua = null)
 		{
+			if (!Reflect.isFunction(func)) {
+				Iris.error('createCallback ($name): 2nd argument is not a function', this.interp.posInfos());
+				return;
+			}
+			
 			if(funk == null) funk = parentLua;
 			
 			if(funk != null) funk.addLocalCallback(name, func);
@@ -358,7 +395,7 @@ class HScript extends Iris
 				final retVal:IrisCall = funk.hscript.call(funcToRun, funcArgs);
 				if (retVal != null)
 				{
-					return (retVal.returnValue == null || LuaUtils.isOfTypes(retVal.returnValue, [Bool, Int, Float, String, Array])) ? retVal.returnValue : null;
+					return (LuaUtils.isLuaSupported(retVal.returnValue)) ? retVal.returnValue : null;
 				}
 				else if (funk.hscript.returnValue != null)
 				{
@@ -374,7 +411,7 @@ class HScript extends Iris
 				final retVal:IrisCall = funk.hscript.call(funcToRun, funcArgs);
 				if (retVal != null)
 				{
-					return (retVal.returnValue == null || LuaUtils.isOfTypes(retVal.returnValue, [Bool, Int, Float, String, Array])) ? retVal.returnValue : null;
+					return (LuaUtils.isLuaSupported(retVal.returnValue)) ? retVal.returnValue : null;
 				}
 			}
 			else
@@ -426,35 +463,30 @@ class HScript extends Iris
 			Iris.error('No function named: $funcToRun', this.interp.posInfos());
 			return null;
 		}
-
+		
 		try {
 			var func:Dynamic = interp.variables.get(funcToRun); // function signature
 			final ret = Reflect.callMethod(null, func, args ?? []);
+			
 			return {funName: funcToRun, signature: func, returnValue: ret};
-		}
-		catch(e:IrisError) {
+		} catch(e:Dynamic) {
+			if (unsafe) {
+				throw e;
+				return null;
+			}
+			
 			var pos:HScriptInfos = cast this.interp.posInfos();
 			pos.funcName = funcToRun;
 			#if LUA_ALLOWED
-			if (parentLua != null)
-			{
+			if (parentLua != null) {
 				pos.isLua = true;
-				if (parentLua.lastCalledFunction != '') pos.funcName = parentLua.lastCalledFunction;
+				if (parentLua.lastCalledFunction != '')
+					pos.funcName = parentLua.lastCalledFunction;
 			}
 			#end
-			Iris.error(Printer.errorToString(e, false), pos);
-		}
-		catch (e:ValueException) {
-			var pos:HScriptInfos = cast this.interp.posInfos();
-			pos.funcName = funcToRun;
-			#if LUA_ALLOWED
-			if (parentLua != null)
-			{
-				pos.isLua = true;
-				if (parentLua.lastCalledFunction != '') pos.funcName = parentLua.lastCalledFunction;
-			}
-			#end
-			Iris.error('$e', pos);
+			
+			var errorString:String = (Std.isOfType(e, IrisError) ? Printer.errorToString(e, false) : Std.string(e));
+			(unsafe ? Iris.fatal : Iris.error) (errorString, pos);
 		}
 		return null;
 	}
@@ -525,12 +557,10 @@ class CustomFlxColor {
 		return cast FlxColor.fromString(str);
 }
 
-class CustomInterp extends crowplexus.hscript.Interp
-{
-	public var parentInstance(default, set):Dynamic = [];
+class CustomInterp extends crowplexus.hscript.Interp {
 	private var _instanceFields:Array<String>;
-	function set_parentInstance(inst:Dynamic):Dynamic
-	{
+	public var parentInstance(default, set):Dynamic = [];
+	function set_parentInstance(inst:Dynamic):Dynamic {
 		parentInstance = inst;
 		if(parentInstance == null)
 		{
@@ -541,52 +571,36 @@ class CustomInterp extends crowplexus.hscript.Interp
 		return inst;
 	}
 
-	public function new()
-	{
+	public function new() {
 		super();
 	}
 
-	override function fcall(o:Dynamic, funcToRun:String, args:Array<Dynamic>):Dynamic {
-		for (_using in usings) {
-			var v = _using.call(o, funcToRun, args);
-			if (v != null)
-				return v;
-		}
-
-		var f = get(o, funcToRun);
-
-		if (f == null) {
-			Iris.error('Tried to call null function $funcToRun', posInfos());
-			return null;
-		}
-
-		return Reflect.callMethod(o, f, args);
-	}
-
 	override function resolve(id: String): Dynamic {
-		if (locals.exists(id)) {
-			var l = locals.get(id);
-			return l.r;
-		}
-
-		if (variables.exists(id)) {
-			var v = variables.get(id);
-			return v;
-		}
-
-		if (imports.exists(id)) {
-			var v = imports.get(id);
-			return v;
-		}
-
-		if(parentInstance != null && _instanceFields.contains(id)) {
-			var v = Reflect.getProperty(parentInstance, id);
-			return v;
-		}
-
+		if (locals.exists(id)) 
+			return locals.get(id).r;
+		if (variables.exists(id))
+			return variables.get(id);
+		if (imports.exists(id))
+			return imports.get(id);
+		
+		if (FunkinLua.customFunctions.exists(id))
+			return FunkinLua.customFunctions.get(id);
+		if (parentInstance != null && _instanceFields.contains(id))
+			return Reflect.getProperty(parentInstance, id);
+		
 		error(EUnknownVariable(id));
-
 		return null;
+	}
+	
+	override function setVar(id:String, v:Dynamic) {
+		if (parentInstance != null && _instanceFields.contains(id))
+			return Reflect.setProperty(parentInstance, id, v);
+		
+		variables.set(id, v);
+		
+		// error(EUnknownVariable(id));
+		// having "global variables" is pretty pointless,
+		// but i figure disabling it would cause issues on existing scripts
 	}
 }
 #else
@@ -609,4 +623,5 @@ class HScript
 	}
 	#end
 }
+#end
 #end
