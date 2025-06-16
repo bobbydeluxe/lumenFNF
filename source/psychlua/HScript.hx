@@ -591,17 +591,6 @@ class CustomInterp extends crowplexus.hscript.Interp {
 		error(EUnknownVariable(id));
 		return null;
 	}
-	
-	override function setVar(id:String, v:Dynamic) {
-		if (parentInstance != null && _instanceFields.contains(id))
-			return Reflect.setProperty(parentInstance, id, v);
-		
-		variables.set(id, v);
-		
-		// error(EUnknownVariable(id));
-		// having "global variables" is pretty pointless,
-		// but i figure disabling it would cause issues on existing scripts
-	}
 }
 #else
 class HScript

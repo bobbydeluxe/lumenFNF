@@ -7,7 +7,6 @@ import shaders.RGBPalette;
 import shaders.RGBPalette.RGBShaderReference;
 
 import objects.StrumNote;
-import objects.SustainSplash;
 
 import flixel.math.FlxRect;
 
@@ -113,7 +112,7 @@ class Note extends FlxSprite
 		a: ClientPrefs.data.splashAlpha
 	};
 
-	public var holdNoteSplash:SustainSplash;
+	public var noteHoldSplash:SustainSplash;
 
 	public var offsetX:Float = 0;
 	public var offsetY:Float = 0;
