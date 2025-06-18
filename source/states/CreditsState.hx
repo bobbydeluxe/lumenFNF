@@ -2,7 +2,7 @@ package states;
 
 import objects.AttachedSprite;
 
-class CreditsState extends MusicBeatState
+class CreditsState extends ScriptedState
 {
 	var curSelected:Int = -1;
 
@@ -19,6 +19,8 @@ class CreditsState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
+		
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Menus", null);
@@ -38,17 +40,6 @@ class CreditsState extends MusicBeatState
 		#end
 
 		var defaultList:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
-			['P-Slice Engine Team'],
-			['Mikolka9144',			'mikolka',			'The lead for the mod',								 'https://gamebanana.com/members/3329541',									'2ebcfa'],
-			[""],
-			['P-Slice Contributors'],
-			['mcagabe19',			'lily',             'Porter of P-slice for mobile devices and creator of linc_luajit-rewritten (used for mobile builds)',                       'https://youtube.com/@mcagabe19',		'FFE7C0'],
-			["Fazecarl",			'fazecarl',			'Made the new logo for P-Slice',									'https://gamebanana.com/members/2121406',	'29170a'],
-			["Mykarm",				'mykarm',			'Made the new icon for P-Slice',									'https://x.com/cronviersmeat/status/1849059676467417311?s=46&t=4dcTT7PAMkRJ8zYd4LgTow',	'29170a'],
-			[""],
-			["P-Slice server"],
-			["Join our community",	"ppslice",			"",																"https://discord.gg/9FCyCqEvRf",			"5e36c4"],
-			[""],
 			["Psych Engine Team"],
 			["Shadow Mario",		"shadowmario",		"Main Programmer and Head of Psych Engine",					"https://ko-fi.com/shadowmario",	"444444"],
 			["Riveren",				"riveren",			"Main Artist/Animator of Psych Engine",						"https://x.com/riverennn",			"14967B"],
@@ -69,12 +60,14 @@ class CreditsState extends MusicBeatState
 			["superpowers04",		"superpowers04",	"LUA JIT Fork",												"https://x.com/superpowers04",		"B957ED"],
 			["CheemsAndFriends",	"cheems",			"Creator of FlxAnimate",									"https://x.com/CheemsnFriendos",	"E1E1E1"],
 			[""],
-
-			["The Funkin' Crew Inc"],
+			["Funkin' Crew"],
 			["ninjamuffin99",		"ninjamuffin99",	"Programmer of Friday Night Funkin'",						"https://x.com/ninja_muffin99",		"CF2D2D"],
 			["PhantomArcade",		"phantomarcade",	"Animator of Friday Night Funkin'",							"https://x.com/PhantomArcade3K",	"FADC45"],
 			["evilsk8r",			"evilsk8r",			"Artist of Friday Night Funkin'",							"https://x.com/evilsk8r",			"5ABD4B"],
 			["kawaisprite",			"kawaisprite",		"Composer of Friday Night Funkin'",							"https://x.com/kawaisprite",		"378FC7"],
+			[""],
+			["Psych Engine Discord"],
+			["Join the Psych Ward!", "discord", "", "https://discord.gg/2ka77eMXDv", "5165F6"]
 		];
 		
 		for(i in defaultList)
@@ -136,9 +129,6 @@ class CreditsState extends MusicBeatState
 		bg.color = CoolUtil.colorFromString(creditsStuff[curSelected][4]);
 		intendedColor = bg.color;
 		changeSelection();
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('UP_DOWN', 'A_B');
-		#end
 		super.create();
 	}
 
@@ -146,10 +136,10 @@ class CreditsState extends MusicBeatState
 	var holdTime:Float = 0;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		if (FlxG.sound.music.volume < 0.7)
-		{
-			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
-		}
+			FlxG.sound.music.volume += 0.5 * elapsed;
 
 		if(!quitting)
 		{
@@ -214,6 +204,8 @@ class CreditsState extends MusicBeatState
 			}
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	var moveTween:FlxTween = null;

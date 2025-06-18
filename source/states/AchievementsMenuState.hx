@@ -5,7 +5,7 @@ import flixel.util.FlxSort;
 import objects.Bar;
 
 #if ACHIEVEMENTS_ALLOWED
-class AchievementsMenuState extends MusicBeatState
+class AchievementsMenuState extends ScriptedState
 {
 	public var curSelected:Int = 0;
 
@@ -22,6 +22,8 @@ class AchievementsMenuState extends MusicBeatState
 
 	override function create()
 	{
+		preCreate();
+		
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 
@@ -121,24 +123,11 @@ class AchievementsMenuState extends MusicBeatState
 		add(nameText);
 		
 		_changeSelection();
-
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('LEFT_FULL', 'B_C');
-		#end
-
 		super.create();
 		
 		FlxG.camera.follow(camFollow, null, 0.15);
 		FlxG.camera.scroll.y = -FlxG.height;
 	}
-
-	#if TOUCH_CONTROLS_ALLOWED
-	override function closeSubState() {
-		super.closeSubState();
-		removeTouchPad();
-		addTouchPad('LEFT_FULL', 'B_C');
-	}
-	#end
 
 	function makeAchievement(achievement:String, data:Achievement, unlocked:Bool, mod:String = null)
 	{
@@ -160,6 +149,8 @@ class AchievementsMenuState extends MusicBeatState
 
 	var goingBack:Bool = false;
 	override function update(elapsed:Float) {
+		preUpdate(elapsed);
+		
 		if(!goingBack && options.length > 1)
 		{
 			var add:Int = 0;
@@ -209,17 +200,11 @@ class AchievementsMenuState extends MusicBeatState
 					_changeSelection();
 				}
 			}
-
-			#if TOUCH_CONTROLS_ALLOWED
-			if(MusicBeatState.getState().touchPad.buttonC.justPressed || controls.RESET && (options[curSelected].unlocked || options[curSelected].curProgress > 0))
+			
+			if(controls.RESET && (options[curSelected].unlocked || options[curSelected].curProgress > 0))
 			{
-				removeTouchPad();
 				openSubState(new ResetAchievementSubstate());
 			}
-			#else
-			if(controls.RESET && (options[curSelected].unlocked || options[curSelected].curProgress > 0)) 
-				openSubState(new ResetAchievementSubstate());	
-			#end
 		}
 
 		if (controls.BACK) {
@@ -228,6 +213,8 @@ class AchievementsMenuState extends MusicBeatState
 			goingBack = true;
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	public var barTween:FlxTween = null;
@@ -277,8 +264,6 @@ class ResetAchievementSubstate extends MusicBeatSubstate
 
 	public function new()
 	{
-		controls.isInSubstate = true;
-
 		super();
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
@@ -287,13 +272,13 @@ class ResetAchievementSubstate extends MusicBeatSubstate
 		add(bg);
 		FlxTween.tween(bg, {alpha: 0.6}, 0.4, {ease: FlxEase.quartInOut});
 
-		var textReset:Alphabet = new Alphabet(0, 180, Language.getPhrase('reset_achievement', 'Reset Achievement:'), true);
-		textReset.screenCenter(X);
-		textReset.scrollFactor.set();
-		add(textReset);
+		var text:Alphabet = new Alphabet(0, 180, Language.getPhrase('reset_achievement', 'Reset Achievement:'), true);
+		text.screenCenter(X);
+		text.scrollFactor.set();
+		add(text);
 		
 		var state:AchievementsMenuState = cast FlxG.state;
-		var text:FlxText = new FlxText(50, textReset.y + 90, FlxG.width - 100, state.options[state.curSelected].displayName, 40);
+		var text:FlxText = new FlxText(50, text.y + 90, FlxG.width - 100, state.options[state.curSelected].displayName, 40);
 		text.setFormat(Paths.font("vcr.ttf"), 40, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		text.scrollFactor.set();
 		text.borderSize = 2;
@@ -311,10 +296,6 @@ class ResetAchievementSubstate extends MusicBeatSubstate
 		noText.scrollFactor.set();
 		add(noText);
 		updateOptions();
-
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('LEFT_RIGHT', 'A');
-		#end
 	}
 
 	override function update(elapsed:Float)
@@ -322,7 +303,6 @@ class ResetAchievementSubstate extends MusicBeatSubstate
 		if(controls.BACK)
 		{
 			close();
-			controls.isInSubstate = false;
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 			return;
 		}
@@ -363,7 +343,6 @@ class ResetAchievementSubstate extends MusicBeatSubstate
 
 				FlxG.sound.play(Paths.sound('cancelMenu'));
 			}
-			controls.isInSubstate = false;
 			close();
 			return;
 		}

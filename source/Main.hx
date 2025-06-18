@@ -17,6 +17,7 @@ import openfl.events.Event;
 import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
+import backend.ScriptedState;
 #if COPYSTATE_ALLOWED
 import states.CopyState;
 #end
@@ -91,6 +92,13 @@ class Main extends Sprite
 		setupGame();
 	}
 
+	function debugPrint(message:String, ?color:FlxColor, ?size:Int) {
+		if (FlxG.state is ScriptedState) {
+			var scriptedState:ScriptedState = cast FlxG.state;
+			scriptedState.addTextToDebug(message, color);
+		}
+	}
+
 	private function setupGame():Void
 	{
 		#if (openfl <= "9.2.0")
@@ -135,7 +143,7 @@ class Main extends Sprite
 			}
 			msgInfo += ' $x';
 			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('WARNING: $msgInfo', FlxColor.YELLOW);
+				debugPrint('WARNING: $msgInfo', FlxColor.YELLOW);
 		}
 		Iris.error = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(ERROR, x, pos);
@@ -153,7 +161,7 @@ class Main extends Sprite
 			}
 			msgInfo += ' $x';
 			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('ERROR: $msgInfo', FlxColor.RED);
+				debugPrint('ERROR: $msgInfo', FlxColor.RED);
 		}
 		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(FATAL, x, pos);
@@ -171,7 +179,7 @@ class Main extends Sprite
 			}
 			msgInfo += ' $x';
 			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('FATAL: $msgInfo', 0xFFBB0000);
+				debugPrint('FATAL: $msgInfo', 0xFFBB0000);
 		}
 		#end
 

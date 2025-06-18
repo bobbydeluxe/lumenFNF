@@ -5,8 +5,6 @@ import backend.PsychCamera;
 
 class MusicBeatState extends FlxState
 {
-	private static var currentState:MusicBeatState;
-
 	private var curSection:Int = 0;
 	private var stepsToDo:Int = 0;
 
@@ -20,84 +18,8 @@ class MusicBeatState extends FlxState
 	{
 		return Controls.instance;
 	}
-
-	#if TOUCH_CONTROLS_ALLOWED
-	public var touchPad:TouchPad;
-	public var hitbox:Hitbox;
-	public var camControls:FlxCamera;
-	public var tpadCam:FlxCamera;
-
-	public function addTouchPad(DPad:String, Action:String)
-	{
-		touchPad = new TouchPad(DPad, Action);
-		add(touchPad);
-	}
-
-	public function removeTouchPad()
-	{
-		if (touchPad != null)
-		{
-			remove(touchPad);
-			touchPad = FlxDestroyUtil.destroy(touchPad);
-		}
-
-		if(tpadCam != null)
-		{
-			FlxG.cameras.remove(tpadCam);
-			tpadCam = FlxDestroyUtil.destroy(tpadCam);
-		}
-	}
-
-	public function addHitbox(defaultDrawTarget:Bool = false):Void
-	{
-		var extraMode = MobileData.extraActions.get(ClientPrefs.data.extraHints);
-
-		hitbox = new Hitbox(extraMode,MobileData.getButtonsColors());
-
-		camControls = new FlxCamera();
-		camControls.bgColor.alpha = 0;
-		FlxG.cameras.add(camControls, defaultDrawTarget);
-
-		hitbox.cameras = [camControls];
-		hitbox.visible = false;
-		add(hitbox);
-	}
-
-	public function removeHitbox()
-	{
-		if (hitbox != null)
-		{
-			remove(hitbox);
-			hitbox = FlxDestroyUtil.destroy(hitbox);
-			hitbox = null;
-		}
-
-		if(camControls != null)
-		{
-			FlxG.cameras.remove(camControls);
-			camControls = FlxDestroyUtil.destroy(camControls);
-		}
-	}
-
-	public function addTouchPadCamera(defaultDrawTarget:Bool = false):Void
-	{
-		if (touchPad != null)
-		{
-			tpadCam = new FlxCamera();
-			tpadCam.bgColor.alpha = 0;
-			FlxG.cameras.add(tpadCam, defaultDrawTarget);
-			touchPad.cameras = [tpadCam];
-		}
-	}
-
-	override function destroy()
-	{
-		removeTouchPad();
-		removeHitbox();
-		
-		super.destroy();
-	}
-	#end
+	
+	var _pre:Bool = false;
 	var _psychCameraInitialized:Bool = false;
 
 	public var variables:Map<String, Dynamic> = new Map<String, Dynamic>();
@@ -105,12 +27,10 @@ class MusicBeatState extends FlxState
 		return getState().variables;
 
 	override function create() {
-		currentState = this;
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
-
-		if(!_psychCameraInitialized) initPsychCamera();
-
+		
+		if (!_pre) preCreate();
 		super.create();
 
 		if(!skip) {
@@ -118,6 +38,11 @@ class MusicBeatState extends FlxState
 		}
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
+	}
+	
+	public function preCreate():Void {
+		if (!_psychCameraInitialized) initPsychCamera();
+		_pre = true;
 	}
 
 	public function initPsychCamera():PsychCamera
@@ -244,10 +169,7 @@ class MusicBeatState extends FlxState
 	}
 
 	public static function getState():MusicBeatState {
-		if (Std.is(FlxG.state, MusicBeatState))
-			return cast(FlxG.state, MusicBeatState);
-		else
-			return currentState;
+		return cast (FlxG.state, MusicBeatState);
 	}
 
 	public function stepHit():Void

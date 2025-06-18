@@ -106,6 +106,9 @@ class MusicBeatSubstate extends FlxSubState
 		super.destroy();
 	}
 	#end
+
+	public function preCreate():Void {}
+
 	override function update(elapsed:Float)
 	{
 		//everyStep();

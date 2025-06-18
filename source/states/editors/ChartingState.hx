@@ -67,7 +67,7 @@ enum abstract WaveformTarget(String)
 	var EVERYTHING = 'all';
 }
 
-class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychUIEvent
+class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUIEvent
 {
 	public static final defaultEvents:Array<Array<String>> =
 	[
@@ -235,6 +235,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 
 	override function create()
 	{
+		preCreate();
+
 		if(Difficulty.list.length < 1) Difficulty.resetList();
 		_keysPressedBuffer.resize(keysArray.length);
 		_heldNotes.resize(keysArray.length);
@@ -750,6 +752,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	var lastSongTime:Float = 0;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+
 		vortexInput = false;
 		if(!fileDialog.completed)
 		{
@@ -1451,6 +1455,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		outputTxt.visible = (outputAlpha > 0);
 		FlxG.camera.scroll.y = scrollY;
 		lastFocus = PsychUIInputText.focusOn;
+		
+		postUpdate(elapsed);
 	}
 	
 	function hitNote(note:MetaNote) {
