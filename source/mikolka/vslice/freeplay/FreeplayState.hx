@@ -2277,7 +2277,7 @@ class FreeplayState extends MusicBeatSubstate
 	 * Build an instance of `FreeplayState` that is above the `MainMenuState`.
 	 * @return The MainMenuState with the FreeplayState as a substate.
 	 */
-	public static function build(?params:FreeplayStateParams, ?stickers:StickerSubState):MusicBeatState
+	public static function build(?params:FreeplayStateParams, ?stickers:StickerSubState):ScriptedState
 	{
 		var result:MainMenuState;
 		if (params?.fromResults?.playRankAnim)

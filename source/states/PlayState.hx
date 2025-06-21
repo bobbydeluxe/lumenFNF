@@ -58,6 +58,10 @@ import psychlua.LuaUtils;
 import psychlua.HScript;
 #end
 
+#if sys
+import sys.io.File;
+#end
+
 /**
  * This is where all the Gameplay stuff happens and is managed
  *
@@ -121,7 +125,9 @@ class PlayState extends ScriptedState
 	public static var uiPrefix:String = "";
 	public static var uiPostfix:String = "";
 	public static var isPixelStage(get, never):Bool;
+	public var styleSizeData:Dynamic; // it's parsed JSON data
 
+	/*
 	@:noCompletion
 	static function set_stageUI(value:String):String
 	{
@@ -137,6 +143,22 @@ class PlayState extends ScriptedState
 		var formatted:String = key;
 		if (uiPrefix.trim() != '')
 			formatted = '$uiPrefix/$formatted';
+		return '$uiPrefix$key$uiPostfix';
+	}
+	*/
+
+	@:noCompletion
+	static function set_stageUI(value:String):String {
+		if (value != "normal" && value != '') {
+			uiPrefix = value + 'UI/';
+			uiPostfix = '-' + value;
+		} else {
+			uiPrefix = uiPostfix = "";
+		}
+
+		return stageUI = value;
+	}
+	static function formatUI(key:String):String {
 		return '$uiPrefix$key$uiPostfix';
 	}
 
@@ -222,7 +244,7 @@ class PlayState extends ScriptedState
 	public var iconP2:HealthIcon;
 	public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
-	public var camOther:FlxCamera;
+	public var camOther:FlxCamera = ScriptedState.camOther;
 	public var luaTpadCam:FlxCamera;
 	public var cameraSpeed:Float = 1;
 
@@ -289,8 +311,6 @@ class PlayState extends ScriptedState
 
 	override public function create()
 	{
-		preCreate();
-
 		this.variables = new JoinedLuaVariables();
 		//trace('Playback Rate: ' + playbackRate);
 		_lastLoadedModDirectory = Mods.currentModDirectory;
@@ -334,14 +354,11 @@ class PlayState extends ScriptedState
 		// var gameCam:FlxCamera = FlxG.camera;
 		camGame = initPsychCamera();
 		camHUD = new FlxCamera();
-		camOther = new FlxCamera();
 		luaTpadCam = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
-		camOther.bgColor.alpha = 0;
 		luaTpadCam.bgColor.alpha = 0;
 
 		FlxG.cameras.add(camHUD, false);
-		FlxG.cameras.add(camOther, false);
 		FlxG.cameras.add(luaTpadCam, false);
 
 		persistentUpdate = true;
@@ -374,11 +391,14 @@ class PlayState extends ScriptedState
 		defaultCamZoom = stageData.defaultZoom;
 		defaultStageZoom = defaultCamZoom;
 
+		stageUI = stageData.stageUI;
+		/*
 		stageUI = "normal";
 		if (stageData.stageUI != null && stageData.stageUI.trim().length > 0)
 			stageUI = stageData.stageUI;
 		else if (stageData.isPixelStage == true) //Backward compatibility
 			stageUI = "pixel";
+		*/
 
 		BF_X = stageData.boyfriend[0];
 		BF_Y = stageData.boyfriend[1];
@@ -407,7 +427,6 @@ class PlayState extends ScriptedState
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
 
 		EventLoader.addstage(curStage);
-		if(isPixelStage) introSoundsSuffix = '-pixel';
 
 		if (!stageData.hide_girlfriend)
 		{
@@ -439,7 +458,21 @@ class PlayState extends ScriptedState
 			add(dadGroup);
 			add(boyfriendGroup);
 		}
+
+		set_stageUI(stageUI);
+		introSoundsSuffix = uiPostfix;
+
+		if (Paths.fileExists('styles/${stageUI}.json', TEXT))
+		{
+			styleSizeData =  tjson.TJSON.parse(Paths.getTextFromFile('styles/${stageUI}.json'));
+		}
+		else
+		{
+			styleSizeData =  tjson.TJSON.parse(Paths.getTextFromFile('styles/normal.json'));
+		}
 		
+		preCreate();
+
 		#if (SCRIPTS_ALLOWED)
 		// "SCRIPTS FOLDER" SCRIPTS
 		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts/'))
@@ -1010,7 +1043,7 @@ class PlayState extends ScriptedState
 				introAssets.set(stageUI, introImagesArray);
 
 				var introAlts:Array<String> = introAssets.get(stageUI);
-				var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
+				var antialias:Bool = (ClientPrefs.data.antialiasing && !styleSizeData.aliasing);
 				var tick:Countdown = THREE;
 
 				switch (swagCounter)
@@ -1064,8 +1097,8 @@ class PlayState extends ScriptedState
 		spr.scrollFactor.set();
 		spr.updateHitbox();
 
-		if (PlayState.isPixelStage)
-			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+		if (stageUI != "normal" && stageUI != '')
+			spr.setGraphicSize(Std.int(spr.width * styleSizeData.assetZoom));
 
 		spr.screenCenter();
 		spr.antialiasing = antialias;
@@ -2836,7 +2869,7 @@ class PlayState extends ScriptedState
 		var uiPostfix:String = '';
 		var antialias:Bool = ClientPrefs.data.antialiasing;
 
-		antialias = !isPixelStage;
+		antialias = !styleSizeData.aliasing;
 
 		if (ClientPrefs.data.popUpRating)
 		{
@@ -2865,16 +2898,8 @@ class PlayState extends ScriptedState
 			comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 			comboGroup.add(rating);
 
-			if (!PlayState.isPixelStage)
-			{
-				rating.setGraphicSize(Std.int(rating.width * 0.7));
-				comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
-			}
-			else
-			{
-				rating.setGraphicSize(Std.int(rating.width * daPixelZoom * 0.85));
-				comboSpr.setGraphicSize(Std.int(comboSpr.width * daPixelZoom * 0.85));
-			}
+			rating.setGraphicSize(Std.int(rating.width * styleSizeData.assetZoom * styleSizeData.ratingWidth));
+			comboSpr.setGraphicSize(Std.int(comboSpr.width * styleSizeData.assetZoom * styleSizeData.ratingWidth));
 
 			comboSpr.updateHitbox();
 			rating.updateHitbox();
@@ -2893,10 +2918,7 @@ class PlayState extends ScriptedState
 				numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.y += 80 - ClientPrefs.data.comboOffset[3];
 
-				if (!PlayState.isPixelStage)
-					numScore.setGraphicSize(Std.int(numScore.width * 0.5));
-				else
-					numScore.setGraphicSize(Std.int(numScore.width * daPixelZoom));
+				numScore.setGraphicSize(Std.int(numScore.width * styleSizeData.numberWidth));
 				numScore.updateHitbox();
 
 				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
@@ -3450,22 +3472,20 @@ class PlayState extends ScriptedState
 	}
 
 	var lastStepHit:Int = -1;
-	override function stepHit()
+	public override function stepHit()
 	{
 		super.stepHit();
 
-		if(curStep == lastStepHit) {
+		if (curStep == lastStepHit) {
 			return;
 		}
 
 		lastStepHit = curStep;
-		setOnScripts('curStep', curStep);
-		callOnScripts('onStepHit');
 	}
 
 	var lastBeatHit:Int = -1;
 
-	override function beatHit()
+	public override function beatHit()
 	{
 		if(lastBeatHit >= curBeat) {
 			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
@@ -3492,9 +3512,6 @@ class PlayState extends ScriptedState
 
 		super.beatHit();
 		lastBeatHit = curBeat;
-
-		setOnScripts('curBeat', curBeat);
-		callOnScripts('onBeatHit');
 	}
 
 	public function characterBopper(beat:Int):Void
@@ -3514,7 +3531,7 @@ class PlayState extends ScriptedState
 			boyfriend.dance();
 	}
 
-	override function sectionHit()
+	public override function sectionHit()
 	{
 		if (SONG.notes[curSection] != null)
 		{
@@ -3532,10 +3549,8 @@ class PlayState extends ScriptedState
 			setOnScripts('altAnim', SONG.notes[curSection].altAnim);
 			setOnScripts('gfSection', SONG.notes[curSection].gfSection);
 		}
-		super.sectionHit();
 
-		setOnScripts('curSection', curSection);
-		callOnScripts('onSectionHit');
+		super.sectionHit();
 	}
 
 	function strumPlayAnim(isDad:Bool, id:Int, time:Float) {

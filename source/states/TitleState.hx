@@ -69,8 +69,6 @@ class TitleState extends ScriptedState
 
 	override public function create():Void
 	{
-		preCreate();
-
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 
@@ -102,6 +100,9 @@ class TitleState extends ScriptedState
 		}
 
 		FlxG.mouse.visible = false;
+
+		preCreate();
+		
 		#if FREEPLAY
 		MusicBeatState.switchState(new FreeplayState());
 		#elseif CHARTING

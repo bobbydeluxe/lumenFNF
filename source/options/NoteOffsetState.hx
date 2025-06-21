@@ -7,7 +7,7 @@ import flixel.addons.display.shapes.FlxShapeCircle;
 
 import mikolka.stages.standard.StageWeek1 as BackgroundStage;
 
-class NoteOffsetState extends MusicBeatState
+class NoteOffsetState extends ScriptedState
 {
 	var stageDirectory:String = 'week1';
 	var boyfriend:Character;
@@ -15,7 +15,6 @@ class NoteOffsetState extends MusicBeatState
 
 	public var camHUD:FlxCamera;
 	public var camGame:FlxCamera;
-	public var camOther:FlxCamera;
 
 	var coolText:FlxText;
 	var rating:FlxSprite;
@@ -37,6 +36,8 @@ class NoteOffsetState extends MusicBeatState
 
 	override public function create()
 	{
+		preCreate();
+
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Delay/Combo Offset Menu", null);
 		#end
@@ -47,10 +48,6 @@ class NoteOffsetState extends MusicBeatState
 		camHUD = new FlxCamera();
 		camHUD.bgColor.alpha = 0;
 		FlxG.cameras.add(camHUD, false);
-
-		camOther = new FlxCamera();
-		camOther.bgColor.alpha = 0;
-		FlxG.cameras.add(camOther, false);
 
 		FlxG.camera.scroll.set(120, 130);
 
@@ -184,6 +181,8 @@ class NoteOffsetState extends MusicBeatState
 
 	override public function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+
 		var addNum:Int = 1;
 		if(FlxG.keys.pressed.SHIFT || FlxG.gamepads.anyPressed(LEFT_SHOULDER))
 		{
@@ -421,6 +420,8 @@ class NoteOffsetState extends MusicBeatState
 
 		Conductor.songPosition = FlxG.sound.music.time;
 		super.update(elapsed);
+
+		postUpdate(elapsed);
 	}
 
 	var zoomTween:FlxTween;

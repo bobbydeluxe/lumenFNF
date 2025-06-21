@@ -18,6 +18,7 @@ import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
 import backend.ScriptedState;
+import debug.ScriptTraceDisplay;
 #if COPYSTATE_ALLOWED
 import states.CopyState;
 #end
@@ -44,6 +45,7 @@ class Main extends Sprite
 	};
 
 	public static var fpsVar:FPS;
+	public static var traces:ScriptTraceDisplay;
 	public static var memoryCounter:MemoryCounter;
 	public static final platform:String = #if mobile "Phones" #else "PCs" #end;
 
@@ -92,13 +94,6 @@ class Main extends Sprite
 		setupGame();
 	}
 
-	function debugPrint(message:String, ?color:FlxColor, ?size:Int) {
-		if (FlxG.state is ScriptedState) {
-			var scriptedState:ScriptedState = cast FlxG.state;
-			scriptedState.addTextToDebug(message, color);
-		}
-	}
-
 	private function setupGame():Void
 	{
 		#if (openfl <= "9.2.0")
@@ -143,7 +138,7 @@ class Main extends Sprite
 			}
 			msgInfo += ' $x';
 			if (PlayState.instance != null)
-				debugPrint('WARNING: $msgInfo', FlxColor.YELLOW);
+				ScriptedState.debugPrint('WARNING: $msgInfo', FlxColor.YELLOW);
 		}
 		Iris.error = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(ERROR, x, pos);
@@ -161,7 +156,7 @@ class Main extends Sprite
 			}
 			msgInfo += ' $x';
 			if (PlayState.instance != null)
-				debugPrint('ERROR: $msgInfo', FlxColor.RED);
+				ScriptedState.debugPrint('ERROR: $msgInfo', FlxColor.RED);
 		}
 		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
 			Iris.logLevel(FATAL, x, pos);
@@ -179,7 +174,7 @@ class Main extends Sprite
 			}
 			msgInfo += ' $x';
 			if (PlayState.instance != null)
-				debugPrint('FATAL: $msgInfo', 0xFFBB0000);
+				ScriptedState.debugPrint('FATAL: $msgInfo', 0xFFBB0000);
 		}
 		#end
 
@@ -202,6 +197,9 @@ class Main extends Sprite
     	gameObject._customSoundTray = mikolka.vslice.components.FunkinSoundTray;
 
 		addChild(gameObject);
+
+		traces = new ScriptTraceDisplay();
+		addChild(traces);
 
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
 		#if mobile
