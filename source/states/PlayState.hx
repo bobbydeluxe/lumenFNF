@@ -58,10 +58,6 @@ import psychlua.LuaUtils;
 import psychlua.HScript;
 #end
 
-#if sys
-import sys.io.File;
-#end
-
 /**
  * This is where all the Gameplay stuff happens and is managed
  *
@@ -125,9 +121,7 @@ class PlayState extends ScriptedState
 	public static var uiPrefix:String = "";
 	public static var uiPostfix:String = "";
 	public static var isPixelStage(get, never):Bool;
-	public var styleSizeData:Dynamic; // it's parsed JSON data
 
-	/*
 	@:noCompletion
 	static function set_stageUI(value:String):String
 	{
@@ -143,22 +137,6 @@ class PlayState extends ScriptedState
 		var formatted:String = key;
 		if (uiPrefix.trim() != '')
 			formatted = '$uiPrefix/$formatted';
-		return '$uiPrefix$key$uiPostfix';
-	}
-	*/
-
-	@:noCompletion
-	static function set_stageUI(value:String):String {
-		if (value != "normal" && value != '') {
-			uiPrefix = value + 'UI/';
-			uiPostfix = '-' + value;
-		} else {
-			uiPrefix = uiPostfix = "";
-		}
-
-		return stageUI = value;
-	}
-	static function formatUI(key:String):String {
 		return '$uiPrefix$key$uiPostfix';
 	}
 
@@ -391,14 +369,11 @@ class PlayState extends ScriptedState
 		defaultCamZoom = stageData.defaultZoom;
 		defaultStageZoom = defaultCamZoom;
 
-		stageUI = stageData.stageUI;
-		/*
 		stageUI = "normal";
 		if (stageData.stageUI != null && stageData.stageUI.trim().length > 0)
 			stageUI = stageData.stageUI;
 		else if (stageData.isPixelStage == true) //Backward compatibility
 			stageUI = "pixel";
-		*/
 
 		BF_X = stageData.boyfriend[0];
 		BF_Y = stageData.boyfriend[1];
@@ -427,6 +402,7 @@ class PlayState extends ScriptedState
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
 
 		EventLoader.addstage(curStage);
+		if(isPixelStage) introSoundsSuffix = '-pixel';
 
 		if (!stageData.hide_girlfriend)
 		{
@@ -459,20 +435,10 @@ class PlayState extends ScriptedState
 			add(boyfriendGroup);
 		}
 
-		set_stageUI(stageUI);
-		introSoundsSuffix = uiPostfix;
+		set_stageUI(stageUI); // so that custom stageUIs load - bobbyDX
 
-		if (Paths.fileExists('styles/${stageUI}.json', TEXT))
-		{
-			styleSizeData =  tjson.TJSON.parse(Paths.getTextFromFile('styles/${stageUI}.json'));
-		}
-		else
-		{
-			styleSizeData =  tjson.TJSON.parse(Paths.getTextFromFile('styles/normal.json'));
-		}
-		
 		preCreate();
-
+		
 		#if (SCRIPTS_ALLOWED)
 		// "SCRIPTS FOLDER" SCRIPTS
 		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts/'))
@@ -1043,7 +1009,7 @@ class PlayState extends ScriptedState
 				introAssets.set(stageUI, introImagesArray);
 
 				var introAlts:Array<String> = introAssets.get(stageUI);
-				var antialias:Bool = (ClientPrefs.data.antialiasing && !styleSizeData.aliasing);
+				var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
 				var tick:Countdown = THREE;
 
 				switch (swagCounter)
@@ -1097,8 +1063,8 @@ class PlayState extends ScriptedState
 		spr.scrollFactor.set();
 		spr.updateHitbox();
 
-		if (stageUI != "normal" && stageUI != '')
-			spr.setGraphicSize(Std.int(spr.width * styleSizeData.assetZoom));
+		if (PlayState.isPixelStage)
+			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
 
 		spr.screenCenter();
 		spr.antialiasing = antialias;
@@ -2869,7 +2835,7 @@ class PlayState extends ScriptedState
 		var uiPostfix:String = '';
 		var antialias:Bool = ClientPrefs.data.antialiasing;
 
-		antialias = !styleSizeData.aliasing;
+		antialias = !isPixelStage;
 
 		if (ClientPrefs.data.popUpRating)
 		{
@@ -2898,8 +2864,16 @@ class PlayState extends ScriptedState
 			comboSpr.velocity.x += FlxG.random.int(1, 10) * playbackRate;
 			comboGroup.add(rating);
 
-			rating.setGraphicSize(Std.int(rating.width * styleSizeData.assetZoom * styleSizeData.ratingWidth));
-			comboSpr.setGraphicSize(Std.int(comboSpr.width * styleSizeData.assetZoom * styleSizeData.ratingWidth));
+			if (!PlayState.isPixelStage)
+			{
+				rating.setGraphicSize(Std.int(rating.width * 0.7));
+				comboSpr.setGraphicSize(Std.int(comboSpr.width * 0.7));
+			}
+			else
+			{
+				rating.setGraphicSize(Std.int(rating.width * daPixelZoom * 0.85));
+				comboSpr.setGraphicSize(Std.int(comboSpr.width * daPixelZoom * 0.85));
+			}
 
 			comboSpr.updateHitbox();
 			rating.updateHitbox();
@@ -2918,7 +2892,10 @@ class PlayState extends ScriptedState
 				numScore.x = placement + (43 * daLoop) - 90 + ClientPrefs.data.comboOffset[2];
 				numScore.y += 80 - ClientPrefs.data.comboOffset[3];
 
-				numScore.setGraphicSize(Std.int(numScore.width * styleSizeData.numberWidth));
+				if (!PlayState.isPixelStage)
+					numScore.setGraphicSize(Std.int(numScore.width * 0.5));
+				else
+					numScore.setGraphicSize(Std.int(numScore.width * daPixelZoom));
 				numScore.updateHitbox();
 
 				numScore.acceleration.y = FlxG.random.int(200, 300) * playbackRate * playbackRate;
@@ -3476,7 +3453,7 @@ class PlayState extends ScriptedState
 	{
 		super.stepHit();
 
-		if (curStep == lastStepHit) {
+		if(curStep == lastStepHit) {
 			return;
 		}
 
@@ -3549,7 +3526,6 @@ class PlayState extends ScriptedState
 			setOnScripts('altAnim', SONG.notes[curSection].altAnim);
 			setOnScripts('gfSection', SONG.notes[curSection].gfSection);
 		}
-
 		super.sectionHit();
 	}
 
