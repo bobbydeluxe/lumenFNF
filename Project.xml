@@ -132,6 +132,8 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 	<haxeflag name="-dce no" if="SCRIPTS_ALLOWED" />
 
 	<!-- victoria's psych fork macro fixes -->
+	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.LuaUtils.ExtraDataMacro.build())', 'flixel.FlxBasic')" if="SCRIPTS_ALLOWED" />
+	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp')" if="HSCRIPT_ALLOWED" />
 	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('haxe', true, ['haxe.atomic', 'haxe.macro'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('sys', true)" if="SCRIPTS_ALLOWED" />

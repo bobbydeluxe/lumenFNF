@@ -1,5 +1,6 @@
 package;
 import psychlua.HScript;
+import psychlua.GlobalScriptHandler;
 import openfl.display.FPS;
 import mikolka.vslice.components.MemoryCounter;
 import mikolka.GameBorder;
@@ -119,6 +120,7 @@ class Main extends Sprite
 		Highscore.load();
 
 		HScript.init();
+		GlobalScriptHandler.init();
 
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();
@@ -204,8 +206,7 @@ class Main extends Sprite
 		#end
 
 		// shader coords fix
-		FlxG.signals.gameResized.add(function(w, h)
-		{
+		FlxG.signals.gameResized.add((w:Int, h:Int) -> {
 			if (FlxG.cameras != null)
 			{
 				for (cam in FlxG.cameras.list)

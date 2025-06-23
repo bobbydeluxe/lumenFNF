@@ -1,7 +1,6 @@
 package states;
 
 import mikolka.stages.EventLoader;
-import mikolka.JoinedLuaVariables;
 import substates.StickerSubState;
 import mikolka.vslice.freeplay.FreeplayState;
 import backend.Highscore;
@@ -199,7 +198,7 @@ class PlayState extends ScriptedState
 
 	public var ratingsData:Array<Rating> = Rating.loadDefault();
 
-	private var generatedMusic:Bool = false;
+	public var generatedMusic:Bool = false;
 	public var endingSong:Bool = false;
 	public var startingSong:Bool = false;
 	private var updateTime:Bool = true;
@@ -291,7 +290,6 @@ class PlayState extends ScriptedState
 
 	override public function create()
 	{
-		this.variables = new JoinedLuaVariables();
 		//trace('Playback Rate: ' + playbackRate);
 		_lastLoadedModDirectory = Mods.currentModDirectory;
 		Paths.clearUnusedMemory();
@@ -1658,10 +1656,10 @@ class PlayState extends ScriptedState
 
 	public var paused:Bool = false;
 	public var canReset:Bool = true;
-	var startedCountdown:Bool = false;
-	var canPause:Bool = true;
-	var freezeCamera:Bool = false;
-	var allowDebugKeys:Bool = true;
+	public var startedCountdown:Bool = false;
+	public var canPause:Bool = true;
+	public var freezeCamera:Bool = false;
+	public var allowDebugKeys:Bool = true;
 
 	override public function update(elapsed:Float)
 	{

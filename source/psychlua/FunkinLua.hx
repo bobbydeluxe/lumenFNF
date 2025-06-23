@@ -54,8 +54,24 @@ class FunkinLua {
 	public var hscript:HScript = null;
 	#end
 
-	public var callbacks:Map<String, Dynamic> = new Map<String, Dynamic>();
-	public static var customFunctions:Map<String, Dynamic> = new Map<String, Dynamic>();
+	public var callbacks:Map<String, Dynamic> = [];
+	public static var customFunctions:Map<String, Dynamic> = [];
+	
+	public static function initFromFile(file:String, ?parent:FlxState):FunkinLua {
+		var newScript:FunkinLua = null;
+		
+		try {
+			newScript = new FunkinLua(file, parent);
+			newScript.call('onCreate');
+			
+			trace('lua file loaded succesfully:' + file);
+		} catch(e:Dynamic) {
+			ScriptedState.debugPrint('FATAL: $e', 0xffbb0000, 18);
+			newScript = null;
+		}
+		
+		return newScript;
+	}
 
 	public function new(scriptName:String, ?state:FlxState) { // TODO: allat
 		lua = LuaL.newstate();
@@ -1619,11 +1635,12 @@ class FunkinLua {
 	//main
 	public var lastCalledFunction:String = '';
 	public static var lastCalledScript:FunkinLua = null;
-	public function call(func:String, args:Array<Dynamic>):Dynamic {
+	public function call(func:String, ?args:Array<Dynamic>):Dynamic {
 		if(closed) return LuaUtils.Function_Continue;
 
 		lastCalledFunction = func;
 		lastCalledScript = this;
+		args ??= [];
 		try {
 			if(lua == null) return LuaUtils.Function_Continue;
 
@@ -1661,7 +1678,7 @@ class FunkinLua {
 		}
 		return LuaUtils.Function_Continue;
 	}
-
+	
 	public function exists(variable:String):Bool {
 		if (lua == null)
 			return false;
@@ -1672,13 +1689,20 @@ class FunkinLua {
 		return (type != Lua.LUA_TNONE && type != Lua.LUA_TNIL);
 	}
 
-	public function set(variable:String, data:Dynamic) {
-		if(lua == null) {
+	public function set(variable:String, data:Dynamic):Void {
+		if (lua == null)
 			return;
-		}
-
+		
 		Convert.toLua(lua, data);
 		Lua.setglobal(lua, variable);
+	}
+	
+	public function get(variable:String):Dynamic {
+		if (lua == null)
+			return null;
+		
+		Lua.getglobal(lua, variable);
+		return Convert.fromLua(lua, -1);
 	}
 
 	public function stop() {

@@ -21,12 +21,8 @@ class HScriptMacro {
 
 #else
 
-import flixel.FlxBasic;
-import objects.Character;
-import psychlua.LuaUtils;
-import backend.ScriptedState;
-import backend.MusicBeatState;
-import psychlua.CustomSubstate;
+import flixel.FlxState;
+import flixel.FlxSubState;
 
 #if LUA_ALLOWED
 import psychlua.FunkinLua;
@@ -50,12 +46,13 @@ typedef HScriptInfos = {
 	#end
 }
 
-class HScript extends Iris
-{
+class HScript extends Iris {	
 	public var filePath:String;
 	public var modFolder:String;
 	public var returnValue:Dynamic;
-	public var parentState:flixel.FlxState;
+	public var parentState:FlxState = null;
+	
+	public static var globalStatic(default, never):Map<String, Dynamic> = [];
 
 	#if LUA_ALLOWED
 	public var parentLua:FunkinLua;
@@ -147,7 +144,7 @@ class HScript extends Iris
 	
 	public var origin:String;
 	public var unsafe:Bool = false;
-	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:flixel.FlxState) {
+	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?state:FlxState) {
 		parentState = state ?? FlxG.state;
 		
 		if (file == null)
@@ -181,7 +178,7 @@ class HScript extends Iris
 		super(scriptThing, new IrisConfig(scriptName, false, false));
 		Iris.instances.set(scriptName, this); // idgaf
 		var customInterp:CustomInterp = new CustomInterp();
-		customInterp.parentInstance = parentState;
+		customInterp.parentInstance = getParent();
 		customInterp.showPosOnLog = false;
 		this.interp = customInterp;
 		#if LUA_ALLOWED
@@ -205,11 +202,41 @@ class HScript extends Iris
 			}
 		}
 	}
+	
+	public static function initFromFile(file:String, ?parent:FlxState, ?base:Class<HScript>) {
+		var newScript:HScript = null;
+		
+		try {
+			newScript = Type.createInstance(base ?? HScript, [null, file, null, true, parent]);
+			newScript.unsafe = true;
+			newScript.execute();
+			
+			if (newScript.exists('onCreate'))
+				newScript.call('onCreate');
+			
+			trace('initialized hscript interp successfully: $file');
+			newScript.unsafe = false;
+		} catch(e:Dynamic) {
+			var script:HScript = cast (Iris.instances.get(file), HScript);
+			if (Std.isOfType(e, IrisError)) {
+				var pos:HScriptInfos = cast {showLine: true, isLua: false, fileName: e.origin, lineNumber: e.line};
+				Iris.fatal(Printer.errorToString(e, false), pos);
+			} else {
+				var pos:HScriptInfos = @:privateAccess { cast script.interp.posInfos(); }
+				Iris.fatal(Std.string(e), pos);
+			}
+			
+			script?.destroy();
+			newScript = null;
+		}
+		
+		return newScript;
+	}
 
 	var varsToBring(default, set):Any = null;
 	override function preset() {
 		super.preset();
-
+		
 		// Some very commonly used classes
 		set('Type', Type);
 		#if sys
@@ -234,7 +261,7 @@ class HScript extends Iris
 		#if ACHIEVEMENTS_ALLOWED
 		set('Achievements', Achievements);
 		#end
-		set('Character', Character);
+		set('Character', objects.Character);
 		set('Alphabet', Alphabet);
 		set('Note', objects.Note);
 		set('CustomState', CustomState);
@@ -250,46 +277,40 @@ class HScript extends Iris
 		#if flxanimate
 		set('FlxAnimate', FlxAnimate);
 		#end
+
+		// Functions & Variables
+		var variableMap:Map<String, Dynamic> = getVariables();
 		
 		if (parentState != null) {
 			var cls = Type.getClass(parentState);
 			var clsName:String = Type.getClassName(cls);
 			var stateName:String = clsName.substr(clsName.indexOf('.') + 1);
 			
+			set('game', parentState);
 			set(stateName, cls);
 		}
-
-		// Functions & Variables
-		var variableMap:Map<String, Dynamic>;
-		if (parentState is MusicBeatState) {
-			variableMap = cast(parentState, MusicBeatState).variables;
-		} else {
-			variableMap = MusicBeatState.getVariables();
-		}
 		
+		set('global', variableMap);
+		set('globalStatic', HScript.globalStatic);
 		set('setVar', function(name:String, value:Dynamic) {
-			variableMap.set(name, value);
+			variableMap?.set(name, value);
 			return value;
 		});
 		set('getVar', function(name:String) {
-			var result:Dynamic = null;
-			if (variableMap.exists(name))
-				result = variableMap.get(name);
-			return result;
+			return variableMap?.get(name);
 		});
-		set('removeVar', function(name:String)
-		{
-			if (variableMap.exists(name)) {
+		set('hasVar', function(name:String) {
+			return variableMap?.exists(name);
+		});
+		set('removeVar', function(name:String) {
+			if (variableMap?.exists(name) ?? false) {
 				variableMap.remove(name);
 				return true;
 			}
 			return false;
 		});
 		set('debugPrint', function(text:String, color:FlxColor = FlxColor.WHITE) {
-			if (parentState != null && parentState is ScriptedSubState) {
-				var scriptedState:ScriptedSubState = cast parentState;
-				scriptedState.addTextToDebug(text, color);
-			}
+			ScriptedState.debugPrint(text, color);
 		});
 		set('getModSetting', function(saveTag:String, ?modName:String = null) {
 			if(modName == null)
@@ -430,7 +451,6 @@ class HScript extends Iris
 		#end
 		
 		set('this', this);
-		set('game', parentState);
 		set('controls', Controls.instance);
 
 		set('buildTarget', LuaUtils.getBuildTarget());
@@ -442,8 +462,13 @@ class HScript extends Iris
 		set('Function_StopLua', LuaUtils.Function_StopLua); //doesnt do much cuz HScript has a lower priority than Lua
 		set('Function_StopHScript', LuaUtils.Function_StopHScript);
 		set('Function_StopAll', LuaUtils.Function_StopAll);
-		
-		set('catchError', (e:Dynamic) -> catchError(this, e));
+	}
+	
+	public function getParent():Dynamic {
+		return parentState;
+	}
+	public function getVariables():Map<String, Dynamic> {
+		return parentState?.extraData;
 	}
 
 	#if LUA_ALLOWED
@@ -627,25 +652,56 @@ class CustomFlxColor {
 }
 
 class CustomInterp extends crowplexus.hscript.Interp {
-	private var _instanceFields:Array<String> = [];
 	public var parentInstance(default, set):Dynamic = null;
+	var _instanceFields:Array<String> = [];
 	
 	function set_parentInstance(inst:Dynamic):Dynamic {
-		parentInstance = inst;
-		if(parentInstance == null)
-		{
+		if (inst == null) {
 			_instanceFields = [];
-			return inst;
+			return parentInstance = inst;
 		}
-		_instanceFields = Type.getInstanceFields(Type.getClass(inst));
-		return inst;
+		
+		if (inst is Class) {
+			_instanceFields = Type.getClassFields(inst);
+		} else {
+			_instanceFields = Type.getInstanceFields(Type.getClass(inst));
+		}
+		return parentInstance = inst;
 	}
 
 	public function new() {
 		super();
 	}
-
-	override function resolve(id: String): Dynamic {
+	
+	override function get(o:Dynamic, id:String):Dynamic {
+		if (o == null)
+			error(EInvalidAccess(id));
+		
+		var val:Dynamic = Reflect.getProperty(o, id);
+		val ??= Reflect.field(o, id);
+		
+		if (val == null && !LuaUtils.hasField(o, id) && o is FlxBasic) {
+			return cast(o, FlxBasic).getVar(id);
+		} else {
+			return val;
+		}
+	}
+	override function set(o:Dynamic, id:String, v:Dynamic):Dynamic {
+		if (o == null)
+			error(EInvalidAccess(id));
+		
+		try {
+			Reflect.setProperty(o, id, v);
+		} catch (e:Dynamic) {
+			if (o is FlxBasic) {
+				cast(o, FlxBasic).setVar(id, v);
+			} else {
+				throw e;
+			}
+		}
+		return v;
+	}
+	override function resolve(id:String):Dynamic {
 		if (locals.exists(id)) 
 			return locals.get(id).r;
 		if (variables.exists(id))
@@ -653,14 +709,40 @@ class CustomInterp extends crowplexus.hscript.Interp {
 		if (imports.exists(id))
 			return imports.get(id);
 		
+		#if LUA_ALLOWED
 		if (FunkinLua.customFunctions.exists(id))
 			return FunkinLua.customFunctions.get(id);
-		if (parentInstance != null && _instanceFields.contains(id))
-			return Reflect.getProperty(parentInstance, id);
+		#end
+		if (parentInstance != null) {
+			if (_instanceFields.contains(id)) {
+				return Reflect.getProperty(parentInstance, id);
+			} else if (parentInstance is FlxBasic) {
+				var basic:FlxBasic = cast parentInstance;
+				if (basic.hasVar(id))
+					return basic.getVar(id);
+			}
+		}
 		
 		error(EUnknownVariable(id));
 		return null;
 	}
+	/*override function setVar(id:String, v:Dynamic):Void {
+		if (parentInstance != null) {
+			if (_instanceFields.contains(id)) {
+				return Reflect.setProperty(parentInstance, id, v);
+			} else if (parentInstance is FlxBasic) {
+				var basic:FlxBasic = cast parentInstance;
+				if (basic.hasVar(id))
+					return basic.setVar(id, v);
+			}
+		}
+		
+		variables.set(id, v);
+		
+		// error(EUnknownVariable(id));
+		// having "global variables" is pretty pointless,
+		// but i figure disabling it would cause issues on existing scripts
+	}*/
 }
 #else
 class HScript

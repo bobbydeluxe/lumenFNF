@@ -1,8 +1,66 @@
 package psychlua;
 
-import flixel.FlxState;
+#if macro
+
+import haxe.macro.Expr;
+import haxe.macro.Type;
+import haxe.macro.Context;
+
+class ExtraDataMacro {
+	static macro function build():Array<Field> {
+		var pos:Position = Context.currentPos();
+		var fields:Array<Field> = Context.getBuildFields();
+		
+		fields = fields.concat([{
+			pos: pos,
+			access: [APublic],
+			name: 'extraData',
+			kind: FieldType.FProp('default', 'never', macro:Map<String, Dynamic>, macro $v{[]})
+		}, {
+			pos: pos,
+			name: 'getVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				ret: macro:Dynamic,
+				args: [{type: macro:String, name: 'id'}],
+				expr: macro { return extraData.get(id); }
+			})
+		}, {
+			pos: pos,
+			name: 'setVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				args: [{type: macro:String, name: 'id'}, {type: macro:Dynamic, name: 'value'}],
+				expr: macro { extraData.set(id, value); }
+			})
+		}, {
+			pos: pos,
+			name: 'removeVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				args: [{type: macro:String, name: 'id'}],
+				expr: macro { extraData.remove(id); }
+			})
+		}, {
+			pos: pos,
+			name: 'hasVar',
+			access: [APublic],
+			kind: FieldType.FFun({
+				ret: macro:Dynamic,
+				args: [{type: macro:String, name: 'id'}],
+				expr: macro { return extraData.exists(id); }
+			})
+		}]);
+		
+		return fields;
+	}
+}
+
+#else
+
 import backend.WeekData;
 import objects.Character;
+import backend.StageData;
 
 import openfl.display.BlendMode;
 import Type.ValueType;
@@ -43,38 +101,35 @@ class LuaUtils
 	public static function setVarInArray(instance:Dynamic, variable:String, value:Dynamic, allowMaps:Bool = false):Any
 	{
 		var splitProps:Array<String> = variable.split('[');
-		if(splitProps.length > 1)
-		{
+		if (splitProps.length > 1) {
 			var target:Dynamic = null;
-			if(MusicBeatState.getVariables().exists(splitProps[0]))
-			{
-				var retVal:Dynamic = MusicBeatState.getVariables().get(splitProps[0]);
-				if(retVal != null)
+			
+			if (instance.hasVar != null && instance.hasVar(variable)) {
+				var retVal:Dynamic = instance.getVar(splitProps[0]);
+				if (retVal != null)
 					target = retVal;
+			} else {
+				target = Reflect.getProperty(instance, splitProps[0]);
 			}
-			else target = Reflect.getProperty(instance, splitProps[0]);
 
-			for (i in 1...splitProps.length)
-			{
+			for (i in 1...splitProps.length) {
 				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
-				if(i >= splitProps.length-1) //Last array
+				if (i >= splitProps.length - 1) //Last array
 					target[j] = value;
 				else //Anything else
 					target = target[j];
 			}
+			
 			return target;
 		}
 
-		if(allowMaps && isMap(instance))
-		{
-			//trace(instance);
+		if (allowMaps && isMap(instance)) {
 			instance.set(variable, value);
 			return value;
 		}
 
-		if(instance is MusicBeatState && MusicBeatState.getVariables().exists(variable))
-		{
-			MusicBeatState.getVariables().set(variable, value);
+		if (instance.hasVar != null && instance.hasVar(variable)) {
+			instance.setVar(variable, value);
 			return value;
 		}
 		Reflect.setProperty(instance, variable, value);
@@ -83,36 +138,31 @@ class LuaUtils
 	public static function getVarInArray(instance:Dynamic, variable:String, allowMaps:Bool = false):Any
 	{
 		var splitProps:Array<String> = variable.split('[');
-		if(splitProps.length > 1)
-		{
+		if (splitProps.length > 1) {
 			var target:Dynamic = null;
-			if(MusicBeatState.getVariables().exists(splitProps[0]))
-			{
-				var retVal:Dynamic = MusicBeatState.getVariables().get(splitProps[0]);
-				if(retVal != null)
+			
+			if (instance.hasVar != null && instance.hasVar(splitProps[0])) {
+				var retVal:Dynamic = instance.getVar(splitProps[0]);
+				if (retVal != null)
 					target = retVal;
-			}
-			else
+			} else {
 				target = Reflect.getProperty(instance, splitProps[0]);
+			}
 
-			for (i in 1...splitProps.length)
-			{
+			for (i in 1...splitProps.length) {
 				var j:Dynamic = splitProps[i].substr(0, splitProps[i].length - 1);
 				target = target[j];
 			}
+			
 			return target;
 		}
 		
-		if(allowMaps && isMap(instance))
-		{
-			//trace(instance);
+		if (allowMaps && isMap(instance))
 			return instance.get(variable);
-		}
 
-		if(instance is MusicBeatState && MusicBeatState.getVariables().exists(variable))
-		{
-			var retVal:Dynamic = MusicBeatState.getVariables().get(variable);
-			if(retVal != null)
+		if (instance.hasVar != null && instance.hasVar(variable)) {
+			var retVal:Dynamic = instance.getVar(variable);
+			if (retVal != null)
 				return retVal;
 		}
 		return Reflect.getProperty(instance, variable);
@@ -161,7 +211,9 @@ class LuaUtils
 				{
 					var errorTitle = 'Mod name: ' + Mods.currentModDirectory;
 					var errorMsg = 'An error occurred: $e';
-					CoolUtil.showPopUp(errorMsg, errorTitle);
+					#if windows
+					lime.app.Application.current.window.alert(errorMsg, errorTitle);
+					#end
 					trace('$errorTitle - $errorMsg');
 				}
 			}
@@ -187,18 +239,11 @@ class LuaUtils
 		return null;
 	}
 	
-	public static function isMap(variable:Dynamic)
-	{
-		/*switch(Type.typeof(variable)){
-			case ValueType.TClass(haxe.ds.StringMap) | ValueType.TClass(haxe.ds.ObjectMap) | ValueType.TClass(haxe.ds.IntMap) | ValueType.TClass(haxe.ds.EnumValueMap):
-				return true;
-			default:
-				return false;
-		}*/
-
-		//trace(variable);//! FlxState implements iterator for Playstate, but we can't use them like MAPs
-		if(variable.exists != null && variable.keyValueIterator != null && !Std.isOfType(variable,FlxState)) return true;
-		return false;
+	public static function isMap(variable:Dynamic):Bool {
+		return switch (Type.typeof(variable)) {
+			case TClass(haxe.ds.StringMap) | TClass(haxe.ds.ObjectMap) | TClass(haxe.ds.IntMap) | TClass(haxe.ds.EnumValueMap): true;
+			default: false;
+		}
 	}
 
 	public static function setGroupStuff(leArray:Dynamic, variable:String, value:Dynamic, ?allowMaps:Bool = false) {
@@ -248,12 +293,39 @@ class LuaUtils
 				return PlayState.instance;
 			
 			default:
-				var obj:Dynamic = MusicBeatState.getVariables().get(objectName);
-				if(obj == null) obj = getVarInArray(MusicBeatState.getState(), objectName, allowMaps);
-				return obj;
+				var split:Array<String> = objectName.split('.');
+				if (split.length > 1)
+					return LuaUtils.getVarInArray(LuaUtils.getPropertyLoop(split, true, allowMaps), split[split.length - 1], allowMaps);
+				return getVarInArray(MusicBeatState.getState(), objectName, allowMaps);
 		}
 	}
 	
+	public static var fieldCache:Map<String, Array<String>> = [];
+	public static function hasField(o:Dynamic, id:String):Bool {
+		if (o == null)
+			return false;
+		if (Reflect.hasField(o, id) || Reflect.field(o, id) != null || Type.typeof(o) == TObject)
+			return true;
+		
+		var name:String;
+		var cls:Class<Dynamic>;
+		
+		if (o is Class) {
+			cls = o;
+			name = '##CLASS_${Type.getClassName(cls)}';
+			
+			if (!fieldCache.exists(name))
+				fieldCache.set(name, Type.getClassFields(cls));
+		} else {
+			cls = Type.getClass(o);
+			name = '##INST_${Type.getClassName(cls)}';
+			
+			if (!fieldCache.exists(name))
+				fieldCache.set(name, Type.getInstanceFields(cls));
+		}
+		
+		return fieldCache[name].contains(id);
+	}
 	public static function isOfTypes(value:Any, types:Array<Dynamic>)
 	{
 		for (type in types)
@@ -262,20 +334,19 @@ class LuaUtils
 		}
 		return false;
 	}
-
 	public static function isLuaSupported(value:Any):Bool {
-		return (value == null || isOfTypes(value, [Bool, Int, Float, String, Array]) || Type.typeof(value) == ValueType.TObject);
+		return (value == null || isOfTypes(value, [Bool, Int, Float, String, Array]) || Type.typeof(value) == TObject);
 	}
 	
-	public static function getTargetInstance():MusicBeatSubstate
-	{
-		if(PlayState.instance != null) return PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance;
+	public static function getTargetInstance():MusicBeatSubstate {
+		if (PlayState.instance != null) return PlayState.instance.isDead ? GameOverSubstate.instance : PlayState.instance;
 		return MusicBeatState.getState();
 	}
 
 	public static inline function getLowestCharacterGroup():FlxSpriteGroup
 	{
-		var group:FlxSpriteGroup = PlayState.instance.gfGroup;
+		var stageData:StageFile = StageData.getStageFile(PlayState.SONG.stage);
+		var group:FlxSpriteGroup = (stageData.hide_girlfriend ? PlayState.instance.boyfriendGroup : PlayState.instance.gfGroup);
 
 		var pos:Int = PlayState.instance.members.indexOf(group);
 
@@ -313,7 +384,7 @@ class LuaUtils
 			}
 
 			if(prefix != null) obj.animation.addByIndices(name, prefix, indices, '', framerate, loop);
-			else obj.animation.addByIndices(name, prefix, indices, '', framerate, loop);
+			else obj.animation.add(name, indices, framerate, loop);
 
 			if(obj.animation.curAnim == null)
 			{
@@ -408,26 +479,10 @@ class LuaUtils
 		return 'linux';
 		#elseif mac
 		return 'mac';
-		#elseif hl
-		return 'hashlink';
-		#elseif (html5 || emscripten || nodejs || winjs || electron)
+		#elseif html5
 		return 'browser';
 		#elseif android
 		return 'android';
-		#elseif webos
-		return 'webos';
-		#elseif tvos
-		return 'tvos';
-		#elseif watchos
-		return 'watchos';
-		#elseif air
-		return 'air';
-		#elseif flash
-		return 'flash';
-		#elseif (ios || iphonesim)
-		return 'ios';
-		#elseif neko
-		return 'neko';
 		#elseif switch
 		return 'switch';
 		#else
@@ -525,9 +580,13 @@ class LuaUtils
 
 	public static function cameraFromString(cam:String):FlxCamera {
 		switch(cam.toLowerCase()) {
+			case 'camgame' | 'game': return PlayState.instance.camGame;
 			case 'camhud' | 'hud': return PlayState.instance.camHUD;
 			case 'camother' | 'other': return PlayState.instance.camOther;
 		}
-		return PlayState.instance.camGame;
+		var camera:FlxCamera = MusicBeatState.getVariables().get(cam);
+		if (camera == null || !Std.isOfType(camera, FlxCamera)) camera = PlayState.instance.camGame;
+		return camera;
 	}
 }
+#end

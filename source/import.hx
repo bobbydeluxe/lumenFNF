@@ -90,9 +90,11 @@ import flxanimate.PsychFlxAnimate as FlxAnimate;
 // Mod libs
 import flixel.ui.FlxBar;
 
-//Flixel
+// Flixel
 import flixel.sound.FlxSound;
 import flixel.FlxG;
+import flixel.FlxBasic;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.FlxCamera;
 import flixel.util.FlxDestroyUtil;
