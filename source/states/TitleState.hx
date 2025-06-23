@@ -72,6 +72,8 @@ class TitleState extends ScriptedState
 		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
 
+		rpcDetails = 'Title Screen';
+
 		if(!initialized)
 		{
 			ClientPrefs.loadPrefs();
@@ -441,8 +443,7 @@ class TitleState extends ScriptedState
 				transitioning = true;
 				// FlxG.sound.music.stop();
 
-				enterTimer = new FlxTimer().start(1, function(tmr:FlxTimer)
-				{
+				enterTimer = new FlxTimer().start(1, (_) -> {
 					if (cheatActive)
 					{
 						FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
@@ -454,6 +455,7 @@ class TitleState extends ScriptedState
 					closedState = true;
 				});
 				// FlxG.sound.play(Paths.music('titleShoot'), 0.7);
+				callOnScripts('onAccept');
 			}
 			#if TITLE_SCREEN_EASTER_EGG
 			else if (FlxG.keys.firstJustPressed() != FlxKey.NONE)
@@ -577,73 +579,76 @@ class TitleState extends ScriptedState
 
 	public static var closedState:Bool = false;
 
-	override function beatHit()
-	{
-		super.beatHit();
-
+	override function beatHit(beat:Int) {
 		if (logoBl != null)
 			logoBl.animation.play('bump', true);
 
-
-		if (gfDance != null)
-		{
+		if (gfDance != null) {
 			danceLeft = !danceLeft;
-			if(!useIdle)
-			{
-				if (danceLeft)
+			if (!useIdle) {
+				if (danceLeft) {
 					gfDance.animation.play('danceRight');
-				else
+				} else {
 					gfDance.animation.play('danceLeft');
+				}
 			}
-			else if(curBeat % 2 == 0) gfDance.animation.play('idle', true);
+			else if(curBeat % 2 == 0) {
+				gfDance.animation.play('idle', true);
+			}
 		}
 
-		if (cheatActive && this.curBeat % 2 == 0 && swagShader != null)
-			swagShader.hue += 0.125;
+		if (!closedState && sickBeats <= beat) {
+			for (b in sickBeats ... beat + 1) {
+				switch (b) {
+					case 0:
+						//FlxG.sound.music.stop();
+						FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
+						FlxG.sound.music.fadeIn(4, 0, 0.7);
+					case 1:
+						createCoolText(['Psych Engine by'], 40);
+					case 3:
+						addMoreText('Shadow Mario', 40);
+						addMoreText('Riveren', 40);
+					case 4:
+						deleteCoolText();
+					case 5:
+						createCoolText(['Not associated', 'with'], -40);
+					case 7:
+						addMoreText('newgrounds', -40);
+						ngSpr.visible = true;
+					case 8:
+						deleteCoolText();
+						ngSpr.visible = false;
+					case 9:
+						createCoolText([curWacky[0]]);
+					case 11:
+						addMoreText(curWacky[1]);
+					case 12:
+						deleteCoolText();
+					case 13:
+						addMoreText('Friday');
+					case 14:
+						addMoreText('Night');
+					case 15:
+						addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
+
+					case 16:
+						skipIntro();
+				}
+			}
+			
+			sickBeats = beat + 1;
+		}
 		
-		if (!closedState)
-		{
-			sickBeats++;
-			switch (sickBeats)
-			{
-				case 1:
-					// FlxG.sound.music.stop();
-					FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-					#if VIDEOS_ALLOWED
-						FlxG.sound.music.onComplete = moveToAttract;
-					#end
-					FlxG.sound.music.fadeIn(4, 0, 0.7);
-				case 2:
-					createCoolText(['Funkin Crew Inc', 'Shadow Mario', 'mikolka9144']);
-				case 4:
-					addMoreText('present');
-				case 5:
-					deleteCoolText();
-				case 6:
-					createCoolText(['Not associated', 'with'], -40);
-				case 8:
-					addMoreText('newgrounds', -40);
-					ngSpr.visible = true;
-				case 9:
-					deleteCoolText();
-					ngSpr.visible = false;
-				case 10:
-					createCoolText([curWacky[0]]);
-				case 12:
-					addMoreText(curWacky[1]);
-				case 13:
-					deleteCoolText();
-				case 14:
-					addMoreText('Friday');
-				case 15:
-					addMoreText('Night');
-				case 16:
-					addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
-
-				case 17:
-					skipIntro();
-			}
-		}
+		super.beatHit(beat);
+	}
+	
+	override function stepHit(step:Int):Void {
+		var syncTime:Float = FlxG.sound.music.time + Conductor.offset;
+		if (Math.abs(Conductor.songPosition - syncTime) > 10)
+			Conductor.songPosition = syncTime;
+		
+		super.stepHit(step);
 	}
 
 	var skippedIntro:Bool = false;

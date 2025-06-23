@@ -8,8 +8,7 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.gamepad.FlxGamepadManager;
 
-class ControlsSubState extends MusicBeatSubstate
-{
+class ControlsSubState extends MusicBeatSubstate { // TODO: scriptable?
 	var curSelected:Int = 0;
 	var curAlt:Bool = false;
 
@@ -31,12 +30,6 @@ class ControlsSubState extends MusicBeatSubstate
 		[true, 'Accept', 'accept', 'Accept'],
 		[true, 'Back', 'back', 'Back'],
 		[true, 'Pause', 'pause', 'Pause'],
-		[false],
-		[false, 'P-SLICE'],
-		[true,"Chr menu","char_select","Character Menu"],
-		[true,"FP left","bar_left","Freeplay left"],
-		[true,"FP right","bar_right","Freeplay right"],
-		[true,"Favorite","favorite","Freeplay favorite"],
 		[false],
 		[false, 'VOLUME'],
 		[false, 'Mute', 'volume_mute', 'Volume Mute'],
@@ -66,14 +59,10 @@ class ControlsSubState extends MusicBeatSubstate
 	
 	public function new()
 	{
-		controls.isInSubstate = true;
-
 		super();
-
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Controls Menu", null);
-		#end
-
+		
+		rpcDetails = 'Controls Menu';
+		
 		options.push([true]);
 		options.push([true]);
 		options.push([true, defaultKey]);
@@ -83,7 +72,7 @@ class ControlsSubState extends MusicBeatSubstate
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.screenCenter();
 		add(bg);
-
+		
 		grpDisplay = new FlxTypedGroup<Alphabet>();
 		add(grpDisplay);
 		grpOptions = new FlxTypedGroup<Alphabet>();
@@ -110,9 +99,6 @@ class ControlsSubState extends MusicBeatSubstate
 		add(text);
 
 		createTexts();
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('NONE', 'B');
-		#end
 	}
 
 	var lastID:Int = 0;
@@ -275,9 +261,8 @@ class ControlsSubState extends MusicBeatSubstate
 
 		if(!binding)
 		{
-			if(#if TOUCH_CONTROLS_ALLOWED touchPad.buttonB.justPressed || #end FlxG.keys.justPressed.ESCAPE || FlxG.gamepads.anyJustPressed(B))
+			if(FlxG.keys.justPressed.ESCAPE || FlxG.gamepads.anyJustPressed(B))
 			{
-				controls.isInSubstate = false;
 				close();
 				return;
 			}
@@ -303,11 +288,8 @@ class ControlsSubState extends MusicBeatSubstate
 					bindingText = new Alphabet(FlxG.width / 2, 160, Language.getPhrase('controls_rebinding', 'Rebinding {1}', [options[curOptions[curSelected]][3]]), false);
 					bindingText.alignment = CENTERED;
 					add(bindingText);
-
-					final escape:String = (controls.mobileC) ? "B" : "ESC";
-					final backspace:String = (controls.mobileC) ? "C" : "Backspace";
 					
-					bindingText2 = new Alphabet(FlxG.width / 2, 340, Language.getPhrase('controls_rebinding2', 'Hold {1} to Cancel\nHold {2} to Delete', [escape, backspace]), true);
+					bindingText2 = new Alphabet(FlxG.width / 2, 340, Language.getPhrase('controls_rebinding2', 'Hold ESC to Cancel\nHold Backspace to Delete'), true);
 					bindingText2.alignment = CENTERED;
 					add(bindingText2);
 
@@ -512,14 +494,15 @@ class ControlsSubState extends MusicBeatSubstate
 
 	function updateAlt(?doSwap:Bool = false)
 	{
-		if(doSwap)
-		{
+		if(doSwap) {
 			curAlt = !curAlt;
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 		}
+		
 		var selectedBG:AttachedSprite = grpBlacks.members[Math.floor(curSelected * 2) + (curAlt ? 1 : 0)];
 		selectSpr.sprTracker = selectedBG;
 		selectSpr.visible = false;
+		
 		if (selectSpr.sprTracker != null) {
 			selectSpr.scale.set(selectedBG.width, selectedBG.height);
 			selectSpr.updateHitbox();

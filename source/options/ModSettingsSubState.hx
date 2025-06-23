@@ -1,27 +1,19 @@
 package options;
 
-import states.ModsMenuState;
 import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
 
 import objects.Character;
-import haxe.Json;
 
 import options.Option.OptionType;
-import options.Option;
 
 class ModSettingsSubState extends BaseOptionsMenu
 {
 	var save:Map<String, Dynamic> = new Map<String, Dynamic>();
 	var folder:String;
 	private var _crashed:Bool = false;
-	public function new(options:Array<Dynamic>, folder:String, name:String)
-	{
+	public function new(options:Array<Dynamic>, folder:String, name:String) {
 		this.folder = folder;
-
-		title = '';
-		//title = name;
-		rpcTitle = 'Mod Settings ($name)'; //for Discord Rich Presence
 
 		if(FlxG.save.data.modSettings == null) FlxG.save.data.modSettings = new Map<String, Dynamic>();
 		else
@@ -55,12 +47,12 @@ class ModSettingsSubState extends BaseOptionsMenu
 
 						newOption.defaultKeys.keyboard = keyboardStr;
 						newOption.defaultKeys.gamepad = gamepadStr;
-
-						if(save.exists(option.save)) save.remove(option.save);
-
+						if(save.get(option.save) == null)
+						{
 							newOption.keys.keyboard = newOption.defaultKeys.keyboard;
 							newOption.keys.gamepad = newOption.defaultKeys.gamepad;
 							save.set(option.save, newOption.keys);
+						}
 
 						// getting inputs and checking
 						var keyboardKey:FlxKey = cast FlxKey.fromString(keyboardStr);
@@ -80,8 +72,7 @@ class ModSettingsSubState extends BaseOptionsMenu
 
 								if(!controls.controllerMode) data.keyboard = value;
 								else data.gamepad = value;
-								if(save.exists(newOption.variable)) save.remove(newOption.variable);
-									save.set(newOption.variable, data);
+								save.set(newOption.variable, data);
 							};
 						}
 
@@ -92,10 +83,7 @@ class ModSettingsSubState extends BaseOptionsMenu
 						@:privateAccess
 						{
 							newOption.getValue = function() return save.get(newOption.variable);
-							newOption.setValue = function(value:Dynamic) { 
-								if(save.exists(newOption.variable)) save.remove(newOption.variable);
-									save.set(newOption.variable, value);
-							}
+							newOption.setValue = function(value:Dynamic) save.set(newOption.variable, value);
 						}
 				}
 
@@ -130,7 +118,7 @@ class ModSettingsSubState extends BaseOptionsMenu
 
 						default:
 					}
-					if(save.exists(option.save)) save.remove(option.save);
+	
 					save.set(option.save, myValue);
 				}
 				addOption(newOption);
@@ -141,13 +129,21 @@ class ModSettingsSubState extends BaseOptionsMenu
 		{
 			var errorTitle = 'Mod name: ' + folder;
 			var errorMsg = 'An error occurred: $e';
-			CoolUtil.showPopUp(errorMsg, errorTitle);
+			#if windows
+			lime.app.Application.current.window.alert(errorMsg, errorTitle);
+			#end
+			trace('$errorTitle - $errorMsg');
+
 			_crashed = true;
 			close();
 			return;
 		}
-
+		
+		title = '$name Mod Settings';
+		
 		super();
+		
+		rpcDetails = 'Mod Settings ($name)'; //for Discord Rich Presence
 
 		bg.alpha = 0.75;
 		bg.color = FlxColor.WHITE;
@@ -177,29 +173,19 @@ class ModSettingsSubState extends BaseOptionsMenu
 
 	override public function update(elapsed:Float)
 	{
-		if(_crashed)
-		{
+		preUpdate(elapsed);
+		
+		if (_crashed) {
 			close();
 			return;
 		}
 		super.update(elapsed);
+		
+		postUpdate(elapsed);
 	}
 
 	override public function close()
 	{
-		try {
-			var modPath:String = ModsMenuState.modsGroup.members[ModsMenuState.curSelectedMod].folder;
-			var settingsPath:String = Paths.mods('$modPath/data/settings.json');
-			var settingsJson:Array<Dynamic> = Json.parse(File.getContent(settingsPath));
-			for(option in settingsJson)
-				option.value = save.get(option.save);
-
-			if(FileSystem.exists(settingsPath))
-				FileSystem.deleteFile(settingsPath);
-
-			File.saveContent(settingsPath, Json.stringify(settingsJson, '\t'));
-		} catch(e:Dynamic) trace('exploded: $e');
-
 		FlxG.save.data.modSettings.set(folder, save);
 		FlxG.save.flush();
 		super.close();

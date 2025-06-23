@@ -14,15 +14,9 @@ import crowplexus.hscript.Expr.Error as IrisError;
 import crowplexus.hscript.Printer;
 #end
 
-import debug.ScriptTraceDisplay;
-
 class ScriptedSubState extends MusicBeatSubstate {
 	#if LUA_ALLOWED public var luaArray:Array<FunkinLua> = []; #end
 	#if HSCRIPT_ALLOWED public var hscriptArray:Array<HScript> = []; #end
-	
-	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
-		return ScriptedState.debugPrint(text, color, size);
-	}
 	
 	var multiScript:Bool = true;
 	
@@ -39,38 +33,92 @@ class ScriptedSubState extends MusicBeatSubstate {
 		#if SCRIPTS_ALLOWED startStateScripts(); #end
 	}
 	
+	var _shouldUpdate:Bool = true;
 	public function preUpdate(elapsed:Float):Void {
-		callOnScripts('onUpdate', [elapsed]);
+		_shouldUpdate = (callOnScripts('onUpdate', [elapsed], true) != LuaUtils.Function_Stop);
+	}
+	public override function update(elapsed:Float):Void {
+		if (_shouldUpdate)
+			super.update(elapsed);
+		_shouldUpdate = true;
 	}
 	public function postUpdate(elapsed:Float):Void {
 		callOnScripts('onUpdatePost', [elapsed]);
 	}
 	
-	public override function sectionHit() {
-		super.sectionHit();
-		
-		setOnScripts('curSection', curSection);
-		callOnScripts('onSectionHit');
+	public override function updatePresence():Void {
+		if (callOnScripts('onUpdatePresence', [rpcDetails, rpcState], true) != LuaUtils.Function_Stop)
+			super.updatePresence();
 	}
-	public override function beatHit() {
-		super.beatHit();
-		
-		setOnScripts('curBeat', curBeat);
-		callOnScripts('onBeatHit');
+	
+	public override function draw():Void {
+		if (callOnScripts('onDraw', true) == LuaUtils.Function_Stop) return;
+		super.draw();
+		callOnScripts('onDrawPost');
 	}
-	public override function stepHit() {
-		super.stepHit();
+	
+	public override function openSubState(subState:flixel.FlxSubState):Void {
+		var stopped:Bool = (callOnHScript('onOpenSubState', [subState], true) == LuaUtils.Function_Stop);
+		stopped = (stopped || callOnLuas('onOpenSubState', [getStateName(subState)], true) == LuaUtils.Function_Stop);
 		
-		setOnScripts('curStep', curStep);
-		callOnScripts('onStepHit');
+		if (!stopped)
+			super.openSubState(subState);
+	}
+	
+	public override function close():Void {
+		if (callOnScripts('onClose', true) != LuaUtils.Function_Stop)
+			super.close();
+	}
+	
+	public override function sectionHit(section:Int):Void {
+		super.sectionHit(section);
+		
+		callOnScripts('onSectionHit', [section]);
+	}
+	public override function beatHit(beat:Int):Void {
+		super.beatHit(beat);
+		
+		callOnScripts('onBeatHit', [beat]);
+	}
+	public override function stepHit(step:Int):Void {
+		super.stepHit(step);
+		
+		callOnScripts('onStepHit', [step]);
+	}
+	
+	override function updateSection():Void {
+		super.updateSection();
+		
+		setOnLuas('curSection', curSection);
+		setOnLuas('curDecSection', curDecSection);
+	}
+	override function updateBeat():Void {
+		super.updateBeat();
+		
+		setOnLuas('curBeat', curBeat);
+		setOnLuas('curDecBeat', curDecBeat);
+	}
+	override function updateStep():Void {
+		super.updateStep();
+		
+		setOnLuas('curStep', curStep);
+		setOnLuas('curDecStep', curDecStep);
 	}
 	
 	public override function destroy():Void {
-		//destroyScripts();
+		#if SCRIPTS_ALLOWED destroyScripts(); #end
 		super.destroy();
 	}
 	
-	public function getStateName():String { // Used to load the appropriate substate script
+	public static function getStateName(state:flixel.FlxSubState):String { // Used to load the appropriate substate script
+		if (state is ScriptedSubState) {
+			return cast(state, ScriptedSubState).customStateName();
+		} else {
+			var clsName:String = Type.getClassName(Type.getClass(state));
+			return clsName.substr(clsName.lastIndexOf('.') + 1);
+		}
+	}
+	public function customStateName():String { 
 		var clsName:String = Type.getClassName(Type.getClass(this));
 		return clsName.substr(clsName.lastIndexOf('.') + 1);
 	}
@@ -85,12 +133,12 @@ class ScriptedSubState extends MusicBeatSubstate {
 		#if HSCRIPT_ALLOWED
 		if (multiScript) {
 			for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'scripts')) {
-				var path:String = '$folder/${getFolderName()}/${getStateName()}.hx';
+				var path:String = '$folder/${getFolderName()}/${customStateName()}.hx';
 				if (FileSystem.exists(path))
-					loaded = (loaded || initHScript(path) != null);
+					loaded = (initHScript(path) != null || loaded);
 			}
 		} else {
-			var file:String = 'scripts/${getFolderName()}/${getStateName()}.hx';
+			var file:String = 'scripts/${getFolderName()}/${customStateName()}.hx';
 			var path:String = Paths.modFolders(file);
 			if (FileSystem.exists(path))
 				loaded = (initHScript(path) != null);
@@ -99,16 +147,13 @@ class ScriptedSubState extends MusicBeatSubstate {
 		
 		return loaded;
 	}
-	
-	// this shit just crashes them playstate scripts when destroyin
-	/*
 	public function destroyScripts():Void {
 		#if LUA_ALLOWED
 		for (lua in luaArray) {
 			lua.call('onDestroy', []);
 			lua.stop();
 		}
-		luaArray = [];
+		luaArray = null;
 		FunkinLua.customFunctions.clear();
 		#end
 
@@ -119,15 +164,13 @@ class ScriptedSubState extends MusicBeatSubstate {
 				script.destroy();
 			}
 		}
-		hscriptArray = [];
+		hscriptArray = null;
 		#end
 	}
-	*/
 	#end
 	
 	#if LUA_ALLOWED
-	public function startLuasNamed(luaFile:String)
-	{
+	public function startLuasNamed(luaFile:String) {
 		#if MODS_ALLOWED
 		var luaToLoad:String = Paths.modFolders(luaFile);
 		if(!FileSystem.exists(luaToLoad))
@@ -164,8 +207,7 @@ class ScriptedSubState extends MusicBeatSubstate {
 	#end
 	
 	#if HSCRIPT_ALLOWED
-	public function startHScriptsNamed(scriptFile:String)
-	{
+	public function startHScriptsNamed(scriptFile:String) {
 		#if MODS_ALLOWED
 		var scriptToLoad:String = Paths.modFolders(scriptFile);
 		if(!FileSystem.exists(scriptToLoad))
@@ -226,9 +268,11 @@ class ScriptedSubState extends MusicBeatSubstate {
 	public function callOnLuas(funcToCall:String, args:Array<Dynamic> = null, ignoreStops = false, exclusions:Array<String> = null, excludeValues:Array<Dynamic> = null):Dynamic {
 		var returnVal:Dynamic = LuaUtils.Function_Continue;
 		#if LUA_ALLOWED
-		if(args == null) args = [];
-		if(exclusions == null) exclusions = [];
-		if(excludeValues == null) excludeValues = [LuaUtils.Function_Continue];
+		if (luaArray == null) return returnVal;
+		
+		if (args == null) args = [];
+		if (exclusions == null) exclusions = [];
+		if (excludeValues == null) excludeValues = [LuaUtils.Function_Continue];
 
 		var arr:Array<FunkinLua> = [];
 		for (script in luaArray)
@@ -265,8 +309,10 @@ class ScriptedSubState extends MusicBeatSubstate {
 		var returnVal:Dynamic = LuaUtils.Function_Continue;
 
 		#if HSCRIPT_ALLOWED
-		if(exclusions == null) exclusions = new Array();
-		if(excludeValues == null) excludeValues = new Array();
+		if (hscriptArray == null) return returnVal;
+		
+		if (exclusions == null) exclusions = new Array();
+		if (excludeValues == null) excludeValues = new Array();
 		excludeValues.push(LuaUtils.Function_Continue);
 
 		var len:Int = hscriptArray.length;

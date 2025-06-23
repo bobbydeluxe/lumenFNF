@@ -146,9 +146,10 @@ class PlayState extends ScriptedState
 
 	public static var SONG:SwagSong = null;
 	public static var isStoryMode:Bool = false;
-	public static var storyWeek:Int = 0;
+	public static var storyVariables:Map<String, Dynamic> = [];
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 1;
+	public static var storyWeek:Int = 0;
 
 	//! new shit P-Slice
 	public static var storyCampaignTitle = "";
@@ -183,6 +184,7 @@ class PlayState extends ScriptedState
 	public var camZoomingMult:Float = 1;
 	public var camZoomingFrequency:Float = 4;
 	public var camZoomingDecay:Float = 1;
+	public var camZoomingDisabled:Bool = false;
 	private var curSong:String = "";
 
 	public var gfSpeed:Int = 1;
@@ -491,7 +493,10 @@ class PlayState extends ScriptedState
 		add(uiGroup);
 		add(noteGroup);
 
+		lastBeatHit = -8;
+		lastStepHit = lastBeatHit * 4;
 		Conductor.songPosition = -Conductor.crochet * 5 + Conductor.offset;
+
 		var showTime:Bool = (ClientPrefs.data.timeBarType != 'Disabled');
 		timeTxt = new FlxText(STRUM_X + (FlxG.width / 2) - 248, 19, 400, "", 32);
 		timeTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -1000,10 +1005,7 @@ class PlayState extends ScriptedState
 			}
 			moveCameraSection();
 
-			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, function(tmr:FlxTimer)
-			{
-				characterBopper(tmr.loopsLeft);
-
+			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, (tmr:FlxTimer) -> {
 				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 				var introImagesArray:Array<String> = [formatUI('ready'), formatUI('set'), formatUI('go')];
 				introAssets.set(stageUI, introImagesArray);
@@ -1050,7 +1052,7 @@ class PlayState extends ScriptedState
 				callOnLuas('onCountdownTick', [swagCounter]);
 				callOnHScript('onCountdownTick', [tick, swagCounter]);
 
-				swagCounter += 1;
+				swagCounter ++;
 			}, 5);
 		}
 		return true;
@@ -1597,33 +1599,37 @@ class PlayState extends ScriptedState
 	override public function onFocus():Void
 	{
 		super.onFocus();
-		if (!paused && health > 0)
-		{
-			resetRPC(Conductor.songPosition > 0.0);
-		}
+		
+		resetRPC(Conductor.songPosition > 0.0);
 	}
 
 	override public function onFocusLost():Void
 	{
 		super.onFocusLost();
-		if (!paused && health > 0 && autoUpdateRPC)
-		{
-			DiscordClient.changePresence(detailsPausedText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
-		}
+		
+		if (health > 0)
+			resetRPC(false);
 	}
 	#end
 
-	// Updating Discord Rich Presence.
-	public var autoUpdateRPC:Bool = true; //performance setting for custom RPC things
-	function resetRPC(?showTime:Bool = false)
-	{
-		#if DISCORD_ALLOWED
-		if(!autoUpdateRPC) return;
+	override function updatePresence():Void {
+		if (autoUpdateRPC)
+			resetRPC(Conductor.songPosition > 0);
+	}
 
-		if (showTime)
-			DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter(), true, songLength - Conductor.songPosition - ClientPrefs.data.noteOffset);
-		else
-			DiscordClient.changePresence(detailsText, SONG.song + " (" + storyDifficultyText + ")", iconP2.getCharacter());
+	// Updating Discord Rich Presence.
+	function resetRPC(showTime:Bool = false) {
+		#if DISCORD_ALLOWED
+		if (!autoUpdateRPC) return;
+		
+		var detailsText:String = (paused ? this.detailsPausedText : this.detailsText);
+		var stateText:String = SONG.song + ' ($storyDifficultyText)';
+		
+		if (showTime && !paused) {
+			DiscordClient.changePresence(detailsText, stateText, iconP2.getCharacter(), true, songLength - Conductor.songPosition - ClientPrefs.data.noteOffset);
+		} else {
+			DiscordClient.changePresence(detailsText, stateText, iconP2.getCharacter());
+		}
 		#end
 	}
 
@@ -1848,8 +1854,6 @@ class PlayState extends ScriptedState
 		#end
 
 		super.update(elapsed);
-		setOnScripts('curDecStep', curDecStep);
-		setOnScripts('curDecBeat', curDecBeat);
 		setOnScripts('botPlay', cpuControlled);
 
 		updateIconsScale(elapsed);
@@ -1978,6 +1982,7 @@ class PlayState extends ScriptedState
 	function doDeathCheck(?skipHealthCheck:Bool = false) {
 		if (((skipHealthCheck && instakillOnMiss) || health <= 0) && !practiceMode && !isDead && gameOverTimer == null)
 		{
+			stagesFunc((stage:BaseStage) -> stage.onGameOver());
 			var ret:Dynamic = callOnScripts('onGameOver', null, true);
 			if(ret != LuaUtils.Function_Stop)
 			{
@@ -2353,72 +2358,52 @@ class PlayState extends ScriptedState
 	}
 
 	public function moveCameraSection(?sec:Null<Int>):Void {
-		if(sec == null) sec = curSection;
-		if(sec < 0) sec = 0;
+		if (sec == null) sec = curSection;
+		if (sec < 0) sec = 0;
 
-		if(SONG.notes[sec] == null) return;
+		if (SONG.notes[sec] == null) return;
 
-		if (gf != null && SONG.notes[sec].gfSection)
-		{
+		if (gf != null && SONG.notes[sec].gfSection) {
 			moveCameraToGirlfriend();
-			callOnScripts('onMoveCamera', ['gf']);
-			return;
+		} else {
+			moveCamera(SONG.notes[sec].mustHitSection != true);	
 		}
-
-		var isDad:Bool = (SONG.notes[sec].mustHitSection != true);
-		moveCamera(isDad);
-		if (isDad)
-			callOnScripts('onMoveCamera', ['dad']);
-		else
-			callOnScripts('onMoveCamera', ['boyfriend']);
 	}
 	
-	public function moveCameraToGirlfriend()
-	{
-		camFollow.setPosition(gf.getMidpoint().x, gf.getMidpoint().y);
-		camFollow.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
-		camFollow.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
-		tweenCamIn();
+	public function moveCameraToGirlfriend() {
+		moveCamera(false, true);
 	}
-
-	var cameraTwn:FlxTween;
-	public function moveCamera(isDad:Bool)
-	{
-		if(isDad)
-		{
-			if(dad == null) return;
-			camFollow.setPosition(dad.getMidpoint().x + 150, dad.getMidpoint().y - 100);
-			camFollow.x += dad.cameraPosition[0] + opponentCameraOffset[0];
-			camFollow.y += dad.cameraPosition[1] + opponentCameraOffset[1];
-			tweenCamIn();
-		}
-		else
-		{
-			if(boyfriend == null) return;
-			camFollow.setPosition(boyfriend.getMidpoint().x - 100, boyfriend.getMidpoint().y - 100);
-			camFollow.x -= boyfriend.cameraPosition[0] - boyfriendCameraOffset[0];
-			camFollow.y += boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
-
-			if (songName == 'tutorial' && cameraTwn == null && FlxG.camera.zoom != 1)
-			{
-				cameraTwn = FlxTween.tween(FlxG.camera, {zoom: 1}, (Conductor.stepCrochet * 4 / 1000), {ease: FlxEase.elasticInOut, onComplete:
-					function (twn:FlxTween)
-					{
-						cameraTwn = null;
-					}
-				});
+	
+	public function moveCamera(isDad:Bool, isGf:Bool = false) {
+		var character:String;
+		if (isGf) {
+			if (gf != null) {
+				camFollow.setPosition(gf.getMidpoint().x, gf.getMidpoint().y);
+				camFollow.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
+				camFollow.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
 			}
+			
+			character = 'gf';
+		} else if (isDad) {
+			if (dad != null) {
+				camFollow.setPosition(dad.getMidpoint().x + 150, dad.getMidpoint().y - 100);
+				camFollow.x += dad.cameraPosition[0] + opponentCameraOffset[0];
+				camFollow.y += dad.cameraPosition[1] + opponentCameraOffset[1];
+			}
+			
+			character = 'dad';
+		} else {
+			if (boyfriend != null) {
+				camFollow.setPosition(boyfriend.getMidpoint().x - 100, boyfriend.getMidpoint().y - 100);
+				camFollow.x -= boyfriend.cameraPosition[0] - boyfriendCameraOffset[0];
+				camFollow.y += boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
+			}
+			
+			character = 'boyfriend';
 		}
-	}
-
-	public function tweenCamIn() {
-		if (songName == 'tutorial' && cameraTwn == null && FlxG.camera.zoom != 1.3) {
-			cameraTwn = FlxTween.tween(FlxG.camera, {zoom: 1.3}, (Conductor.stepCrochet * 4 / 1000), {ease: FlxEase.elasticInOut, onComplete:
-				function (twn:FlxTween) {
-					cameraTwn = null;
-				}
-			});
-		}
+		
+		stagesFunc((stage:BaseStage) -> stage.onMoveCamera(character));
+		callOnScripts('onMoveCamera', [character]);
 	}
 
 	public function finishSong(?ignoreNoteOffset:Bool = false):Void
@@ -3447,52 +3432,38 @@ class PlayState extends ScriptedState
 
 		super.destroy();
 	}
-
-	var lastStepHit:Int = -1;
-	public override function stepHit()
-	{
-		super.stepHit();
-
-		if(curStep == lastStepHit) {
+	
+	var lastStepHit:Int;
+	public override function stepHit(step:Int):Void {
+		if (step == lastStepHit)
 			return;
-		}
-
-		lastStepHit = curStep;
+		
+		super.stepHit(step);
+		
+		lastStepHit = step;
 	}
-
-	var lastBeatHit:Int = -1;
-
-	public override function beatHit()
-	{
-		if(lastBeatHit >= curBeat) {
-			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
+	
+	var lastBeatHit:Int;
+	public override function beatHit(beat:Int):Void {
+		if (lastBeatHit >= beat)
 			return;
-		}
-
-		if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms && (curBeat % camZoomingFrequency) == 0)
-			{
-				FlxG.camera.zoom += 0.015 * camZoomingMult;
-				camHUD.zoom += 0.03 * camZoomingMult;
-				
-			}
-
+		
 		if (generatedMusic)
 			notes.members.sort((a:Note, b:Note) -> Std.int(b.strumTime) - Std.int(a.strumTime));
-
+		
 		iconP1.scale.set(1.2, 1.2);
 		iconP2.scale.set(1.2, 1.2);
-
+		
 		iconP1.updateHitbox();
 		iconP2.updateHitbox();
-
-		characterBopper(curBeat);
-
-		super.beatHit();
-		lastBeatHit = curBeat;
+		
+		characterBopper(beat);
+		
+		super.beatHit(beat);
+		lastBeatHit = beat;
 	}
 
-	public function characterBopper(beat:Int):Void
-	{
+	public function characterBopper(beat:Int):Void {
 		if (gf != null && beat % Math.round(gfSpeed * gf.danceEveryNumBeats) == 0 && !gf.getAnimationName().startsWith('sing') && !gf.stunned)
 			gf.dance();
 		if (boyfriend != null && beat % boyfriend.danceEveryNumBeats == 0 && !boyfriend.getAnimationName().startsWith('sing') && !boyfriend.stunned)
@@ -3501,32 +3472,34 @@ class PlayState extends ScriptedState
 			dad.dance();
 	}
 
-	public function playerDance():Void
-	{
+	public function playerDance():Void {
 		var anim:String = boyfriend.getAnimationName();
 		if(boyfriend.holdTimer > Conductor.stepCrochet * (0.0011 #if FLX_PITCH / FlxG.sound.music.pitch #end) * boyfriend.singDuration && anim.startsWith('sing') && !anim.endsWith('miss'))
 			boyfriend.dance();
 	}
 
-	public override function sectionHit()
-	{
-		if (SONG.notes[curSection] != null)
-		{
+	public override function sectionHit(section:Int):Void {
+		if (SONG.notes[section] != null) {
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection();
 
-			if (SONG.notes[curSection].changeBPM)
-			{
-				Conductor.bpm = SONG.notes[curSection].bpm;
+			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms) {
+				FlxG.camera.zoom += 0.015 * camZoomingMult;
+				camHUD.zoom += 0.03 * camZoomingMult;
+			}
+
+			if (SONG.notes[section].changeBPM) {
+				Conductor.bpm = SONG.notes[section].bpm;
 				setOnScripts('curBpm', Conductor.bpm);
 				setOnScripts('crochet', Conductor.crochet);
 				setOnScripts('stepCrochet', Conductor.stepCrochet);
 			}
-			setOnScripts('mustHitSection', SONG.notes[curSection].mustHitSection);
-			setOnScripts('altAnim', SONG.notes[curSection].altAnim);
-			setOnScripts('gfSection', SONG.notes[curSection].gfSection);
+			setOnScripts('altAnim', SONG.notes[section].altAnim);
+			setOnScripts('gfSection', SONG.notes[section].gfSection);
+			setOnScripts('mustHitSection', SONG.notes[section].mustHitSection);
 		}
-		super.sectionHit();
+		
+		super.sectionHit(section);
 	}
 
 	function strumPlayAnim(isDad:Bool, id:Int, time:Float) {
@@ -3631,76 +3604,6 @@ class PlayState extends ScriptedState
 		}
 	}
 	#end
-
-	#if (!flash && sys)
-	public var runtimeShaders:Map<String, Array<String>> = new Map<String, Array<String>>();
-	#end
-	public function createRuntimeShader(shaderName:String):ErrorHandledRuntimeShader
-	{
-		#if (!flash && sys)
-		if(!ClientPrefs.data.shaders) return new ErrorHandledRuntimeShader(shaderName);
-
-		if(!runtimeShaders.exists(shaderName) && !initLuaShader(shaderName))
-		{
-			FlxG.log.warn('Shader $shaderName is missing!');
-			return new ErrorHandledRuntimeShader(shaderName);
-		}
-
-		var arr:Array<String> = runtimeShaders.get(shaderName);
-		return new ErrorHandledRuntimeShader(shaderName, arr[0], arr[1]);
-		#else
-		FlxG.log.warn("Platform unsupported for Runtime Shaders!");
-		return null;
-		#end
-	}
-
-	public function initLuaShader(name:String, ?glslVersion:Int = 120)
-	{
-		if(!ClientPrefs.data.shaders) return false;
-
-		#if (!flash && sys)
-		if(runtimeShaders.exists(name))
-		{
-			FlxG.log.warn('Shader $name was already initialized!');
-			return true;
-		}
-
-		for (folder in Mods.directoriesWithFile(Paths.getSharedPath(), 'shaders/'))
-		{
-			var frag:String = folder + name + '.frag';
-			var vert:String = folder + name + '.vert';
-			var found:Bool = false;
-			if(FileSystem.exists(frag))
-			{
-				frag = File.getContent(frag);
-				found = true;
-			}
-			else frag = null;
-
-			if(FileSystem.exists(vert))
-			{
-				vert = File.getContent(vert);
-				found = true;
-			}
-			else vert = null;
-
-			if(found)
-			{
-				runtimeShaders.set(name, [frag, vert]);
-				//trace('Found shader $name!');
-				return true;
-			}
-		}
-			#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-			addTextToDebug('Missing shader $name .frag AND .vert files!', FlxColor.RED);
-			#else
-			FlxG.log.warn('Missing shader $name .frag AND .vert files!');
-			#end
-		#else
-		FlxG.log.warn('This platform doesn\'t support Runtime Shaders!');
-		#end
-		return false;
-	}
 
 	#if TOUCH_CONTROLS_ALLOWED
 	public function makeLuaTouchPad(DPadMode:String, ActionMode:String) {

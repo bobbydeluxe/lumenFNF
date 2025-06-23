@@ -971,14 +971,14 @@ class CharSelectSubState extends MusicBeatSubState
     }
   }
 
-  override function beatHit() {
-    super.beatHit(); //? We have no enevt system here.
+  override function beatHit(beat:Int) {
+    super.beatHit(beat); //? We have no enevt system here.
     playerChill.onBeatHit(); //? emulate beats here
     gfChill.onBeatHit(this.curBeat);
   }
-  override function stepHit() { //? emulate Conductor, which would call this every step
+  override function stepHit(step:Int) { //? emulate Conductor, which would call this every step
     spamOnStep();
-    super.stepHit();
+    super.stepHit(step);
   }
 
   function spamOnStep():Void

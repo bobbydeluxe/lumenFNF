@@ -1840,11 +1840,11 @@ class FreeplayState extends MusicBeatSubstate
 		}
 	}
 
-	override function beatHit()
+	override function beatHit(beat:Int)
 	{
 		backingCard?.beatHit(curBeat);
 
-		super.beatHit();
+		super.beatHit(beat);
 	}
 
 	public override function destroy():Void

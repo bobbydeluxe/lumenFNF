@@ -12,7 +12,7 @@ import states.StoryMenuState;
 import substates.StickerSubState;
 import options.OptionsState;
 
-class PauseSubState extends MusicBeatSubstate
+class PauseSubState extends ScriptedSubState
 {
 	var grpMenuShit:FlxTypedGroup<Alphabet>;
 
@@ -106,7 +106,10 @@ class PauseSubState extends MusicBeatSubstate
 		pauseMusic.volume = 0;
 		pauseMusic.play(false, FlxG.random.int(0, Std.int(pauseMusic.length / 2)));
 
-		FlxG.sound.list.add(pauseMusic);
+		preCreate();
+
+		if (pauseMusic != null)
+			FlxG.sound.list.add(pauseMusic);
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
 		bg.scale.set(FlxG.width, FlxG.height);
@@ -206,6 +209,8 @@ class PauseSubState extends MusicBeatSubstate
 	var cantUnpause:Float = 0.1;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+
 		cantUnpause -= elapsed;
 		if (pauseMusic.volume < 0.5)
 			pauseMusic.volume += 0.01 * elapsed;
@@ -410,6 +415,8 @@ class PauseSubState extends MusicBeatSubstate
 			addTouchPadCamera();
 		}
 		#end
+
+		postUpdate(elapsed);
 	}
 
 	function deleteSkipTimeText()
@@ -445,26 +452,29 @@ class PauseSubState extends MusicBeatSubstate
 		super.destroy();
 	}
 
-	function changeSelection(change:Int = 0):Void
-	{
-		curSelected = FlxMath.wrap(curSelected + change, 0, menuItems.length - 1);
-		for (num => item in grpMenuShit.members)
-		{
-			item.targetY = num - curSelected;
-			item.alpha = 0.6;
-			if (item.targetY == 0)
-			{
-				item.alpha = 1;
-				if(item == skipTimeTracker)
-				{
-					curTime = Math.max(0, Conductor.songPosition);
-					updateSkipTimeText();
+	function changeSelection(change:Int = 0, forced:Bool = false):Void {
+		var next:Int = FlxMath.wrap(curSelected + change, 0, menuItems.length - 1);
+		
+		if (forced || callOnScripts('onSelectItem', [grpMenuShit.members[next].text, next], true) != psychlua.LuaUtils.Function_Stop) {
+			curSelected = next;
+			
+			for (num => item in grpMenuShit.members) {
+				item.targetY = num - curSelected;
+				item.alpha = 0.6;
+				if (item.targetY == 0) {
+					item.alpha = 1;
+					if(item == skipTimeTracker) {
+						curTime = Math.max(0, Conductor.songPosition);
+						updateSkipTimeText();
+					}
 				}
 			}
+			missingText.visible = false;
+			missingTextBG.visible = false;
+			FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+			
+			callOnScripts('onSelectItemPost', [grpMenuShit.members[curSelected], curSelected]);
 		}
-		missingText.visible = false;
-		missingTextBG.visible = false;
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 	}
 
 	function regenMenu():Void {
@@ -482,8 +492,7 @@ class PauseSubState extends MusicBeatSubstate
 			item.targetY = num;
 			grpMenuShit.add(item);
 
-			if(str == 'Skip Time')
-			{
+			if (str == 'Skip Time') {
 				skipTimeText = new FlxText(0, 0, 0, '', 64);
 				skipTimeText.setFormat(Paths.font("vcr.ttf"), 64, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 				skipTimeText.scrollFactor.set();
@@ -496,7 +505,7 @@ class PauseSubState extends MusicBeatSubstate
 			}
 		}
 		curSelected = 0;
-		changeSelection();
+		changeSelection(0, true);
 	}
 	
 	function updateSkipTextStuff()

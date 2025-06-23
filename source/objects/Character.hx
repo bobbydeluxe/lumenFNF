@@ -3,6 +3,7 @@ package objects;
 import backend.animation.PsychAnimationController;
 
 import flixel.util.FlxSort;
+import flixel.util.FlxDestroyUtil;
 
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
@@ -117,8 +118,16 @@ class Character extends FlxSprite
 		{
 			path = Paths.getSharedPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 			missingCharacter = true;
-			missingText = new FlxText(0, 0, 300, 'ERROR:\n$character.json', 16);
-			missingText.alignment = CENTER;
+			
+			if (missingText == null) {
+				missingText = new FlxText(0, 0, 300, 'ERROR:\n$character.json', 16);
+				missingText.alignment = CENTER;
+			}
+			missingText.revive();
+		} else {
+			missingCharacter = false;
+			
+			missingText?.kill();
 		}
 
 		try
@@ -490,6 +499,7 @@ class Character extends FlxSprite
 				{
 					missingText.x = getMidpoint().x - 150;
 					missingText.y = getMidpoint().y - 10;
+					missingText.cameras = cameras;
 					missingText.draw();
 				}
 			}
@@ -502,6 +512,7 @@ class Character extends FlxSprite
 			color = lastColor;
 			missingText.x = getMidpoint().x - 150;
 			missingText.y = getMidpoint().y - 10;
+			missingText.cameras = cameras;
 			missingText.draw();
 		}
 	}
