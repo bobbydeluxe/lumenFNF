@@ -1,10 +1,10 @@
 #if !macro
-//Discord API
+// Discord API
 #if DISCORD_ALLOWED
 import backend.Discord;
 #end
 
-//Psych
+// Psych
 #if LUA_ALLOWED
 import llua.*;
 import llua.Lua;
@@ -14,7 +14,7 @@ import llua.Lua;
 import backend.Achievements;
 #end
 
-// Mobile Controls
+// Mobile Controls [so p-slice don't break]
 import mobile.input.MobileInputID;
 import mobile.backend.SwipeUtil;
 import mobile.backend.TouchUtil;
@@ -46,7 +46,7 @@ import sys.io.*;
 import js.html.*;
 #end
 
-//P-Slice
+// P-Slice
 import mikolka.funkin.*;
 import mikolka.funkin.utils.*;
 import mikolka.funkin.custom.*;
@@ -58,6 +58,8 @@ import states.stages.objects.*;
 import backend.Paths;
 import backend.Controls;
 import backend.CoolUtil;
+import backend.ScriptedState;
+import backend.ScriptedSubState;
 import backend.MusicBeatState;
 import backend.MusicBeatSubstate;
 import backend.CustomFadeTransition;
@@ -68,9 +70,12 @@ import backend.Difficulty;
 import backend.Mods;
 import backend.Highscore;
 import backend.Language;
+
 import mobile.backend.StorageUtil;
 
-import backend.ui.*; //Psych-UI
+import backend.ui.*; // Psych-UI
+
+import debug.Log;
 
 import objects.Alphabet;
 import objects.BGSprite;
@@ -88,9 +93,11 @@ import flxanimate.PsychFlxAnimate as FlxAnimate;
 // Mod libs
 import flixel.ui.FlxBar;
 
-//Flixel
+// Flixel
 import flixel.sound.FlxSound;
 import flixel.FlxG;
+import flixel.FlxBasic;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.FlxCamera;
 import flixel.util.FlxDestroyUtil;

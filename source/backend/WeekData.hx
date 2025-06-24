@@ -64,10 +64,11 @@ class WeekData {
 	// HELP: Is there any way to convert a WeekFile to WeekData without having to put all variables there manually? I'm kind of a noob in haxe lmao
 	public function new(weekFile:WeekFile, fileName:String) {
 		// here ya go - MiguelItsOut
-		var fields = Reflect.fields(#if js js.lib.Object.getPrototypeOf(this) #else this #end);	
-		for (field in Reflect.fields(weekFile))
-			if(fields.contains(field)) // Reflect.hasField() won't fucking work :/
+		var fields:Array<String> = Reflect.fields(this);
+		for (field in Reflect.fields(weekFile)) {
+			if (fields.contains(field))
 				Reflect.setProperty(this, field, Reflect.getProperty(weekFile, field));
+		}
 
 		this.fileName = fileName;
 	}
@@ -125,7 +126,7 @@ class WeekData {
 					}
 				}
 
-				for (file in NativeFileSystem.readDirectory(directory))
+				for (file in FileSystem.readDirectory(directory))
 				{
 					var path = haxe.io.Path.join([directory, file]);
 					if (!FileSystem.isDirectory(path) && file.endsWith('.json'))
@@ -161,7 +162,7 @@ class WeekData {
 		}
 	}
 
-	private static function getWeekFile(path:String):WeekFile {
+	public static function getWeekFile(path:String):WeekFile {
 		var rawJson:String = null;
 		#if MODS_ALLOWED
 		if(FileSystem.exists(path)) {

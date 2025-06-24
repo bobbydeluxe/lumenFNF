@@ -3,6 +3,7 @@ package objects;
 import backend.animation.PsychAnimationController;
 
 import flixel.util.FlxSort;
+import flixel.util.FlxDestroyUtil;
 
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
@@ -46,7 +47,6 @@ class Character extends FlxSprite
 
 	public var animOffsets:Map<String, Array<Dynamic>>;
 	public var debugMode:Bool = false;
-	public var extraData:Map<String, Dynamic> = new Map<String, Dynamic>();
 
 	public var isPlayer:Bool = false;
 	public var curCharacter:String = DEFAULT_CHARACTER;
@@ -79,6 +79,12 @@ class Character extends FlxSprite
 	public var noAntialiasing:Bool = false;
 	public var originalFlipX:Bool = false;
 	public var editorIsPlayer:Null<Bool> = null;
+	
+	public var canPlayComboAnim:Bool = true;
+	public var canPlayDropAnim:Bool = true;
+	
+	public var comboNoteCounts:Array<Int> = [];
+	public var dropNoteCounts:Array<Int> = [];
 
 	public function new(x:Float, y:Float, ?character:String = 'bf', ?isPlayer:Bool = false)
 	{
@@ -117,8 +123,16 @@ class Character extends FlxSprite
 		{
 			path = Paths.getSharedPath('characters/' + DEFAULT_CHARACTER + '.json'); //If a character couldn't be found, change him to BF just to prevent a crash
 			missingCharacter = true;
-			missingText = new FlxText(0, 0, 300, 'ERROR:\n$character.json', 16);
-			missingText.alignment = CENTER;
+			
+			if (missingText == null) {
+				missingText = new FlxText(0, 0, 300, 'ERROR:\n$character.json', 16);
+				missingText.alignment = CENTER;
+			}
+			missingText.revive();
+		} else {
+			missingCharacter = false;
+			
+			missingText?.kill();
 		}
 
 		try
@@ -202,10 +216,12 @@ class Character extends FlxSprite
 		animationsArray = json.animations;
 		if(animationsArray != null && animationsArray.length > 0) {
 			for (anim in animationsArray) {
-				var animAnim:String = '' + anim.anim;
-				var animName:String = '' + anim.name;
+				if (anim.anim == null || anim.name == null) continue;
+				
 				var animFps:Int = anim.fps;
-				var animLoop:Bool = !!anim.loop; //Bruh
+				var animAnim:String = anim.anim;
+				var animName:String = anim.name;
+				var animLoop:Bool = (anim.loop == true);
 				var animIndices:Array<Int> = anim.indices;
 
 				if(!isAnimateAtlas)
@@ -229,8 +245,12 @@ class Character extends FlxSprite
 				else addOffset(anim.anim, 0, 0);
 			}
 		}
+		
+		comboNoteCounts = findCountAnims('combo');
+		dropNoteCounts = findCountAnims('drop');
+		
 		#if flxanimate
-		if(isAnimateAtlas) copyAtlasValues();
+		if (isAnimateAtlas) copyAtlasValues();
 		#end
 		//trace('Loaded file to character ' + curCharacter);
 	}
@@ -373,6 +393,55 @@ class Character extends FlxSprite
 				playAnim('idle' + idleSuffix);
 		}
 	}
+	
+	public function findCountAnims(prefix:String):Array<Int> {
+		var counts:Array<Int> = [];
+		
+		for (anim => _ in animOffsets) {
+			if (anim.startsWith(prefix)) {
+				var number:Null<Int> = Std.parseInt(anim.substring(prefix.length));
+				if (number != null)
+					counts.push(number);
+			}
+		}
+		
+		counts.sort((a:Int, b:Int) -> a - b);
+		return counts;
+	}
+	
+	public function playComboAnim(combo:Int):Void {
+		if (!canPlayComboAnim || comboNoteCounts.length == 0) return;
+		
+		var animToPlay:String = 'combo$combo';
+		
+		if (hasAnimation(animToPlay)) {
+			playAnim(animToPlay, true);
+			specialAnim = true;
+		}
+	}
+	
+	public function playComboDropAnim(lastCombo:Int):Void {
+		if (!canPlayDropAnim) return;
+		
+		if (dropNoteCounts.length == 0) { // classic mode
+			if (hasAnimation('sad')) {
+				playAnim('sad', true);
+				specialAnim = true;
+			}
+			return;
+		}
+		
+		var dropAnim:Null<String> = null;
+		for (count in dropNoteCounts) {
+			if (count >= lastCombo)
+				dropAnim = 'drop$count';
+		}
+		
+		if (dropAnim != null && hasAnimation(dropAnim)) {
+			playAnim(dropAnim, true);
+			specialAnim = true;
+		}
+	}
 
 	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
 	{
@@ -490,6 +559,7 @@ class Character extends FlxSprite
 				{
 					missingText.x = getMidpoint().x - 150;
 					missingText.y = getMidpoint().y - 10;
+					missingText.cameras = cameras;
 					missingText.draw();
 				}
 			}
@@ -502,6 +572,7 @@ class Character extends FlxSprite
 			color = lastColor;
 			missingText.x = getMidpoint().x - 150;
 			missingText.y = getMidpoint().y - 10;
+			missingText.cameras = cameras;
 			missingText.draw();
 		}
 	}

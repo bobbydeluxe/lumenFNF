@@ -2,7 +2,7 @@ package options;
 
 import openfl.utils.Assets;
 
-class LanguageSubState extends MusicBeatSubstate
+class LanguageSubState extends ScriptedSubState
 {
 	#if TRANSLATIONS_ALLOWED
 	var grpLanguages:FlxTypedGroup<Alphabet> = new FlxTypedGroup<Alphabet>();
@@ -10,19 +10,19 @@ class LanguageSubState extends MusicBeatSubstate
 	var displayLanguages:Map<String, String> = [];
 	var curSelected:Int = 0;
 	var titleText:Alphabet;
-
 	public function new()
 	{
-		controls.isInSubstate = true;
 		super();
-
+		
+		rpcDetails = 'Language Select Menu';
+		
 		var bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.color = 0xFFea71fd;
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.screenCenter();
 		add(bg);
 		add(grpLanguages);
-
+		
 		titleText = new Alphabet(75, 45, 'Language Select', true);
 		titleText.setScale(.6);
 		titleText.alpha = .4;
@@ -34,7 +34,7 @@ class LanguageSubState extends MusicBeatSubstate
 		var directories:Array<String> = Mods.directoriesWithFile(Paths.getSharedPath(), 'data/');
 		for (directory in directories)
 		{
-			for (file in NativeFileSystem.readDirectory(directory))
+			for (file in FileSystem.readDirectory(directory))
 			{
 				if(file.toLowerCase().endsWith('.lang'))
 				{
@@ -101,15 +101,12 @@ class LanguageSubState extends MusicBeatSubstate
 			grpLanguages.add(text);
 		}
 		changeSelected();
-
-		#if TOUCH_CONTROLS_ALLOWED
-        addTouchPad('LEFT_FULL', 'A_B');
-		#end
 	}
 
 	var changedLanguage:Bool = false;
-	override function update(elapsed:Float)
-	{
+	override function update(elapsed:Float) {
+		preUpdate(elapsed);
+		
 		super.update(elapsed);
 
 		var mult:Int = (FlxG.keys.pressed.SHIFT) ? 4 : 1;
@@ -129,7 +126,6 @@ class LanguageSubState extends MusicBeatSubstate
 				MusicBeatState.resetState();
 			}
 			else close();
-			controls.isInSubstate = false;
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 		}
 
@@ -144,22 +140,28 @@ class LanguageSubState extends MusicBeatSubstate
 			updateTitleText();
 			changeSelected();
 		}
+		
+		postUpdate(elapsed);
 	}
 
-	function changeSelected(change:Int = 0)
-	{
-		curSelected = FlxMath.wrap(curSelected + change, 0, languages.length-1);
-		for (num => lang in grpLanguages)
-		{
-			lang.targetY = num - curSelected;
-
-			lang.alpha = (num == curSelected ? 1 : .6);
-			lang.color = (ClientPrefs.data.language == languages[num] ? 0xffffcc33 : FlxColor.WHITE);
+	function changeSelected(change:Int = 0) {
+		var next:Int = FlxMath.wrap(curSelected + change, 0, languages.length - 1);
+		
+		if (callOnScripts('onSelectItem', [languages[next], next], true) != psychlua.LuaUtils.Function_Stop) {
+			curSelected = next;
+			
+			for (num => lang in grpLanguages) {
+				lang.targetY = num - curSelected;
+				
+				lang.alpha = (num == curSelected ? 1 : .6);
+				lang.color = (ClientPrefs.data.language == languages[num] ? 0xffffcc33 : FlxColor.WHITE);
+			}
+			
+			if (change != 0)
+				FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
 		}
-		if (change != 0)
-			FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
 	}
-
+	
 	function updateTitleText() {
 		titleText.text = Language.getPhrase('language_menu', 'Language Select');
 	}

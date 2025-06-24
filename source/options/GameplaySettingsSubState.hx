@@ -1,14 +1,10 @@
 package options;
 
-import options.Option;
-
 class GameplaySettingsSubState extends BaseOptionsMenu
 {
-	public function new()
-	{
-		title = Language.getPhrase('gameplay_menu', 'Gameplay Settings');
-		rpcTitle = 'Gameplay Settings Menu'; //for Discord Rich Presence
-
+	public function new() {
+		super(Language.getPhrase('gameplay_menu', 'Gameplay Settings'), 'Gameplay Settings Menu');
+		
 		//I'd suggest using "Downscroll" as an example for making your own option since it is the simplest here
 		var option:Option = new Option('Downscroll', //Name
 			'Changes the notes to be located at the bottom instead of the top of the screen.', //Description
@@ -35,17 +31,11 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		
 		var option:Option = new Option('Auto Pause',
-			"If checked, the game will automatically pause when focus is lost",
+			"If checked, the game will automatically pause when focus is lost.",
 			'autoPause',
 			BOOL);
 		addOption(option);
 		option.onChange = onChangeAutoPause;
-
-		var option:Option = new Option('Pop Up Score',
-			"If unchecked, hitting notes won't make \"sick\", \"good\".. and combo popups\n(Useful for low end " + Main.platform + ").",
-			'popUpRating',
-			BOOL);
-		addOption(option);
 
 		var option:Option = new Option('Disable Reset Button',
 			"If checked, pressing Reset won't kill the player.",
@@ -53,12 +43,11 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
-		var option:Option = new Option('Vibrations',
-			"If checked, your device will vibrate at some cases.",
-			'vibrating',
+		var option:Option = new Option('Sustains as One Note',
+			"If checked, Hold Notes can't be pressed if you miss,\nand count as a single Hit/Miss.\nUncheck this if you prefer the old Input System.",
+			'guitarHeroSustains',
 			BOOL);
 		addOption(option);
-		option.onChange = onChangeVibration;
 
 		var option:Option = new Option('Hitsound Volume',
 			'Changes the volume of a tick sound that will play when hitting notes.',
@@ -85,31 +74,34 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		var option:Option = new Option('Sick! Hit Window',
 			'Changes the amount of time you have\nfor hitting a "Sick!" in milliseconds.',
 			'sickWindow',
-			INT);
+			FLOAT);
 		option.displayFormat = '%vms';
 		option.scrollSpeed = 15;
-		option.minValue = 15;
-		option.maxValue = 45;
+		option.minValue = 15.0;
+		option.maxValue = 45.0;
+		option.changeValue = 0.1;
 		addOption(option);
 
 		var option:Option = new Option('Good Hit Window',
 			'Changes the amount of time you have\nfor hitting a "Good" in milliseconds.',
 			'goodWindow',
-			INT);
+			FLOAT);
 		option.displayFormat = '%vms';
 		option.scrollSpeed = 30;
-		option.minValue = 15;
-		option.maxValue = 90;
+		option.minValue = 15.0;
+		option.maxValue = 90.0;
+		option.changeValue = 0.1;
 		addOption(option);
 
 		var option:Option = new Option('Bad Hit Window',
 			'Changes the amount of time you have\nfor hitting a "Bad" in milliseconds.',
 			'badWindow',
-			INT);
+			FLOAT);
 		option.displayFormat = '%vms';
 		option.scrollSpeed = 60;
-		option.minValue = 15;
-		option.maxValue = 135;
+		option.minValue = 15.0;
+		option.maxValue = 135.0;
+		option.changeValue = 0.1;
 		addOption(option);
 
 		var option:Option = new Option('Safe Frames',
@@ -121,14 +113,6 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.maxValue = 10;
 		option.changeValue = 0.1;
 		addOption(option);
-
-		var option:Option = new Option('Sustains as One Note',
-			"If checked, Hold Notes can't be pressed if you miss,\nand count as a single Hit/Miss.\nUncheck this if you prefer the old Input System.",
-			'guitarHeroSustains',
-			BOOL);
-		addOption(option);
-
-		super();
 	}
 
 	function onChangeHitsoundVolume()
@@ -136,10 +120,4 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 
 	function onChangeAutoPause()
 		FlxG.autoPause = ClientPrefs.data.autoPause;
-
-	function onChangeVibration()
-	{
-		if(ClientPrefs.data.vibrating)
-			lime.ui.Haptic.vibrate(0, 500);
-	}
 }

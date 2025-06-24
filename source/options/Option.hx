@@ -5,15 +5,15 @@ typedef Keybind = {
 	gamepad:String
 }
 
-enum OptionType {
+enum abstract OptionType(String) to String {
 	// Bool will use checkboxes
 	// Everything else will use a text
-	BOOL;
-	INT;
-	FLOAT;
-	PERCENT;
-	STRING;
-	KEYBIND;
+	var BOOL = 'bool';
+	var INT = 'int';
+	var FLOAT = 'float';
+	var PERCENT = 'percent';
+	var STRING = 'string';
+	var KEYBIND = 'keybind';
 }
 
 class Option
@@ -105,16 +105,18 @@ class Option
 	dynamic public function getValue():Dynamic
 	{
 		var value = Reflect.getProperty(ClientPrefs.data, variable);
-		if(type == KEYBIND) return !Controls.instance.controllerMode ? value.keyboard : value.gamepad;
+		if (type == KEYBIND)
+			return (Controls.instance.controllerMode ? value.gamepad : value.keyboard);
 		return value;
 	}
 
 	dynamic public function setValue(value:Dynamic)
 	{
-		if(type == KEYBIND)
-		{
+		if (!psychlua.LuaUtils.hasField(ClientPrefs.data, variable))
+			return value;
+		if (type == KEYBIND) {
 			var keys = Reflect.getProperty(ClientPrefs.data, variable);
-			if(!Controls.instance.controllerMode) keys.keyboard = value;
+			if (!Controls.instance.controllerMode) keys.keyboard = value;
 			else keys.gamepad = value;
 			return value;
 		}

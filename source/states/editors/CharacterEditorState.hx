@@ -1,8 +1,6 @@
 package states.editors;
 
 import flixel.graphics.FlxGraphic;
-
-import flixel.system.debug.interaction.tools.Pointer.GraphicCursorCross;
 import flixel.util.FlxDestroyUtil;
 
 import openfl.net.FileReference;
@@ -17,7 +15,10 @@ import objects.Bar;
 import states.editors.content.Prompt;
 import states.editors.content.PsychJsonPrinter;
 
-class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler.PsychUIEvent
+@:bitmap("assets/images/debugger/cursorCross.png")
+class GraphicCursorCross extends openfl.display.BitmapData {}
+
+class CharacterEditorState extends ScriptedState implements PsychUIEventHandler.PsychUIEvent
 {
 	var character:Character;
 	var ghost:FlxSprite;
@@ -60,7 +61,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 	{
 		this._char = char;
 		this._goToPlayState = goToPlayState;
-		if(this._char == null) this._char = Character.DEFAULT_CHARACTER;
+		if (PlayState.SONG == null) goToPlayState = false;
+		if (this._char == null) this._char = Character.DEFAULT_CHARACTER;
 
 		super();
 	}
@@ -78,6 +80,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		FlxG.cameras.add(camHUD, false);
 
 		loadBG();
+		
+		preCreate();
 
 		silhouettes = new FlxSpriteGroup();
 		add(silhouettes);
@@ -100,6 +104,7 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		ghost.visible = false;
 		ghost.alpha = ghostAlpha;
 		add(ghost);
+		
 		animsTxt = new FlxText(10, 32, 400, '');
 		animsTxt.setFormat(null, 16, FlxColor.WHITE, LEFT, OUTLINE_FAST, FlxColor.BLACK);
 		animsTxt.scrollFactor.set();
@@ -125,7 +130,7 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		add(healthIcon);
 		add(animsTxt);
 
-		var tipText:FlxText = new FlxText(FlxG.width - 300, FlxG.height - 24, 300, 'Press ${(controls.mobileC) ? 'F' : 'F1'} for Help', 20);
+		var tipText:FlxText = new FlxText(FlxG.width - 300, FlxG.height - 24, 300, "Press F1 for Help", 20);
 		tipText.cameras = [camHUD];
 		tipText.setFormat(null, 16, FlxColor.WHITE, RIGHT, OUTLINE_FAST, FlxColor.BLACK);
 		tipText.borderColor = FlxColor.BLACK;
@@ -160,11 +165,6 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		updateHealthBar();
 		character.finishAnimation();
 
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('LEFT_FULL', 'CHARACTER_EDITOR');
-		addTouchPadCamera(false);
-		#end
-
 		if(ClientPrefs.data.cacheOnGPU) Paths.clearUnusedMemory();
 
 		super.create();
@@ -172,21 +172,7 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 
 	function addHelpScreen()
 	{
-		var str:Array<String> = controls.mobileC ? ["CAMERA",
-		"X/Y - Camera Zoom In/Out",
-		"G + Arrow Buttons - Move Camera",
-		"Z - Reset Camera Zoom",
-		"",
-		"CHARACTER",
-		"A - Reset Current Offset",
-		"V/D - Previous/Next Animation",
-		"Arrow Buttons - Move Offset",
-		"",
-		"OTHER",
-		"S - Toggle Silhouettes",
-		"Hold C - Move Offsets 10x faster and Camera 4x faster"]
-		:
-		["CAMERA",
+		var str:Array<String> = ["CAMERA",
 		"E/Q - Camera Zoom In/Out",
 		"J/K/L/I - Move Camera",
 		"R - Reset Camera Zoom",
@@ -878,42 +864,9 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 	var undoOffsets:Array<Float> = null;
 	override function update(elapsed:Float)
 	{
+		preUpdate(elapsed);
+		
 		super.update(elapsed);
-		//? pulling key presses
-
-		var pressed_I = FlxG.keys.pressed.I;
-		var pressed_J = FlxG.keys.pressed.J;
-		var pressed_K = FlxG.keys.pressed.K;
-		var pressed_L = FlxG.keys.pressed.L;
-
-		var pressed_E = FlxG.keys.pressed.E;
-		var pressed_Q = FlxG.keys.pressed.Q;
-
-		var justPressed_F12 = FlxG.keys.justPressed.F12;
-		var justPressed_F1 = FlxG.keys.justPressed.F1;
-		var justPressed_ESC = FlxG.keys.justPressed.ESCAPE;
-
-		var justPressed_RESET = FlxG.keys.justPressed.R && !FlxG.keys.pressed.CONTROL;
-
-		var pressed_SHIFT = FlxG.keys.pressed.SHIFT;
-		#if TOUCH_CONTROLS_ALLOWED
-
-		pressed_I = pressed_I || touchPad.buttonG.pressed && touchPad.buttonUp.pressed;
-		pressed_J = pressed_J || touchPad.buttonG.pressed && touchPad.buttonLeft.pressed;
-		pressed_K = pressed_K || touchPad.buttonG.pressed && touchPad.buttonDown.pressed;
-		pressed_L = pressed_L || touchPad.buttonG.pressed && touchPad.buttonRight.pressed;
-
-		pressed_E = pressed_E || touchPad.buttonX.pressed;
-		pressed_Q = pressed_Q || touchPad.buttonY.pressed;
-
-		justPressed_F12 = justPressed_F12 || touchPad.buttonS.justPressed;
-		justPressed_F1 = justPressed_F1 || touchPad.buttonF.justPressed;
-		justPressed_ESC = justPressed_ESC || touchPad.buttonB.justPressed;
-
-		justPressed_RESET = justPressed_RESET || touchPad.buttonZ.justPressed;
-
-		pressed_SHIFT = pressed_SHIFT || touchPad.buttonC.pressed;
-		#end
 
 		if(PsychUIInputText.focusOn != null)
 		{
@@ -925,7 +878,7 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		var shiftMult:Float = 1;
 		var ctrlMult:Float = 1;
 		var shiftMultBig:Float = 1;
-		if(pressed_SHIFT)
+		if(FlxG.keys.pressed.SHIFT)
 		{
 			shiftMult = 4;
 			shiftMultBig = 10;
@@ -933,18 +886,18 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		if(FlxG.keys.pressed.CONTROL) ctrlMult = 0.25;
 
 		// CAMERA CONTROLS
-		if (pressed_J) FlxG.camera.scroll.x -= elapsed * 500 * shiftMult * ctrlMult;
-		if (pressed_K) FlxG.camera.scroll.y += elapsed * 500 * shiftMult * ctrlMult;
-		if (pressed_L) FlxG.camera.scroll.x += elapsed * 500 * shiftMult * ctrlMult;
-		if (pressed_I) FlxG.camera.scroll.y -= elapsed * 500 * shiftMult * ctrlMult;
+		if (FlxG.keys.pressed.J) FlxG.camera.scroll.x -= elapsed * 500 * shiftMult * ctrlMult;
+		if (FlxG.keys.pressed.K) FlxG.camera.scroll.y += elapsed * 500 * shiftMult * ctrlMult;
+		if (FlxG.keys.pressed.L) FlxG.camera.scroll.x += elapsed * 500 * shiftMult * ctrlMult;
+		if (FlxG.keys.pressed.I) FlxG.camera.scroll.y -= elapsed * 500 * shiftMult * ctrlMult;
 
 		var lastZoom = FlxG.camera.zoom;
-		if(justPressed_RESET) FlxG.camera.zoom = 1;
-		else if (pressed_E && FlxG.camera.zoom < 3) {
+		if(FlxG.keys.justPressed.R && !FlxG.keys.pressed.CONTROL) FlxG.camera.zoom = 1;
+		else if (FlxG.keys.pressed.E && FlxG.camera.zoom < 3) {
 			FlxG.camera.zoom += elapsed * FlxG.camera.zoom * shiftMult * ctrlMult;
 			if(FlxG.camera.zoom > 3) FlxG.camera.zoom = 3;
 		}
-		else if (pressed_Q && FlxG.camera.zoom > 0.1) {
+		else if (FlxG.keys.pressed.Q && FlxG.camera.zoom > 0.1) {
 			FlxG.camera.zoom -= elapsed * FlxG.camera.zoom * shiftMult * ctrlMult;
 			if(FlxG.camera.zoom < 0.1) FlxG.camera.zoom = 0.1;
 		}
@@ -955,13 +908,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		var changedAnim:Bool = false;
 		if(anims.length > 1)
 		{
-			#if TOUCH_CONTROLS_ALLOWED
-			if((FlxG.keys.justPressed.W  || touchPad.buttonV.justPressed) && !touchPad.buttonG.pressed && (changedAnim = true)) curAnim--;
-			else if((FlxG.keys.justPressed.S || touchPad.buttonD.justPressed) && !touchPad.buttonG.pressed && (changedAnim = true)) curAnim++;
-			#else
-			if((FlxG.keys.justPressed.W) && (changedAnim = true)) curAnim--;
-			else if((FlxG.keys.justPressed.S) && (changedAnim = true)) curAnim++;
-			#end
+			if(FlxG.keys.justPressed.W && (changedAnim = true)) curAnim--;
+			else if(FlxG.keys.justPressed.S && (changedAnim = true)) curAnim++;
 
 			if(changedAnim)
 			{
@@ -973,25 +921,16 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		}
 
 		var changedOffset = false;
-
-		var not_G_pressed = true;
 		var moveKeysP = [FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT, FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN];
-		var moveKeys =  [FlxG.keys.pressed.LEFT, FlxG.keys.pressed.RIGHT, FlxG.keys.pressed.UP, FlxG.keys.pressed.DOWN];
-		#if TOUCH_CONTROLS_ALLOWED
-		if(controls.mobileC){
-			moveKeysP =  [touchPad.buttonLeft.justPressed, touchPad.buttonRight.justPressed, touchPad.buttonUp.justPressed, touchPad.buttonDown.justPressed];
-			moveKeys =  [touchPad.buttonLeft.pressed, touchPad.buttonRight.pressed, touchPad.buttonUp.pressed, touchPad.buttonDown.pressed];
-			not_G_pressed = !touchPad.buttonG.pressed;
-		}
-		#end
-		if(moveKeysP.contains(true) && not_G_pressed)
+		var moveKeys = [FlxG.keys.pressed.LEFT, FlxG.keys.pressed.RIGHT, FlxG.keys.pressed.UP, FlxG.keys.pressed.DOWN];
+		if(moveKeysP.contains(true))
 		{
 			character.offset.x += ((moveKeysP[0] ? 1 : 0) - (moveKeysP[1] ? 1 : 0)) * shiftMultBig;
 			character.offset.y += ((moveKeysP[2] ? 1 : 0) - (moveKeysP[3] ? 1 : 0)) * shiftMultBig;
 			changedOffset = true;
 		}
 
-		if(moveKeys.contains(true) && not_G_pressed)
+		if(moveKeys.contains(true))
 		{
 			holdingArrowsTime += elapsed;
 			if(holdingArrowsTime > 0.6)
@@ -1008,10 +947,10 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		}
 		else holdingArrowsTime = 0;
 
-		if(FlxG.mouse.pressedRight && (FlxG.mouse.deltaScreenX != 0 || FlxG.mouse.deltaScreenY != 0))
+		if(FlxG.mouse.pressedRight && (FlxG.mouse.deltaViewX != 0 || FlxG.mouse.deltaViewY != 0))
 		{
-			character.offset.x -= FlxG.mouse.deltaScreenX;
-			character.offset.y -= FlxG.mouse.deltaScreenY;
+			character.offset.x -= FlxG.mouse.deltaViewX;
+			character.offset.y -= FlxG.mouse.deltaViewY;
 			changedOffset = true;
 		}
 
@@ -1043,15 +982,6 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 				changedOffset = true;
 			}
 		}
-		#if TOUCH_CONTROLS_ALLOWED
-		if (touchPad.buttonA.justPressed)
-		{
-			undoOffsets = [character.offset.x, character.offset.y];
-			character.offset.x = copiedOffset[0];
-			character.offset.y = copiedOffset[1];
-			changedOffset = true;
-		}
-		#end
 
 		var anim = anims[curAnim];
 		if(changedOffset && anim != null && anim.offsets != null)
@@ -1116,30 +1046,21 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		frameAdvanceText.color = clr;
 
 		// OTHER CONTROLS
-		if(justPressed_F12)
+		if(FlxG.keys.justPressed.F12)
 			silhouettes.visible = !silhouettes.visible;
 
-		if(justPressed_F1 || (helpBg.visible && FlxG.keys.justPressed.ESCAPE))
+		if(FlxG.keys.justPressed.F1 || (helpBg.visible && FlxG.keys.justPressed.ESCAPE))
 		{
-			#if TOUCH_CONTROLS_ALLOWED
-			if(controls.mobileC){
-				touchPad.forEachAlive(function(button:TouchButton){
-					if(button.tag != 'F')
-						button.visible = !button.visible;
-				});
-			}
-			#end
-
 			helpBg.visible = !helpBg.visible;
 			helpTexts.visible = helpBg.visible;
 		}
-		else if(justPressed_ESC)
+		else if(FlxG.keys.justPressed.ESCAPE)
 		{
 			if(!_goToPlayState)
 			{
 				if(!unsavedProgress)
 				{
-					MusicBeatState.switchState(new states.MainMenuState(false, true));
+					MusicBeatState.switchState(new states.MainMenuState(true));
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				}
 				else openSubState(new ExitConfirmationPrompt());
@@ -1151,6 +1072,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 			}
 			return;
 		}
+		
+		postUpdate(elapsed);
 	}
 
 	final assetFolder = 'week1';  //load from assets/week1/
@@ -1215,8 +1138,8 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		healthIcon.changeIcon(character.healthIcon, false);
 		updatePresence();
 	}
-
-	inline function updatePresence() {
+	
+	override function updatePresence() {
 		#if DISCORD_ALLOWED
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("Character Editor", "Character: " + _char, healthIcon.getCharacter());
@@ -1307,7 +1230,7 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 		characterList = Mods.mergeAllTextsNamed('data/characterList.txt');
 		var foldersToCheck:Array<String> = Mods.directoriesWithFile(Paths.getSharedPath(), 'characters/');
 		for (folder in foldersToCheck)
-			for (file in NativeFileSystem.readDirectory(folder))
+			for (file in FileSystem.readDirectory(folder))
 				if(file.toLowerCase().endsWith('.json'))
 				{
 					var charToCheck:String = file.substr(0, file.length - 5);
@@ -1389,16 +1312,11 @@ class CharacterEditorState extends MusicBeatState implements PsychUIEventHandler
 
 		if (data.length > 0)
 		{
-			#if mobile
-			unsavedProgress = false;
-			StorageUtil.saveContent('$_char.json', data);
-			#else
 			_file = new FileReference();
 			_file.addEventListener(#if desktop Event.SELECT #else Event.COMPLETE #end, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, '$_char.json');
-			#end
 		}
 	}
 }

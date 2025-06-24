@@ -23,11 +23,12 @@ import sys.thread.Mutex;
 import objects.Note;
 import objects.NoteSplash;
 
-#if HSCRIPT_ALLOWED
-import psychlua.HScript;
-import crowplexus.iris.Iris;
-import crowplexus.hscript.Expr.Error as IrisError;
-import crowplexus.hscript.Printer;
+#if LUA_ALLOWED
+import psychlua.FunkinLua;
+import psychlua.LuaUtils;
+#end
+#if SCRIPTS_ALLOWED
+import psychlua.GlobalScriptHandler;
 #end
 
 #if cpp
@@ -36,7 +37,7 @@ import crowplexus.hscript.Printer;
 #include <thread>
 ')
 #end
-class LoadingState extends MusicBeatState
+class LoadingState extends ScriptedState
 {
 	public static var loaded:Int = 0;
 	public static var loadMax:Int = 0;
@@ -49,6 +50,7 @@ class LoadingState extends MusicBeatState
 	function new(target:FlxState, stopMusic:Bool)
 	{
 		this.target = target;
+		this.multiScript = false;
 		this.stopMusic = stopMusic;
 		
 		super();
@@ -63,16 +65,18 @@ class LoadingState extends MusicBeatState
 
 	var barGroup:FlxSpriteGroup;
 	var bar:FlxSprite;
+	var barBack:FlxSprite;
 	var barWidth:Int = 0;
 	var intendedPercent:Float = 0;
 	var curPercent:Float = 0;
 	var stateChangeDelay:Float = 0;
-
+	
+	var bg:FlxSprite;
 	#if PSYCH_WATERMARKS
 	var logo:FlxSprite;
 	var pessy:FlxSprite;
 	var loadingText:FlxText;
-
+	
 	var timePassed:Float;
 	var shakeFl:Float;
 	var shakeMult:Float = 0;
@@ -83,67 +87,27 @@ class LoadingState extends MusicBeatState
 	#else
 	var funkay:FlxSprite;
 	#end
-
-	#if HSCRIPT_ALLOWED
-	var hscript:HScript;
-	#end
+	
 	override function create()
-	{
+	{	
 		persistentUpdate = true;
 		barGroup = new FlxSpriteGroup();
 		add(barGroup);
-
-		var barBack:FlxSprite = new FlxSprite(0, 660).makeGraphic(1, 1, FlxColor.BLACK);
+		
+		barBack = new FlxSprite(0, 660).makeGraphic(1, 1, FlxColor.BLACK);
 		barBack.scale.set(FlxG.width - 300, 25);
 		barBack.updateHitbox();
 		barBack.screenCenter(X);
 		barGroup.add(barBack);
-
+		
 		bar = new FlxSprite(barBack.x + 5, barBack.y + 5).makeGraphic(1, 1, FlxColor.WHITE);
 		bar.scale.set(0, 15);
 		bar.updateHitbox();
 		barGroup.add(bar);
 		barWidth = Std.int(barBack.width - 10);
-
-		#if HSCRIPT_ALLOWED
-		if(Mods.currentModDirectory != null && Mods.currentModDirectory.trim().length > 0)
-		{
-			var scriptPath:String = 'mods/${Mods.currentModDirectory}/data/LoadingScreen.hx'; //mods/My-Mod/data/LoadingScreen.hx
-			if(FileSystem.exists(scriptPath))
-			{
-				try
-				{
-					hscript = new HScript(null, scriptPath);
-					hscript.set('getLoaded', function() return loaded);
-					hscript.set('getLoadMax', function() return loadMax);
-					hscript.set('barBack', barBack);
-					hscript.set('bar', bar);
-	
-					if(hscript.exists('onCreate'))
-					{
-						hscript.call('onCreate');
-						trace('initialized hscript interp successfully: $scriptPath');
-						return super.create();
-					}
-					else
-					{
-						trace('"$scriptPath" contains no \"onCreate" function, stopping script.');
-					}
-				}
-				catch(e:IrisError)
-				{
-					var pos:HScriptInfos = cast {fileName: scriptPath, showLine: false};
-					Iris.error(Printer.errorToString(e, false), pos);
-					var hscript:HScript = cast (Iris.instances.get(scriptPath), HScript);
-				}
-				if(hscript != null) hscript.destroy();
-				hscript = null;
-			}
-		}
-		#end
-
+		
 		#if PSYCH_WATERMARKS // PSYCH LOADING SCREEN
-		var bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		bg = new FlxSprite(0, 0, Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.setGraphicSize(Std.int(FlxG.width));
 		bg.color = 0xFFD16FFF;
@@ -165,7 +129,7 @@ class LoadingState extends MusicBeatState
 		addBehindBar(logo);
 
 		#else // BASE GAME LOADING SCREEN
-		var bg = new FlxSprite().makeGraphic(1, 1, 0xFFCAFF4D);
+		bg = new FlxSprite().makeGraphic(1, 1, 0xffcaff4d);
 		bg.scale.set(FlxG.width, FlxG.height);
 		bg.updateHitbox();
 		bg.screenCenter();
@@ -177,14 +141,61 @@ class LoadingState extends MusicBeatState
 		funkay.updateHitbox();
 		addBehindBar(funkay);
 		#end
+		
+		preCreate();
 		super.create();
 
-		if (stateChangeDelay <= 0 && checkLoaded())
-		{
+		if (stateChangeDelay <= 0 && checkLoaded()) {
 			dontUpdate = true;
 			onLoad();
 		}
 	}
+	
+	public function getLoaded():Int {
+		return loaded;
+	}
+	public function getLoadMax():Int {
+		return loadMax;
+	}
+	
+	var folderNameLol:String = '';
+	var stateNameLol:String = 'LoadingScreen';
+	override function getFolderName():String {
+		return folderNameLol;
+	}
+	override function customStateName():String {
+		return stateNameLol;
+	}
+	override function _preCreate():Void {
+		#if SCRIPTS_ALLOWED
+		scriptFolder = 'data';
+		startStateScripts(); // try data/LoadingScreen.hx
+		
+		if (!loadedScripts) {
+			scriptFolder = 'scripts';
+			folderNameLol = 'states';
+			stateNameLol = 'LoadingState';
+			startStateScripts(); // try scripts/states/LoadingState.hx
+		}
+		#end
+		
+		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
+	}
+	#if LUA_ALLOWED
+	public override function implementLua(lua:FunkinLua):Void {
+		lua.addLocalCallback('getLoaded', function() return loaded);
+		lua.addLocalCallback('getLoadMax', function() return loadMax);
+		lua.addLocalCallback('addBehindBar', function(tag:String) {
+			var sprite:FlxBasic = LuaUtils.getObjectDirectly(tag);
+			if (sprite == null) {
+				FunkinLua.luaTrace('addBehindBar: Couldnt find object: $tag', false, false, ERROR);
+				return;
+			}
+			
+			addBehindBar(sprite);
+		});
+	}
+	#end
 
 	function addBehindBar(obj:flixel.FlxBasic)
 	{
@@ -196,6 +207,8 @@ class LoadingState extends MusicBeatState
 	{
 		super.update(elapsed);
 		if (dontUpdate) return;
+		
+		preUpdate(elapsed);
 
 		if (!transitioning)
 		{
@@ -220,14 +233,6 @@ class LoadingState extends MusicBeatState
 			bar.scale.x = barWidth * curPercent;
 			bar.updateHitbox();
 		}
-		
-		#if HSCRIPT_ALLOWED
-		if(hscript != null)
-		{
-			if(hscript.exists('onUpdate')) hscript.call('onUpdate', [elapsed]);
-			return;
-		}
-		#end
 
 		#if PSYCH_WATERMARKS // PSYCH LOADING SCREEN
 		timePassed += elapsed;
@@ -299,29 +304,18 @@ class LoadingState extends MusicBeatState
 			FlxTween.tween(pessy, {y: 10}, 0.65, {ease: FlxEase.quadOut});
 		}
 		#end
+		
+		postUpdate(elapsed);
 	}
-
-	#if HSCRIPT_ALLOWED
-	override function destroy()
-	{
-		if(hscript != null)
-		{
-			if(hscript.exists('onDestroy')) hscript.call('onDestroy');
-			hscript.destroy();
-		}
-		hscript = null;
-		super.destroy();
-	}
-	#end
 	
 	var finishedLoading:Bool = false;
 	function onLoad()
 	{
 		_loaded();
-
+		
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
-
+		
 		FlxG.camera.visible = false;
 		MusicBeatState.switchState(target);
 		transitioning = true;
@@ -784,7 +778,7 @@ class LoadingState extends MusicBeatState
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
+				return FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 			}
 		}
 		mutex.acquire();

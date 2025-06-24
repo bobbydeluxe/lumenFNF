@@ -8,6 +8,43 @@ import lime.utils.Assets as LimeAssets;
 #end
 class CoolUtil
 {
+	public static function getStyleSize(style:String, lineToParse:Int = 0):Float {
+		function parseFirstLine(content:String, targetLine:Int = 0):Float {
+			var lines = content.split('\n');
+			if (lines.length > 0) {
+				var firstLine = lines[targetLine].trim();
+				var num = Std.parseFloat(firstLine);
+				if (Math.isNaN(num)) return 1;
+				return num;
+			}
+			return 1;
+		}
+
+		var path = Paths.txt(style, 'images/uiSizes');
+		#if sys
+		var content:String = null;
+		if (FileSystem.exists(path)) {
+			content = File.getContent(path);
+		} else {
+			var fallback = Paths.txt('default', 'images/uiSizes');
+			if (FileSystem.exists(fallback)) content = File.getContent(fallback);
+		}
+		if (content != null) return parseFirstLine(content, lineToParse);
+		#else
+		if (OpenFlAssets.exists(path)) {
+			var content = OpenFlAssets.getText(path);
+			return parseFirstLine(content, lineToParse);
+		} else {
+			var fallback = Paths.txt('default', 'images/uiSizes');
+			if (OpenFlAssets.exists(fallback)) {
+				var content = OpenFlAssets.getText(fallback);
+				return parseFirstLine(content, lineToParse);
+			}
+		}
+		#end
+		return 1;
+	}
+
 	public static function checkForUpdates(url:String = null):String {
 		if (url == null || url.length == 0)
 			url = "https://raw.githubusercontent.com/Psych-Slice/P-Slice/master/gitVersion.txt";

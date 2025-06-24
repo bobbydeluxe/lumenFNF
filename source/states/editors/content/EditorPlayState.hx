@@ -250,26 +250,23 @@ class EditorPlayState extends MusicBeatSubstate
 	}
 
 	var lastBeatHit:Int = -1;
-	override function beatHit()
-	{
-		if(lastBeatHit >= curBeat) {
-			//trace('BEAT HIT: ' + curBeat + ', LAST HIT: ' + lastBeatHit);
+	override function beatHit(beat:Int):Void {
+		if (lastBeatHit >= beat)
 			return;
-		}
+		
 		notes.members.sort((a:Note, b:Note) -> Std.int(b.strumTime) - Std.int(a.strumTime));
 
-		super.beatHit();
-		lastBeatHit = curBeat;
+		super.beatHit(beat);
+		lastBeatHit = beat;
 	}
 	
-	override function sectionHit()
-	{
-		if (PlayState.SONG.notes[curSection] != null)
-		{
-			if (PlayState.SONG.notes[curSection].changeBPM)
-				Conductor.bpm = PlayState.SONG.notes[curSection].bpm;
+	override function sectionHit(section:Int):Void {
+		if (PlayState.SONG.notes[section] != null) {
+			if (PlayState.SONG.notes[section].changeBPM)
+				Conductor.bpm = PlayState.SONG.notes[section].bpm;
 		}
-		super.sectionHit();
+		
+		super.sectionHit(section);
 	}
 
 	override function destroy()
@@ -379,10 +376,11 @@ class EditorPlayState extends MusicBeatSubstate
 			}
 
 			var swagNote:Note = new Note(note.strumTime, note.noteData, oldNote, false, this);
-			swagNote.mustPress = note.mustPress;
 			swagNote.sustainLength = note.sustainLength;
-			swagNote.gfNote = note.gfNote;
+			swagNote.mustPress = note.mustPress;
 			swagNote.noteType = note.noteType;
+			swagNote.gfNote = note.gfNote;
+			swagNote.section = noteSec;
 
 			swagNote.scrollFactor.set();
 			unspawnNotes.push(swagNote);
@@ -401,6 +399,7 @@ class EditorPlayState extends MusicBeatSubstate
 					sustainNote.noteType = swagNote.noteType;
 					sustainNote.gfNote = swagNote.gfNote;
 					sustainNote.scrollFactor.set();
+					sustainNote.section = noteSec;
 					sustainNote.parent = swagNote;
 					unspawnNotes.push(sustainNote);
 					swagNote.tail.push(sustainNote);

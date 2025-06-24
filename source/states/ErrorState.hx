@@ -25,29 +25,25 @@ class ErrorState extends MusicBeatState
 		add(bg);
 		bg.screenCenter();
 
-		errorText = new FlxText(0, 0, FlxG.width - 300, errorMsg, 32);
+		errorText = new FlxText(0, 0, FlxG.width - 300, errorMsg, 24);
 		errorText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		errorText.scrollFactor.set();
 		errorText.borderSize = 2;
 		errorText.screenCenter();
 		add(errorText);
 		super.create();
-		
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('NONE', 'A_B');
-		addTouchPadCamera();
-		#end
 	}
 
-	override function update(elapsed:Float)
-	{
+	override public function reset():Void {}
+	override function update(elapsed:Float) {
 		errorSine += 180 * elapsed;
 		errorText.alpha = 1 - Math.sin((Math.PI * errorSine) / 180);
 
-		if(controls.ACCEPT && acceptCallback != null)
+		if (controls.ACCEPT && acceptCallback != null) {
 			acceptCallback();
-		else if(controls.BACK && backCallback != null)
+		} else if(controls.BACK && backCallback != null) {
 			backCallback();
+		}
 
 		super.update(elapsed);
 	}

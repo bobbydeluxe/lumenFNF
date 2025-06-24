@@ -131,9 +131,19 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 
 	<haxeflag name="-dce no" if="SCRIPTS_ALLOWED" />
 
+	<!-- victoria's psych fork macro fixes -->
+	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.LuaUtils.ExtraDataMacro.build())', 'flixel.FlxBasic')" if="SCRIPTS_ALLOWED" />
+	<haxeflag name="--macro" value="addMetadata('@:build(psychlua.HScript.HScriptMacro.buildInterp())', 'crowplexus.hscript.Interp')" if="HSCRIPT_ALLOWED" />
 	<haxeflag name="--macro" value="include('flixel', true, ['flixel.addons.nape', 'flixel.addons.editors.spine', 'flixel.system.macros'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('haxe', true, ['haxe.atomic', 'haxe.macro'])" if="SCRIPTS_ALLOWED" />
 	<haxeflag name="--macro" value="include('sys', true)" if="SCRIPTS_ALLOWED" />
+
+	<!-- p-slice macro fixes -->
+	<haxeflag name="--macro" value="allowPackage('flash')" />
+	<haxeflag name="--macro" value="include('my.pack')" />
+	<!-- This macro allows addition of new functionality to existing Flixel. -->
+	<haxeflag name="--macro" value="addMetadata('@:build(mikolka.FlxMacro.buildFlxBasic())', 'flixel.FlxBasic')" />
+
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
@@ -225,13 +235,8 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 	<!-- Do whatever you want I'm tired uninstall and install everytime -->
 	<certificate path="key.keystore" password="pslice" alias="psliceport" alias-password="pslice" if="android" unless="debug" />
 
-	<!--Macro fixes-->
-	<haxeflag name="--macro" value="allowPackage('flash')" />
-	<haxeflag name="--macro" value="include('my.pack')" />
-	<!-- This macro allows addition of new functionality to existing Flixel. -->
-	<haxeflag name="--macro" value="addMetadata('@:build(mikolka.FlxMacro.buildFlxBasic())', 'flixel.FlxBasic')" />
-
 	<!-- more verbose HScript-->
 	<define name="IRIS_DEBUG" if="debug"/>
 	<haxedef name="hscriptPos" if="HSCRIPT_ALLOWED"/>
+	<define name="SCRIPTS_ALLOWED" if="HSCRIPT_ALLOWED || LUA_ALLOWED" />
 </project>

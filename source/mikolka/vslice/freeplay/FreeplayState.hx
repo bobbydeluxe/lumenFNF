@@ -1840,11 +1840,11 @@ class FreeplayState extends MusicBeatSubstate
 		}
 	}
 
-	override function beatHit()
+	override function beatHit(beat:Int)
 	{
 		backingCard?.beatHit(curBeat);
 
-		super.beatHit();
+		super.beatHit(beat);
 	}
 
 	public override function destroy():Void
@@ -2277,7 +2277,7 @@ class FreeplayState extends MusicBeatSubstate
 	 * Build an instance of `FreeplayState` that is above the `MainMenuState`.
 	 * @return The MainMenuState with the FreeplayState as a substate.
 	 */
-	public static function build(?params:FreeplayStateParams, ?stickers:StickerSubState):MusicBeatState
+	public static function build(?params:FreeplayStateParams, ?stickers:StickerSubState):ScriptedState
 	{
 		var result:MainMenuState;
 		if (params?.fromResults?.playRankAnim)

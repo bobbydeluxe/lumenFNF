@@ -94,10 +94,14 @@ class Conductor
 		return Math.floor(getStepRounded(time, bpmChangeMap)/4);
 	}
 
-	public static function mapBPMChanges(song:SwagSong)
-	{
+	public static function mapBPMChanges(?song:SwagSong) {
+		if (song == null) {
+			bpmChangeMap = defaultBPMChangeMap(Conductor.bpm);
+			return;
+		}
+		
 		bpmChangeMap = defaultBPMChangeMap(song.bpm);
-
+		
 		var curBPM:Float = song.bpm;
 		var totalSteps:Int = 0;
 		var totalPos:Float = 0;
@@ -110,7 +114,7 @@ class Conductor
 					stepTime: totalSteps,
 					songTime: totalPos,
 					bpm: curBPM,
-					stepCrochet: calculateCrochet(curBPM)/4
+					stepCrochet: calculateCrochet(curBPM) / 4
 				};
 				bpmChangeMap.push(event);
 			}
@@ -121,15 +125,15 @@ class Conductor
 		}
 		trace('Added ${bpmChangeMap.length} BPM changes');
 	}
-
 	public static function copyBPMChanges(?bpmChanges:Array<BPMChangeEvent>):Array<BPMChangeEvent> {
 		bpmChanges ??= Conductor.bpmChangeMap;
+		
 		var newBPMMap:Array<BPMChangeEvent> = [];
 		for (change in bpmChanges)
 			newBPMMap.push(Reflect.copy(change));
+		
 		return newBPMMap;
 	}
-
 	public static function defaultBPMChangeMap(bpm:Float = 100):Array<BPMChangeEvent> {
 		return [{
 			bpm: bpm,
@@ -151,10 +155,17 @@ class Conductor
 	}
 
 	public static function set_bpm(newBPM:Float):Float {
-		bpm = newBPM;
-		crochet = calculateCrochet(bpm);
+		crochet = calculateCrochet(newBPM);
 		stepCrochet = crochet / 4;
+		bpm = newBPM;
+		
+		if (bpmChangeMap == null || bpmChangeMap.length == 0) {
+			mapBPMChanges();
+		} else if (Math.abs(bpm - bpmChangeMap[0].bpm) < 1) {
+			bpmChangeMap[0].stepCrochet = stepCrochet;
+			bpmChangeMap[0].bpm = bpm;
+		}
 
-		return bpm = newBPM;
+		return newBPM;
 	}
 }
