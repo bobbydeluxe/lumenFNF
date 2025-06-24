@@ -185,8 +185,7 @@ class Main extends Sprite
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
 		#end
-
-		FlxG.fixedTimestep = false;
+		
 		FlxG.game.focusLostFramerate = #if mobile 30 #else 60 #end;
 		#if web
 		FlxG.keys.preventDefaultKeys.push(TAB);

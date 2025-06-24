@@ -1,5 +1,7 @@
 package options;
 
+import psychlua.LuaUtils;
+
 import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.input.gamepad.FlxGamepadInputID;
@@ -9,8 +11,6 @@ import objects.CheckboxThingie;
 import objects.AttachedText;
 import options.Option;
 import backend.InputFormatter;
-
-import psychlua.LuaUtils;
 
 class BaseOptionsMenu extends ScriptedSubState
 {
@@ -249,7 +249,7 @@ class BaseOptionsMenu extends ScriptedSubState
 											curOption.change();
 										}
 										
-									case PERCENT:
+									case FLOAT | PERCENT:
 										var target:Float = FlxMath.roundDecimal(holdValue, curOption.decimals);
 										if (callOnScripts('onChangeItem', [curOption, target], true) != LuaUtils.Function_Stop && curOption.getValue() != target) {
 											curOption.setValue(target);
@@ -494,7 +494,7 @@ class BaseOptionsMenu extends ScriptedSubState
 		
 		var next:Int = FlxMath.wrap(curSelected + change, 0, optionsArray.length - 1);
 		
-		if (callOnScripts('onSelectItem', [optionsArray[next], next], true) != psychlua.LuaUtils.Function_Stop) {
+		if (callOnScripts('onSelectItem', [optionsArray[next], next], true) != LuaUtils.Function_Stop) {
 			curSelected = next;
 			curOption = optionsArray[curSelected]; //shorter lol
 			

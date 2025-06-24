@@ -1,12 +1,9 @@
 package backend;
 
-import debug.ScriptTraceDisplay;
 import shaders.ErrorHandledShader;
 import psychlua.GlobalScriptHandler;
 
 class MusicBeatSubstate extends flixel.FlxSubState {
-	public static var instance:MusicBeatSubstate;
-
 	var stepsToDo:Int = 0;
 	
 	public var curSection:Int = 0;
@@ -27,7 +24,6 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 	public var autoUpdateRPC:Bool = true; //performance setting for custom RPC things
 	
 	public function new() {
-		instance = this;
 		super();
 	}
 	
@@ -49,10 +45,10 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 		_postCreate();
 	}
 	function _preCreate():Void {
-		GlobalScriptHandler.call('onCreateSubState', [this]);
+		GlobalScriptHandler.call('onCreateSubState', [this, Type.getClass(this)]);
 	}
 	function _postCreate():Void {
-		GlobalScriptHandler.call('onCreateSubStatePost', [this]);
+		GlobalScriptHandler.call('onCreateSubStatePost', [this, Type.getClass(this)]);
 	}
 	
 	public function updatePresence():Void {
@@ -221,12 +217,12 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 				func(stage);
 	}
 	
-	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int):TracePopUp {
-		return ScriptedState.debugPrint(text, color, size);
+	public function addTextToDebug(text:String, ?color:FlxColor, ?size:Int) {
+		ScriptedState.debugPrint(text, color, size);
 	}
 	
 	public override function openSubState(subState:flixel.FlxSubState):Void {
-		if (GlobalScriptHandler.call('onOpenSubState', [this]) != psychlua.LuaUtils.Function_Stop)
+		if (GlobalScriptHandler.call('onOpenSubState', [subState, Type.getClass(subState)]) != psychlua.LuaUtils.Function_Stop)
 			super.openSubState(subState);
 	}
 	
@@ -278,7 +274,7 @@ class MusicBeatSubstate extends flixel.FlxSubState {
 			}
 		}
 		#if (SCRIPTS_ALLOWED)
-		addTextToDebug('No .frag or .vert code found for shader "$name"!', FlxColor.RED);
+		Log.print('No .frag or .vert code found for shader "$name"!', ERROR);
 		#else
 		FlxG.log.warn('No .frag or .vert code found for shader "$name"!');
 		#end

@@ -22,6 +22,7 @@ class MusicBeatState extends MusicBeatSubstate {
 	
 	public override function create() {
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
+		FlxG.fixedTimestep = false;
 		
 		super.create();
 		
@@ -46,10 +47,10 @@ class MusicBeatState extends MusicBeatSubstate {
 		super.preCreate();
 	}
 	override function _preCreate():Void {
-		GlobalScriptHandler.call('onCreateState', [this]);
+		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
 	}
 	override function _postCreate():Void {
-		GlobalScriptHandler.call('onCreateStatePost', [this]);
+		GlobalScriptHandler.call('onCreateStatePost', [this, Type.getClass(this)]);
 	}
 	
 	public function initPsychCamera():PsychCamera {
@@ -61,12 +62,12 @@ class MusicBeatState extends MusicBeatSubstate {
 	}
 
 	public static function switchState(?nextState:FlxState):Void {
-		if (GlobalScriptHandler.call('onSwitchState', [nextState]) != psychlua.LuaUtils.Function_Stop) {
+		if (GlobalScriptHandler.call('onSwitchState', [nextState, Type.getClass(nextState)]) != psychlua.LuaUtils.Function_Stop) {
 			if (nextState == null)
 				return resetState();
 			
 			if (FlxTransitionableState.skipNextTransIn) {
-				FlxG.switchState(nextState);
+				FlxG.switchState(nextState); // actually just cant rid of this deprecated implementation or everything dies
 			} else {
 				startTransition(nextState);
 			}
@@ -93,7 +94,7 @@ class MusicBeatState extends MusicBeatSubstate {
 		
 		if (nextState is CustomState) {
 			var customState:CustomState = cast nextState;
-			CustomFadeTransition.finishCallback = () -> FlxG.switchState(new CustomState(customState.stateName));
+			CustomFadeTransition.finishCallback = () -> FlxG.switchState(() -> new CustomState(customState.stateName));
 		} else {
 			if (nextState == FlxG.state) {
 				CustomFadeTransition.finishCallback = () -> FlxG.resetState();

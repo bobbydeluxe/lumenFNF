@@ -86,6 +86,7 @@ class Note extends FlxSprite
 	public static var globalRgbShaders:Array<RGBPalette> = [];
 	public var inEditor:Bool = false;
 
+	public var character:Character = null;
 	public var animSuffix:String = '';
 	public var gfNote:Bool = false;
 	public var earlyHitMult:Float = 1;
@@ -152,6 +153,8 @@ class Note extends FlxSprite
 		return hitsoundForce ? hitsoundVolume : 0.0;
 	}
 	public var hitsound:String = 'hitsound';
+
+	public var section:Int = 0;
 
 	private function set_texture(value:String):String {
 		if(texture != value) {
