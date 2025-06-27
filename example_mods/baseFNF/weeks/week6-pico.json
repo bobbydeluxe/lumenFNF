@@ -1,0 +1,24 @@
+{
+	"songs": [
+		["Senpai (Pico Mix)", "senpai-pixel", [255, 120, 191]],
+		["Roses (Pico Mix)", "senpai-pixel", [255, 120, 191]]
+	],
+
+	"colors": ["F9CF51", "B79839"],
+
+	"weekCharacters": [
+		"senpai",
+		"pico-plr",
+		"nene"
+	],
+	"weekBackground": "week6",
+
+	"storyName": "Hating Simulator (ft. moawling)",
+	"weekBefore": "week5-pico",
+	"weekName": "Week 6",
+	"startUnlocked": true,
+
+	"hideStoryMode": true,
+	"hideFreeplay": false,
+	"difficulties": "Easy, Normal, Hard"
+}

@@ -1,0 +1,1 @@
+fix the fucking character select because of an issue about not being able to get shit from the assets folder when there's no mod directory

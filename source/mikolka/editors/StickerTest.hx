@@ -16,7 +16,7 @@ class StickerTest extends MusicBeatState {
 	var stickerSetInput:PsychUIInputText;
 	var stickerPackInput:PsychUIInputText;
 
-	public function new(?stickers:StickerSubState = null,set:String = "stickers-set-1",pack:String = "all"){
+	public function new(?stickers:StickerSubState = null,set:String = "stickers-set-base",pack:String = "all"){
         stickerPack = pack;
         stickerSet = set;
         if (stickers != null)

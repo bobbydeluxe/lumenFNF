@@ -5,7 +5,7 @@ import mikolka.vslice.freeplay.BGScrollingText;
 import mikolka.funkin.freeplay.FreeplayStyle;
 import mikolka.funkin.freeplay.FreeplayStyleRegistry;
 import shaders.AngleMask;
-import mikolka.vslice.freeplay.backcards.BoyfriendCard;
+import mikolka.vslice.freeplay.BackingCard;
 
 class FreeplayEditSubstate extends MusicBeatSubstate
 {
@@ -19,7 +19,7 @@ class FreeplayEditSubstate extends MusicBeatSubstate
 	var dj:FlxAtlasSprite;
 	var dj_anim:DJAnimPreview;
 
-	var backingCard:BoyfriendCard;
+	var backingCard:BackingCard;
 	var angleMaskShader:AngleMask = new AngleMask();
 	var bgDad:FlxSprite;
 	var ostName:FlxText;
@@ -63,7 +63,7 @@ class FreeplayEditSubstate extends MusicBeatSubstate
 
 	override function create()
 	{
-		backingCard = new BoyfriendCard(data);
+		backingCard = new BackingCard(data);
 		backingCard.init();
 		add(backingCard);
 
@@ -268,7 +268,7 @@ class FreeplayEditSubstate extends MusicBeatSubstate
 			input_text3 = new PsychUIInputText(10, 90, 150, data._data.freeplayDJ.text3);
 
 			var currentCharacter = data.getFreeplayDJData();
-			input_text1.onChange = (prev, current) ->
+			/*input_text1.onChange = (prev, current) ->
 			{
 				data.getFreeplayDJData().text1 = current;
 				backingCard.remove(backingCard.funnyScroll);
@@ -313,7 +313,7 @@ class FreeplayEditSubstate extends MusicBeatSubstate
 				backingCard.txtNuts = new BGScrollingText(0, 285, currentCharacter.getFreeplayDJText(3), FlxG.width / 2, true, 43);
 				backingCard.txtNuts.speed = 3.5;
 				backingCard.add(backingCard.txtNuts);
-			}
+			}*/
 		}
 		// DJ EDITOR
 		var dj_editor_desc_txt = new FlxText(10, 10, 400, "Pick frames (start,end)");

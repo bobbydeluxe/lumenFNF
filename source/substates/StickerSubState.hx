@@ -26,7 +26,7 @@ using mikolka.funkin.utils.ArrayTools;
 
 class StickerSubState extends MusicBeatSubstate
 {
-  public static var STICKER_SET = "stickers-set-1";
+  public static var STICKER_SET = "stickers-set-base";
   public static var STICKER_PACK = "all";
   public var grpStickers:FlxTypedGroup<StickerSprite>;
 
@@ -331,7 +331,7 @@ class StickerSubState extends MusicBeatSubstate
     lastOne.angle = 0;
     lastOne.screenCenter();
 
-    STICKER_SET = "stickers-set-1";
+    STICKER_SET = "stickers-set-base";
     STICKER_PACK = "all";
     Mods.loadTopMod(); // We won't be messing with mods from here on
   }

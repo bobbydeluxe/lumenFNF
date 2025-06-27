@@ -1,0 +1,17 @@
+[
+	{
+		"save": "comboAnims",
+		"name": "Combo Animations:",
+		"type": "string",
+		"description": "Select how GF characters should react to the combo, or turn it off.",
+		"value": "Psych",
+		"options": ["Psych", "Vanilla", "Disabled"]
+	},
+	{
+		"save": "visualizerActive",
+		"name": "A-Bot Visualizer",
+		"type": "bool",
+		"description": "Choose whether to enable A-Bot's visualizer.",
+		"value": true
+	}
+]

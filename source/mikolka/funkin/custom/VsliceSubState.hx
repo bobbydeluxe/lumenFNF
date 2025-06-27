@@ -5,7 +5,7 @@ import flixel.FlxBasic;
 import flixel.util.FlxSort;
 
 // V-Slice substate
-class VsliceSubState extends MusicBeatSubstate
+class VsliceSubState extends ScriptedSubState
 {
 	/**
 	 * Refreshes the state, by redoing the render order of all sprites.

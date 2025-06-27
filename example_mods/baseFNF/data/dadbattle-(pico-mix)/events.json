@@ -1,0 +1,242 @@
+{
+	"events": [
+		[
+			0,
+			[
+				["Set Camera Target", "BF", ""]
+			]
+		],
+		[
+			10666.6666666667,
+			[
+				["Set Camera Target", "Dad,250,100", ""],
+				["Set Camera Zoom", "0.8", "32,expoOut"]
+			]
+		],
+		[
+			13333.3333333333,
+			[
+				["Set Camera Target", "BF", ""],
+				["Set Camera Zoom", "0.9", "32,expoOut"]
+			]
+		],
+		[
+			16000,
+			[
+				["Set Camera Target", "Dad", ""]
+			]
+		],
+		[
+			18666.6666666667,
+			[
+				["Set Camera Target", "BF", ""]
+			]
+		],
+		[
+			21666.6666666667,
+			[
+				["Set Camera Target", "Dad,250,100", ""],
+				["Set Camera Zoom", "0.8", "32,expoOut"]
+			]
+		],
+		[
+			22666.6666666667,
+			[
+				["Set Camera Target", "Dad,250,100", ""]
+			]
+		],
+		[
+			26666.6666666667,
+			[
+				["Set Camera Target", "BF", ""],
+				["Set Camera Zoom", "0.9", "32,expoOut"]
+			]
+		],
+		[
+			28000,
+			[
+				["Set Camera Zoom", "0.95", "32,expoOut"]
+			]
+		],
+		[
+			29333.3333333333,
+			[
+				["Set Camera Zoom", "1", "32,expoOut"]
+			]
+		],
+		[
+			30666.6666666667,
+			[
+				["Set Camera Zoom", "0.9", "32,expoOut"]
+			]
+		],
+		[
+			32000,
+			[
+				["Set Camera Target", "Dad", ""],
+				["Set Camera Zoom", "1.02", "32,expoOut"],
+				["Dadbattle Spotlight", "1", ""]
+			]
+		],
+		[
+			41000,
+			[
+				["Set Camera Target", "Dad,250,100", ""],
+				["Set Camera Zoom", "0.8", "32,expoOut"]
+			]
+		],
+		[
+			42833.3333333333,
+			[
+				["Set Camera Target", "BF", ""],
+				["Set Camera Zoom", "1.02", "32,expoOut"],
+				["Dadbattle Spotlight", "3", ""]
+			]
+		],
+		[
+			48000,
+			[
+				["Set Camera Zoom", "1.07", "32,expoOut"]
+			]
+		],
+		[
+			49333.3333333334,
+			[
+				["Set Camera Zoom", "1.11", "32,expoOut"]
+			]
+		],
+		[
+			50666.6666666667,
+			[
+				["Set Camera Zoom", "1.15", "32,expoOut"],
+				["Set Camera Bop", "4", "0"],
+				["Add Camera Zoom", "", "0.045"]
+			]
+		],
+		[
+			51333.3333333334,
+			[
+				["Set Camera Zoom", "1.19", "32,expoOut"],
+				["Add Camera Zoom", "", "0.045"]
+			]
+		],
+		[
+			51833.3333333334,
+			[
+				["Set Camera Zoom", "1.23", "32,expoOut"],
+				["Add Camera Zoom", "", "0.045"]
+			]
+		],
+		[
+			52333.3333333334,
+			[
+				["Set Camera Zoom", "1.29", "32,expoOut"],
+				["Add Camera Zoom", "", ""]
+			]
+		],
+		[
+			53333.3333333334,
+			[
+				["Set Camera Target", "Dad", ""],
+				["Set Camera Zoom", "0.9", "32,expoOut"],
+				["Set Camera Bop", "4", "1"],
+				["Dadbattle Spotlight", "0", ""]
+			]
+		],
+		[
+			54333.3333333334,
+			[
+				["Set Camera Target", "Dad,250,100", ""],
+				["Set Camera Zoom", "0.8", "32,expoOut"]
+			]
+		],
+		[
+			56000,
+			[
+				["Set Camera Target", "BF", ""],
+				["Set Camera Zoom", "0.9", "32,expoOut"]
+			]
+		],
+		[
+			58666.6666666667,
+			[
+				["Set Camera Target", "Dad", ""]
+			]
+		],
+		[
+			61333.3333333334,
+			[
+				["Set Camera Target", "BF", ""]
+			]
+		],
+		[
+			62666.6666666667,
+			[
+				["Set Camera Target", "Dad,250,100", ""],
+				["Set Camera Zoom", "0.8", "32,expoOut"]
+			]
+		],
+		[
+			69333.3333333334,
+			[
+				["Set Camera Target", "BF", ""],
+				["Set Camera Zoom", "0.9", "32,expoOut"]
+			]
+		],
+		[
+			70666.6666666667,
+			[
+				["Set Camera Zoom", "0.95", "32,expoOut"]
+			]
+		],
+		[
+			72000,
+			[
+				["Set Camera Zoom", "1", "32,expoOut"]
+			]
+		],
+		[
+			73333.3333333334,
+			[
+				["Set Camera Zoom", "0.9", "32,expoOut"]
+			]
+		],
+		[
+			74666.6666666667,
+			[
+				["Set Camera Target", "Dad", ""]
+			]
+		],
+		[
+			77333.3333333333,
+			[
+				["Set Camera Target", "BF", ""]
+			]
+		],
+		[
+			80000,
+			[
+				["Set Camera Target", "Dad", ""]
+			]
+		],
+		[
+			82666.6666666667,
+			[
+				["Set Camera Target", "BF", ""]
+			]
+		],
+		[
+			83666.6666666667,
+			[
+				["Set Camera Zoom", "0.95", "32,expoOut"]
+			]
+		],
+		[
+			85333.3333333333,
+			[
+				["Set Camera Zoom", "0.85", "32,expoOut"]
+			]
+		]
+	],
+	"format": "psych_v1"
+}

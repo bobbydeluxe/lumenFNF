@@ -18,6 +18,7 @@ typedef WeekFile =
 	var hideStoryMode:Bool;
 	var hideFreeplay:Bool;
 	var difficulties:String;
+	var colors:Array<String>; // New colors array
 }
 
 class WeekData {
@@ -37,17 +38,14 @@ class WeekData {
 	public var hideStoryMode:Bool;
 	public var hideFreeplay:Bool;
 	public var difficulties:String;
+	public var colors:Array<String>; // New colors array
 
 	public var fileName:String;
 
 	public static function createWeekFile():WeekFile {
 		var weekFile:WeekFile = {
 			songs: [["Bopeebo", "face", [146, 113, 253]], ["Fresh", "face", [146, 113, 253]], ["Dad Battle", "face", [146, 113, 253]]],
-			#if BASE_GAME_FILES
 			weekCharacters: ['dad', 'bf', 'gf'],
-			#else
-			weekCharacters: ['bf', 'bf', 'gf'],
-			#end
 			weekBackground: 'stage',
 			weekBefore: 'tutorial',
 			storyName: 'Your New Week',
@@ -56,7 +54,8 @@ class WeekData {
 			hiddenUntilUnlocked: false,
 			hideStoryMode: false,
 			hideFreeplay: false,
-			difficulties: ''
+			difficulties: '',
+			colors: ['FFFFFF', '8C9CFF'] // Default colors
 		};
 		return weekFile;
 	}

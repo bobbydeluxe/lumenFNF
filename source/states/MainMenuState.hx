@@ -52,7 +52,7 @@ class MainMenuState extends ScriptedState
 
 	static var showOutdatedWarning:Bool = true;
 	var openDebugMenu:Bool = false;
-	public function new(debug:Bool = false) {
+	public function new(isDisplayingRank:Bool = false, debug:Bool = false) {
 		super();
 		openDebugMenu = debug;
 	}
@@ -89,7 +89,24 @@ class MainMenuState extends ScriptedState
 
 		menuItems = new FlxTypedSpriteGroup();
 		menuFunctions['story_mode'] ??= (item:MenuItem) -> MusicBeatState.switchState(new StoryMenuState());
-		menuFunctions['freeplay'] ??= (item:MenuItem) -> MusicBeatState.switchState(new FreeplayState());
+		menuFunctions['freeplay'] ??= (item:MenuItem) -> {
+			persistentDraw = true;
+			persistentUpdate = false;
+			// Freeplay has its own custom transition
+			FlxTransitionableState.skipNextTransIn = true;
+			FlxTransitionableState.skipNextTransOut = true;
+
+			openSubState(new mikolka.vslice.freeplay.FreeplayState());
+			subStateOpened.addOnce(state -> {
+				for (i in 0...menuItems.members.length) {
+					menuItems.members[i].revive();
+					menuItems.members[i].alpha = 1;
+					menuItems.members[i].visible = true;
+					selectedSomethin = false;
+				}
+				changeItem(0);
+			});
+		}
 		menuFunctions['mods'] ??= (item:MenuItem) -> MusicBeatState.switchState(new ModsMenuState());
 		menuFunctions['credits'] ??= (item:MenuItem) -> MusicBeatState.switchState(new CreditsState());
 		menuFunctions['options'] ??= (item:MenuItem) -> {
@@ -135,14 +152,6 @@ class MainMenuState extends ScriptedState
 			openSubState(new MasterEditorMenu(true));
 			FlxTransitionableState.skipNextTransOut = true;
 		}
-
-		#if CHECK_FOR_UPDATES
-		if (showOutdatedWarning && ClientPrefs.data.checkForUpdates && substates.OutdatedSubState.updateVersion > pSliceVersion) {
-			persistentUpdate = false;
-			showOutdatedWarning = false;
-			openSubState(new substates.OutdatedSubState());
-		}
-		#end
 
 		FlxG.camera.follow(camFollow, null, .2);
 		

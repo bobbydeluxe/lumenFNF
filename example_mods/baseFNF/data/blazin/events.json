@@ -1,0 +1,16 @@
+{
+	"song": {
+		"events": [
+			[
+				0,
+				[
+					[
+						"Set Camera Target",
+						"dad",
+						"4, quartOut"
+					]
+				]
+			]
+		]
+	}
+}

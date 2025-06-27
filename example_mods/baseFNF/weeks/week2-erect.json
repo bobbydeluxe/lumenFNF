@@ -1,0 +1,24 @@
+{
+	"songs": [
+		["Spookeez Erect", "spooky", [34, 51, 68]],
+		["South Erect", "spooky", [34, 51, 68]]
+	],
+
+	"colors": ["F9CF51", "B79839"],
+
+	"weekCharacters": [
+		"spooky",
+		"bf",
+		"gf"
+	],
+	"weekBackground": "week2",
+
+	"storyName": "Spooky Month",
+	"weekBefore": "week1-erect",
+	"weekName": "Week 2",
+	"startUnlocked": true,
+
+	"hideStoryMode": true,
+	"hideFreeplay": false,
+	"difficulties": "Erect, Nightmare"
+}

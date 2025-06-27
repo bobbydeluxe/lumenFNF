@@ -1,10 +1,6 @@
 package mikolka.compatibility;
 
 class VsliceOptions {
-    public static var ALLOW_COLORING(get,never):Bool;    
-    public static function get_ALLOW_COLORING():Bool {
-        return ClientPrefs.data.vsliceFreeplayColors;
-    }
     public static var FLASHBANG(get,never):Bool;    
     public static function get_FLASHBANG():Bool {
         return ClientPrefs.data.flashing;
@@ -20,10 +16,6 @@ class VsliceOptions {
     public static var CAM_ZOOMING(get,never):Bool;    
     public static function get_CAM_ZOOMING():Bool {
         return ClientPrefs.data.camZooms;
-    }
-    public static var FP_CARDS(get,never):Bool;    
-    public static function get_FP_CARDS():Bool {
-        return ClientPrefs.data.vsliceSpecialCards;
     }
     public static var SHADERS(get,never):Bool;    
     public static function get_SHADERS():Bool {

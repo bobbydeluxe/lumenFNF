@@ -5,7 +5,6 @@ import backend.WeekData;
 import objects.Character;
 
 import states.MainMenuState;
-import states.FreeplayState;
 
 class MasterEditorMenu extends ScriptedSubState
 {
@@ -144,7 +143,6 @@ class MasterEditorMenu extends ScriptedSubState
 				if (optionFunc != null) {
 					optionFunc();
 					FlxG.sound.music.volume = 0;
-					FreeplayState.destroyFreeplayVocals();
 				} else {
 					trace('Option "$option" doesn\'t do anything');
 				}
@@ -186,6 +184,7 @@ class MasterEditorMenu extends ScriptedSubState
 			Mods.currentModDirectory = directories[curDirectory];
 			directoryTxt.text = '< Loaded Mod Directory: ' + Mods.currentModDirectory + ' >';
 		}
+		trace(Mods.currentModDirectory);
 		directoryTxt.text = directoryTxt.text.toUpperCase();
 		
 		callOnScripts('onSelectDirectory', [directories[curDirectory], next]);

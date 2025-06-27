@@ -1,5 +1,6 @@
 package states;
 
+import mikolka.compatibility.ModsHelper;
 import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
@@ -59,11 +60,23 @@ class StoryMenuState extends ScriptedState
 
 	override function create()
 	{	
-		Paths.clearStoredMemory();
 		Paths.clearUnusedMemory();
+
+		if (stickerSubState != null)
+			{
+			  //this.persistentUpdate = true;
+			  //this.persistentDraw = true;
+		
+			  openSubState(stickerSubState);
+			  ModsHelper.clearStoredWithoutStickers();
+			  stickerSubState.degenStickers();
+			  FlxG.sound.playMusic(Paths.music('freakyMenu'));
+			}
+		else Paths.clearStoredMemory();
 
 		persistentUpdate = persistentDraw = true;
 		PlayState.isStoryMode = true;
+		PlayState.altInstrumentals = null; //? P-Slice
 		WeekData.reloadWeekFiles(true);
 		
 		rpcDetails = 'Story Menu';
@@ -90,7 +103,7 @@ class StoryMenuState extends ScriptedState
 		txtWeekTitle.alpha = 0.7;
 
 		var ui_tex = Paths.getSparrowAtlas('campaign_menu_UI_assets');
-		bgYellow = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
+		bgYellow = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFFFFFFF);
 		bgSprite = new FlxSprite(0, 56);
 
 		grpWeekText = new FlxTypedGroup<MenuItem>();
@@ -371,7 +384,6 @@ class StoryMenuState extends ScriptedState
 		new FlxTimer().start(1, (_) -> {
 			#if !SHOW_LOADING_SCREEN FlxG.sound.music.stop(); #end
 			LoadingState.loadAndSwitchState(new PlayState(), true);
-			FreeplayState.destroyFreeplayVocals();
 		});
 		
 		#if (MODS_ALLOWED && DISCORD_ALLOWED)
@@ -466,9 +478,14 @@ class StoryMenuState extends ScriptedState
 			var assetName:String = leWeek.weekBackground;
 			if(assetName == null || assetName.length < 1) {
 				bgSprite.visible = false;
+				bgSprite.color = 0xFFFFFFFF;
 			} else {
 				bgSprite.loadGraphic(Paths.image('menubackgrounds/menu_' + assetName));
+				bgSprite.color = FlxColor.fromString("0x" + leWeek.colors[1]);
 			}
+
+			bgYellow.color = FlxColor.fromString("0x" + leWeek.colors[0]);
+
 			PlayState.storyWeek = curWeek;
 
 			Difficulty.loadFromWeek();
@@ -500,6 +517,7 @@ class StoryMenuState extends ScriptedState
 		var weekArray:Array<String> = loadedWeeks[curWeek].weekCharacters;
 		for (i in 0...grpWeekCharacters.length) {
 			grpWeekCharacters.members[i].changeCharacter(weekArray[i]);
+			grpWeekCharacters.members[i].color = bgYellow.color;
 		}
 
 		var leWeek:WeekData = loadedWeeks[curWeek];
