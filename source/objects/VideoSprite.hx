@@ -4,7 +4,9 @@ import flixel.addons.display.FlxPieDial;
 
 #if hxvlc
 import hxvlc.flixel.FlxVideoSprite;
-#elseif hxcodec
+#end
+
+#if hxCodec
 import hxcodec.flixel.FlxVideoSprite;
 #end
 
