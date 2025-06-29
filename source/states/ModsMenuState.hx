@@ -315,11 +315,6 @@ class ModsMenuState extends MusicBeatState
 				TitleState.initialized = false;
 				TitleState.closedState = false;
 				FlxG.sound.music.fadeOut(0.3);
-				if(FreeplayState.vocals != null)
-				{
-					FreeplayState.vocals.fadeOut(0.3);
-					FreeplayState.vocals = null;
-				}
 				FlxG.camera.fade(FlxColor.BLACK, 0.5, false, FlxG.resetGame, false);
 			}
 			else MusicBeatState.switchState(new MainMenuState());
@@ -849,10 +844,10 @@ class ModItem extends FlxSpriteGroup
 		add(text);
 
 		var isPixel = false;
-		var file:String = Paths.mods('$folder/pack.png');
+		var file:String = Paths.mods('$folder/icon.png');
 		if (!FileSystem.exists(file))
 		{
-			file = Paths.mods('$folder/pack-pixel.png');
+			file = Paths.mods('$folder/icon-pixel.png');
 			isPixel = true;
 		}
 		

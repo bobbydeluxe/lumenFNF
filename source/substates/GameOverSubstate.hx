@@ -8,7 +8,7 @@ import flixel.FlxSubState;
 import flixel.math.FlxPoint;
 
 import states.StoryMenuState;
-import states.FreeplayState;
+import mikolka.vslice.freeplay.FreeplayState;
 
 class GameOverSubstate extends ScriptedSubState
 {
@@ -88,43 +88,6 @@ class GameOverSubstate extends ScriptedSubState
 		PlayState.instance?.setOnScripts('inGameOver', true);
 		PlayState.instance?.callOnScripts('onGameOverStart', []);
 		FlxG.sound.music.loadEmbedded(Paths.music(loopSoundName), true);
-		
-		if (characterName == 'pico-dead') {
-			overlay = new FlxSprite(boyfriend.x + 205, boyfriend.y - 80);
-			overlay.frames = Paths.getSparrowAtlas('Pico_Death_Retry');
-			overlay.animation.addByPrefix('deathLoop', 'Retry Text Loop', 24, true);
-			overlay.animation.addByPrefix('deathConfirm', 'Retry Text Confirm', 24, false);
-			overlay.antialiasing = ClientPrefs.data.antialiasing;
-			overlayConfirmOffsets.set(250, 200);
-			overlay.visible = false;
-			add(overlay);
-
-			boyfriend.animation.onFrameChange.add(function(name:String, frameNumber:Int, frameIndex:Int) {
-				switch (name) {
-					case 'firstDeath':
-						if (frameNumber >= 36 - 1) {
-							overlay.visible = true;
-							overlay.animation.play('deathLoop');
-							boyfriend.animation.onFrameChange.removeAll();
-						}
-					default:
-						boyfriend.animation.onFrameChange.removeAll();
-				}
-			});
-
-			if (PlayState.instance.gf != null && PlayState.instance.gf.curCharacter == 'nene') {
-				var neneKnife:FlxSprite = new FlxSprite(boyfriend.x - 450, boyfriend.y - 250);
-				neneKnife.frames = Paths.getSparrowAtlas('NeneKnifeToss');
-				neneKnife.animation.addByPrefix('anim', 'knife toss', 24, false);
-				neneKnife.antialiasing = ClientPrefs.data.antialiasing;
-				neneKnife.animation.onFinish.addOnce(function(_) {
-					remove(neneKnife, true);
-					neneKnife.kill();
-				});
-				insert(0, neneKnife);
-				neneKnife.animation.play('anim', true);
-			}
-		}
 
 		super.create();
 	}
@@ -170,13 +133,15 @@ class GameOverSubstate extends ScriptedSubState
 				if (!stopped) {
 					Mods.loadTopMod();
 					
-					if (PlayState.isStoryMode) {
-						MusicBeatState.switchState(new StoryMenuState());
-					} else {
-						MusicBeatState.switchState(new FreeplayState());
+					if (PlayState.isStoryMode)
+					{
+						PlayState.storyPlaylist = [];
+						openSubState(new StickerSubState(null, (sticker) -> new StoryMenuState(sticker)));
 					}
-		
-					FlxG.sound.playMusic(Paths.music('freakyMenu'));
+					else
+					{
+						openSubState(new StickerSubState(null, (sticker) -> FreeplayState.build(null, sticker)));
+					}
 				}
 			} else if (justPlayedLoop) {
 				coolStartDeath();

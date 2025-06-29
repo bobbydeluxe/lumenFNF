@@ -18,11 +18,17 @@ import crowplexus.hscript.Printer;
 class ScriptedSubState extends MusicBeatSubstate {
 	#if LUA_ALLOWED public var luaArray:Array<FunkinLua> = []; #end
 	#if HSCRIPT_ALLOWED public var hscriptArray:Array<HScript> = []; #end
+	public static var stInstance:ScriptedSubState;
 	
 	var multiScript:Bool = true;
 	var loadedScripts:Bool = false;
 	
 	public var scriptFolder:String = 'scripts';
+
+	public function new() {
+		super();
+		stInstance = this;
+	}
 	
 	public override function create():Void {
 		super.create();

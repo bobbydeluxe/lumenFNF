@@ -1,6 +1,5 @@
 package mikolka.vslice.freeplay.backcards;
 
-import mikolka.compatibility.VsliceOptions;
 import mikolka.vslice.freeplay.FreeplayState;
 import flixel.FlxCamera;
 import flixel.FlxSprite;
@@ -19,6 +18,8 @@ import mikolka.funkin.players.PlayableCharacter;
 import openfl.display.BlendMode;
 import flixel.group.FlxSpriteGroup;
 import mikolka.compatibility.FunkinPath as Paths;
+
+import mikolka.vslice.freeplay.BGScrollingText; // DCE PREVENTION
 
 /**
  * A class for the backing cards so they dont have to be part of freeplayState......
@@ -169,7 +170,7 @@ class BackingCard extends FlxSpriteGroup
    */
   public function introDone():Void
   {
-    if(!VsliceOptions.ALLOW_COLORING) pinkBack.color = 0xFFFFD863;
+    pinkBack.color = 0xFFFFD863;
     orangeBackShit.visible = true;
     alsoOrangeLOL.visible = true;
     cardGlow.visible = true;

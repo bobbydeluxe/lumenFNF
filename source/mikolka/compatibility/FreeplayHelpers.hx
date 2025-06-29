@@ -5,7 +5,6 @@ import options.GameplayChangersSubstate;
 import substates.ResetScoreSubState;
 import mikolka.vslice.components.crash.UserErrorSubstate;
 import openfl.utils.AssetType;
-import mikolka.vslice.freeplay.pslice.FreeplayColorTweener;
 import mikolka.vslice.freeplay.pslice.BPMCache;
 import mikolka.vslice.freeplay.FreeplayState;
 import backend.Song;
@@ -155,8 +154,10 @@ class FreeplayHelpers {
 
 		state.openSubState(new ResetScoreSubState(sng.songName, sng.loadAndGetDiffId(), sng.songCharacter,-1,onScoreReset));
 	}
-	public inline static function openGameplayChanges(state:FreeplayState) {
-		state.openSubState(new GameplayChangersSubstate());
+	public inline static function openGameplayChanges(state:FreeplayState, camera:FlxCamera) {
+		var substate = new GameplayChangersSubstate();
+		substate.cameras = [camera];
+		state.openSubState(substate);
 	}
 	public static function loadDiffsFromWeek(songData:FreeplaySongData){
 		Mods.currentModDirectory = songData.folder;

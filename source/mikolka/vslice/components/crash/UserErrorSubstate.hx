@@ -122,10 +122,8 @@ class UserErrorSubstate extends MusicBeatSubstate
                 TitleState.closedState = false;
                 #if LEGACY_PSYCH
                 if (Main.fpsVar != null) Main.fpsVar.visible = ClientPrefs.showFPS;
-                if (Main.memoryCounter != null) Main.memoryCounter.visible = ClientPrefs.showFPS;
                 #else
                 if (Main.fpsVar != null) Main.fpsVar.visible = ClientPrefs.data.showFPS;
-                if (Main.memoryCounter != null) Main.memoryCounter.visible = ClientPrefs.data.showFPS;
                 #end
                 FlxG.sound.pause();
                 FlxTween.globalManager.clear();
@@ -140,8 +138,8 @@ class UserErrorSubstate extends MusicBeatSubstate
     
         function printError(error:CrashData)
         {
-            var star = #if CHECK_FOR_UPDATES "" #else "*" #end;
-            printToTrace('P-SLICE ${MainMenuState.pSliceVersion}$star  (${error.message})');
+            var star = "*";
+            printToTrace('LUMENFNF$star  (${error.message})');
             textNextY += 35;
             FlxTimer.wait(1 / 24, () ->
             {
@@ -196,7 +194,7 @@ class UserErrorSubstate extends MusicBeatSubstate
             var star = #if CHECK_FOR_UPDATES "" #else "*" #end;
             dateNow = dateNow.replace(' ', '_');
             dateNow = dateNow.replace(':', "'");
-            errMsg += 'P-Slice ${MainMenuState.pSliceVersion}$star\n';
+            errMsg += 'Lumen Engine$star\n';
             errMsg += '\nUncaught Error: ' + error.message + "\n";
             for (x in error.extendedTrace)
             {
@@ -206,7 +204,7 @@ class UserErrorSubstate extends MusicBeatSubstate
             errMsg += 'Active mod: ${error.activeMod}\n';
             errMsg += 'Platform: ${error.systemName}\n';
             errMsg += '\n';
-            errMsg += '\nPlease report this error to the GitHub page: https://github.com/Psych-Slice/P-Slice\n\n> Crash Handler written by: sqirra-rng';
+            errMsg += '\nPlease report this error to the GitHub page: https://github.com/bobbydeluxe/LumenFNF\n\n> Crash Handler written by: sqirra-rng';
     
             #if !LEGACY_PSYCH
             @:privateAccess // lazy

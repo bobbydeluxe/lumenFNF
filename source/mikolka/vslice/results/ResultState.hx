@@ -35,14 +35,14 @@ import flixel.util.FlxGradient;
 import flixel.util.FlxTimer;
 import mikolka.funkin.players.*;
 import mikolka.funkin.players.PlayerData.PlayerFreeplayDJData;
-import mikolka.funkin.custom.VsliceSubState as MusicBeatSubState;
+import mikolka.funkin.custom.VsliceSubState as EpicSubState;
 using mikolka.funkin.custom.FunkinTools;
 
 /**
  * The state for the results screen after a song or week is finished.
  */
 //TODO  documented?
-class ResultState extends MusicBeatSubState
+class ResultState extends EpicSubState
 {
   final params:ResultsStateParams;
 
@@ -147,12 +147,14 @@ class ResultState extends MusicBeatSubState
 
   override function create():Void
   {
+    preCreate();
+
     if (FlxG.sound.music != null) FlxG.sound.music.stop();
 
     // We need multiple cameras so we can put one at an angle.
     cameraScroll.angle = -3.8;
 
-    cameraBG.bgColor = FlxColor.MAGENTA;
+    cameraBG.bgColor = FlxColor.MAGENTA; // why the fuck is it magenta - bobbyDX
     cameraScroll.bgColor = FlxColor.TRANSPARENT;
     cameraEverything.bgColor = FlxColor.TRANSPARENT;
 
@@ -703,6 +705,7 @@ class ResultState extends MusicBeatSubState
 
   override function update(elapsed:Float):Void
   {
+    preUpdate(elapsed);
     // if(FlxG.keys.justPressed.R){
     //   FlxG.switchState(() -> new funkin.play.ResultState(
     //   {
@@ -864,6 +867,8 @@ class ResultState extends MusicBeatSubState
     }
 
     super.update(elapsed);
+
+    postUpdate(elapsed);
   }
 }
 

@@ -1,6 +1,6 @@
 package states;
 
-import mikolka.stages.EventLoader;
+import mikolka.stages.standard.StageWeek1;
 import substates.StickerSubState;
 import mikolka.vslice.freeplay.FreeplayState;
 import backend.Highscore;
@@ -120,6 +120,8 @@ class PlayState extends ScriptedState
 	public static var uiPrefix:String = "";
 	public static var uiPostfix:String = "";
 	public static var isPixelStage(get, never):Bool;
+
+	public static var skipResults:Bool = false;
 
 	@:noCompletion
 	static function set_stageUI(value:String):String
@@ -329,6 +331,7 @@ class PlayState extends ScriptedState
 		practiceMode = ClientPrefs.getGameplaySetting('practice');
 		cpuControlled = ClientPrefs.getGameplaySetting('botplay');
 		guitarHeroSustains = ClientPrefs.data.guitarHeroSustains;
+		skipResults = false;
 
 		// var gameCam:FlxCamera = FlxG.camera;
 		camGame = initPsychCamera();
@@ -402,7 +405,10 @@ class PlayState extends ScriptedState
 		dadGroup = new FlxSpriteGroup(DAD_X, DAD_Y);
 		gfGroup = new FlxSpriteGroup(GF_X, GF_Y);
 
-		EventLoader.addstage(curStage);
+		switch (curStage)
+		{
+			case 'stage': new StageWeek1();
+		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
 		if (!stageData.hide_girlfriend)
@@ -914,31 +920,6 @@ class PlayState extends ScriptedState
 			FlxTransitionableState.skipNextTransOut = true;
 		}
 		MusicBeatState.resetState();
-	}
-
-	public static function exitSong(skipTransition:Bool = false):Void {
-		if (skipTransition) {
-			FlxTransitionableState.skipNextTransIn = true;
-			FlxTransitionableState.skipNextTransOut = true;
-		}
-		
-		#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
-		
-		PlayState.deathCounter = 0;
-		PlayState.seenCutscene = false;
-		
-		Mods.loadTopMod();
-		if (PlayState.isStoryMode) {
-			MusicBeatState.switchState(new StoryMenuState());
-		} else {
-			MusicBeatState.switchState(new FreeplayState());
-		}
-
-		FlxG.sound.playMusic(Paths.music('freakyMenu'));
-		PlayState.instance.canResync = false;
-		PlayState.changedDifficulty = false;
-		PlayState.chartingMode = false;
-		FlxG.camera.followLerp = 0;
 	}
 
 	var dialogueCount:Int = 0;
@@ -2631,7 +2612,7 @@ class PlayState extends ScriptedState
    function zoomIntoResultsScreen(isNewHighscore:Bool,scoreData:SaveScoreData,prevScoreRank:ScoringRank):Void
 	{
 		var botplay = ClientPrefs.getGameplaySetting('botplay');
-		if(!ClientPrefs.data.vsliceResults || botplay){
+		if(skipResults || botplay){
 			var resultingAccuracy = Math.min(1,scoreData.accPoints/scoreData.totalNotesHit); 
 			var fpRank = Scoring.calculateRankFromData(scoreData.score,resultingAccuracy,scoreData.missed == 0) ?? SHIT;
 			if(isNewHighscore && !isStoryMode){
@@ -3231,13 +3212,7 @@ class PlayState extends ScriptedState
 				var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, direction)))] + 'miss' + postfix;
 				char.playAnim(animToPlay, true);
 			}
-			
-			if (gf != null && char != gf)
-				gf.playComboDropAnim(combo);
-			if (dad != null && char != dad)
-				dad.playComboDropAnim(combo);
-			if (boyfriend != null && char != boyfriend)
-				boyfriend.playComboDropAnim(combo);
+			//combo animation logic was here but FAILED ! ! so im removing it - bobbyDX
 		}
 		vocals.volume = 0;
 	}
@@ -3350,13 +3325,6 @@ class PlayState extends ScriptedState
 			if (!note.isSustainNote) {
 				combo ++;
 				popUpScore(note);
-				
-				if (gf != null && char != gf)
-					gf.playComboAnim(combo);
-				if (dad != null && char != dad)
-					dad.playComboAnim(combo);
-				if (boyfriend != null && char != boyfriend)
-					boyfriend.playComboAnim(combo);
 			}
 			var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
 			if (guitarHeroSustains && note.isSustainNote) gainHealth = false;

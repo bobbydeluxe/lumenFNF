@@ -32,15 +32,22 @@ class PlayerRegistry extends PsliceRegistry{
             trace('Couldn\'t pull $playableCharId: ${x.message}');
             return null;
         }
-        
     }
     
     // return ALL characters avaliable (from current mod)
     public function listEntryIds():Array<String> {
-        return listJsons();
+        var nativeCheck:Bool;
+        if (Mods.currentModDirectory == "" || Mods.currentModDirectory == null)
+            nativeCheck = true;
+        else
+            nativeCheck = false;
+
+        return listJsons(nativeCheck);
     }
+
     // This is only used to check if we should allow the player to open charSelect
     public function countUnlockedCharacters():Int {
         return 2;
+        // this is pointless! but im keeping it so it doesn't break - bobbyDX
     }
 }

@@ -26,7 +26,7 @@ import objects.Character;
 
 import states.MainMenuState;
 import states.StoryMenuState;
-import states.FreeplayState;
+import mikolka.vslice.freeplay.FreeplayState;
 
 import substates.PauseSubState;
 import substates.GameOverSubstate;
@@ -41,6 +41,9 @@ import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
 
 import haxe.Json;
+
+import mikolka.compatibility.ModsHelper;
+import mikolka.compatibility.VsliceOptions;
 
 class FunkinLua {
 	public var lua:State = null;
@@ -255,6 +258,15 @@ class FunkinLua {
 			if(excludeScripts == null) excludeScripts = [];
 			if(ignoreSelf && !excludeScripts.contains(scriptName)) excludeScripts.push(scriptName);
 			return game.callOnHScript(funcName, args, ignoreStops, excludeScripts, excludeValues);
+		});
+		addLocalCallback("getFreeplayCharacter", function() {
+			return VsliceOptions.LAST_MOD.char_name;
+		});
+		addLocalCallback("setFreeplayCharacter", function(character:String,modded:Bool = false) {
+			VsliceOptions.LAST_MOD = {
+				mod_dir: modded? ModsHelper.getActiveMod() : "",
+				char_name: character
+			}; //? save selected character
 		});
 
 		// mod settings
@@ -625,44 +637,65 @@ class FunkinLua {
 	}
 	
 	public function implementLocal():Void {
-		var st:ScriptedSubState = null;
-		if (st is ScriptedSubState)
-			st = cast FlxG.state;
+		var st:ScriptedSubState = ScriptedSubState.stInstance;
 		
-		if (st != null) {
+		if (st != null) { // REMOTE SCRIPT FUNCTION FIXES [because victoria broke 'em for playstate] - bobbyDX
 			addLocalCallback('callScript', function(luaFile:String, funcName:String, ?args:Array<Dynamic>) {
 				args ??= [];
 
 				var luaPath:String = findScript(luaFile);
 				if(luaPath != null)
-					for (luaInstance in st.luaArray)
-						if(luaInstance.scriptName == luaPath)
-							return luaInstance.call(funcName, args);
+					if (FlxG.state is PlayState) {
+						for (luaInstance in PlayState.instance.luaArray)
+							if(luaInstance.scriptName == luaPath)
+								return luaInstance.call(funcName, args);
+					} else {
+						for (luaInstance in st.luaArray)
+							if(luaInstance.scriptName == luaPath)
+								return luaInstance.call(funcName, args);
+					}
 
 				return null;
 			});
 			addLocalCallback('isRunning', function(scriptFile:String) {
 				var luaPath:String = findScript(scriptFile);
 				if (luaPath != null) {
-					for (luaInstance in st.luaArray)
-						if (luaInstance.scriptName == luaPath)
-							return true;
+					if (FlxG.state is PlayState) {
+						for (luaInstance in PlayState.instance.luaArray)
+							if (luaInstance.scriptName == luaPath)
+								return true;
+					} else {
+						for (luaInstance in st.luaArray)
+							if (luaInstance.scriptName == luaPath)
+								return true;
+					}
 				}
 
 				#if HSCRIPT_ALLOWED
 				var hscriptPath:String = findScript(scriptFile, '.hx');
 				if (hscriptPath != null) {
-					for (hscriptInstance in st.hscriptArray)
-						if (hscriptInstance.origin == hscriptPath)
-							return true;
+					if (FlxG.state is PlayState) {
+						for (hscriptInstance in PlayState.instance.hscriptArray)
+							if (hscriptInstance.origin == hscriptPath)
+								return true;
+					} else {
+						for (hscriptInstance in st.hscriptArray)
+							if (hscriptInstance.origin == hscriptPath)
+								return true;
+					}
 				}
 				#end
 				return false;
 			});
 			addLocalCallback('getRunningScripts', function() {
 				var runningScripts:Array<String> = [];
-				for (script in st.luaArray)
-					runningScripts.push(script.scriptName);
+				if (FlxG.state is PlayState) {
+					for (script in PlayState.instance.luaArray)
+						runningScripts.push(script.scriptName);
+				} else {
+					for (script in st.luaArray)
+						runningScripts.push(script.scriptName);
+				}
 
 				return runningScripts;
 			});
@@ -670,35 +703,61 @@ class FunkinLua {
 			registerFunction('addLuaScript', function(luaFile:String, ?ignoreAlreadyRunning:Bool = false) {
 				var luaPath:String = findScript(luaFile);
 				if (luaPath != null) {
-					if (!ignoreAlreadyRunning) {
-						for (luaInstance in st.luaArray) {
-							if(luaInstance.scriptName == luaPath) {
-								luaTrace('addLuaScript: The script "' + luaPath + '" is already running!', WARN);
-								return;
+					if (FlxG.state is PlayState) {
+						if (!ignoreAlreadyRunning)
+							for (luaInstance in PlayState.instance.luaArray)
+								if (luaInstance.scriptName == luaPath) {
+									luaTrace('addLuaScript: The script "' + luaPath + '" is already running!');
+									return;
+								}
+
+						PlayState.instance.initLuaScript(luaPath);
+						return;
+					} else {
+						if (!ignoreAlreadyRunning) {
+							for (luaInstance in st.luaArray) {
+								if (luaInstance.scriptName == luaPath) {
+									luaTrace('addLuaScript: The script "' + luaPath + '" is already running!', WARN);
+									return;
+								}
 							}
 						}
-					}
 
-					st.initLuaScript(luaPath);
-					return;
+						st.initLuaScript(luaPath);
+						return;
+					}
 				}
-				luaTrace("addLuaScript: Script doesn't exist!", false, false, ERROR);
+				luaTrace("addLuaScript: Script doesn't exist!", false, false, FlxColor.RED);
 			});
 			registerFunction('addHScript', function(scriptFile:String, ?ignoreAlreadyRunning:Bool = false) {
 				#if HSCRIPT_ALLOWED
 				var scriptPath:String = findScript(scriptFile, '.hx');
 				if (scriptPath != null) {
-					if (!ignoreAlreadyRunning) {
-						for (script in st.hscriptArray) {
-							if(script.origin == scriptPath) {
-								luaTrace('addHScript: The script "' + scriptPath + '" is already running!', WARN);
-								return;
+					if (FlxG.state is PlayState) {
+						if (!ignoreAlreadyRunning) {
+							for (script in PlayState.instance.hscriptArray) {
+								if(script.origin == scriptPath) {
+									luaTrace('addHScript: The script "' + scriptPath + '" is already running!', WARN);
+									return;
+								}
 							}
 						}
-					}
 
-					st.initHScript(scriptPath);
-					return;
+						PlayState.instance.initHScript(scriptPath);
+						return;
+					} else {
+						if (!ignoreAlreadyRunning) {
+							for (script in st.hscriptArray) {
+								if(script.origin == scriptPath) {
+									luaTrace('addHScript: The script "' + scriptPath + '" is already running!', WARN);
+									return;
+								}
+							}
+						}
+
+						st.initHScript(scriptPath);
+						return;
+					}
 				}
 				luaTrace("addHScript: Script doesn't exist!", false, false, ERROR);
 				#else
@@ -709,11 +768,21 @@ class FunkinLua {
 				var luaPath:String = findScript(luaFile);
 				if (luaPath != null) {
 					var foundAny:Bool = false;
-					for (luaInstance in st.luaArray) {
-						if (luaInstance.scriptName == luaPath) {
-							trace('Closing lua script $luaPath');
-							luaInstance.stop();
-							foundAny = true;
+					if (FlxG.state is PlayState) {
+						for (luaInstance in PlayState.instance.luaArray) {
+							if (luaInstance.scriptName == luaPath) {
+								trace('Closing lua script $luaPath');
+								luaInstance.stop();
+								foundAny = true;
+							}
+						}
+					} else {
+						for (luaInstance in st.luaArray) {
+							if (luaInstance.scriptName == luaPath) {
+								trace('Closing lua script $luaPath');
+								luaInstance.stop();
+								foundAny = true;
+							}
 						}
 					}
 					if (foundAny) return true;
@@ -727,11 +796,21 @@ class FunkinLua {
 				var scriptPath:String = findScript(scriptFile, '.hx');
 				if (scriptPath != null) {
 					var foundAny:Bool = false;
-					for (script in st.hscriptArray) {
-						if (script.origin == scriptPath) {
-							trace('Closing hscript $scriptPath');
-							script.destroy();
-							foundAny = true;
+					if (FlxG.state is PlayState) {
+						for (script in PlayState.instance.hscriptArray) {
+							if (script.origin == scriptPath) {
+								trace('Closing hscript $scriptPath');
+								script.destroy();
+								foundAny = true;
+							}
+						}
+					} else {
+						for (script in st.hscriptArray) {
+							if (script.origin == scriptPath) {
+								trace('Closing hscript $scriptPath');
+								script.destroy();
+								foundAny = true;
+							}
 						}
 					}
 					if (foundAny) return true;
@@ -1391,8 +1470,26 @@ class FunkinLua {
 			PlayState.restartSong(skipTransition);
 			return true;
 		});
-		registerFunction('exitSong', function(skipTransition:Bool = false) {
-			PlayState.exitSong(skipTransition);
+		registerFunction("exitSong", function(?skipTransition:Bool = false) {
+			#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
+
+			PlayState.changedDifficulty = false;
+			PlayState.chartingMode = false;
+			game.transitioning = true;
+			FlxG.camera.followLerp = 0;
+			FlxG.sound.music.volume = 0;
+			var target = game.subState != null ? game.subState : game;
+			if (PlayState.isStoryMode)
+				{
+					PlayState.storyPlaylist = [];
+					if(skipTransition) FlxG.switchState(() -> new StoryMenuState())
+					else target.openSubState(new substates.StickerSubState(null, (sticker) -> new StoryMenuState(sticker)));
+				}
+				else
+				{
+					if(skipTransition) FlxG.switchState(() -> FreeplayState.build(null, null))
+					else target.openSubState(new substates.StickerSubState(null, (sticker) -> FreeplayState.build(null, sticker)));
+				}
 			return true;
 		});
 		

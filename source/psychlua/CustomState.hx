@@ -1,5 +1,8 @@
 package psychlua;
 
+import substates.StickerSubState;
+import mikolka.compatibility.ModsHelper;
+
 class CustomState extends ScriptedState {
 	public var stateName:String;
 	
@@ -9,14 +12,31 @@ class CustomState extends ScriptedState {
 	}
 	#end
 	
-	public function new(name:String) {
+	var stickerSubState:StickerSubState;
+	public function new(name:String, ?stickers:StickerSubState = null) {
 		super();
 		stateName = name;
 		multiScript = false;
+
+		if (stickers != null)
+		{
+			stickerSubState = stickers;
+		}
 	}
 	
 	public override function create():Void {
 		rpcDetails = 'Custom State ($stateName)';
+
+		if (stickerSubState != null)
+			{
+			  //this.persistentUpdate = true;
+			  //this.persistentDraw = true;
+		
+			  openSubState(stickerSubState);
+			  ModsHelper.clearStoredWithoutStickers();
+			  stickerSubState.degenStickers();
+			  //FlxG.sound.playMusic(Paths.music('freakyMenu'));
+			}
 		
 		preCreate();
 		super.create();
