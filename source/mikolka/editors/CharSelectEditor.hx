@@ -5,10 +5,8 @@ import mikolka.vslice.components.crash.UserErrorSubstate;
 import openfl.events.Event;
 import openfl.events.IOErrorEvent;
 import openfl.net.FileReference;
-import editors.MasterEditorMenu;
 #else
 import states.editors.content.FileDialogHandler;
-import states.editors.MasterEditorMenu;
 #end
 
 import mikolka.compatibility.FunkinControls;
@@ -139,11 +137,7 @@ class CharSelectEditor extends MusicBeatState
 				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				FlxG.mouse.visible = false;
 				persistentUpdate = false;
-				#if LEGACY_PSYCH
-				MusicBeatState.switchState(new MasterEditorMenu());
-				#else
-				MusicBeatState.startTransition(new MasterEditorMenu());
-				#end
+				MusicBeatState.switchState(new states.MainMenuState(false, true));
 			}
 			else if(#if TOUCH_CONTROLS_ALLOWED touchPad.buttonF.justPressed || #end FlxG.keys.justPressed.F1){
 				persistentUpdate = false;

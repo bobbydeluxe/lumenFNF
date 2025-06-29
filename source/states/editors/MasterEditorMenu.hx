@@ -16,7 +16,9 @@ class MasterEditorMenu extends ScriptedSubState
 		'Menu Character Editor',
 		'Dialogue Editor',
 		'Dialogue Portrait Editor',
-		'Note Splash Editor'
+		'Note Splash Editor',
+		'Player Editor',
+		'Test Stickers'
 	];
 	var optionFunctions:Map<String, Void -> Void> = [];
 	private var grpTexts:FlxTypedGroup<Alphabet>;
@@ -33,6 +35,11 @@ class MasterEditorMenu extends ScriptedSubState
 	public function new(fadeIn:Bool = false) {
 		super();
 		this.fadeIn = fadeIn;
+	}
+
+	public function skipTransitionFades(fadeskip:Bool) {
+		FlxTransitionableState.skipNextTransIn = fadeskip;
+		FlxTransitionableState.skipNextTransOut = fadeskip;
 	}
 	
 	override function create() {
@@ -62,14 +69,55 @@ class MasterEditorMenu extends ScriptedSubState
 			grpTexts.add(leText);
 		}
 		
-		optionFunctions['Chart Editor'] = () -> LoadingState.loadAndSwitchState(new ChartingState(), false);
-		optionFunctions['Character Editor'] = () -> LoadingState.loadAndSwitchState(new CharacterEditorState(Character.DEFAULT_CHARACTER, false));
-		optionFunctions['Stage Editor'] = () -> LoadingState.loadAndSwitchState(new StageEditorState());
-		optionFunctions['Week Editor'] = () -> MusicBeatState.switchState(new WeekEditorState());
-		optionFunctions['Menu Character Editor'] = () -> MusicBeatState.switchState(new MenuCharacterEditorState());
-		optionFunctions['Dialogue Editor'] = () -> LoadingState.loadAndSwitchState(new DialogueEditorState(), false);
-		optionFunctions['Dialogue Portrait Editor'] = () -> LoadingState.loadAndSwitchState(new DialogueCharacterEditorState(), false);
-		optionFunctions['Note Splash Editor'] =  () -> MusicBeatState.switchState(new NoteSplashEditorState());
+		optionFunctions['Chart Editor'] = () -> {
+			skipTransitionFades(false);
+			LoadingState.loadAndSwitchState(new ChartingState(), false);
+		};
+
+		optionFunctions['Character Editor'] = () -> {
+			skipTransitionFades(false);
+			LoadingState.loadAndSwitchState(new CharacterEditorState(Character.DEFAULT_CHARACTER, false));
+		};
+
+		optionFunctions['Stage Editor'] = () -> {
+			skipTransitionFades(false);
+			LoadingState.loadAndSwitchState(new StageEditorState());
+		};
+
+		optionFunctions['Week Editor'] = () -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new WeekEditorState());
+		};
+
+		optionFunctions['Menu Character Editor'] = () -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new MenuCharacterEditorState());
+		};
+
+		optionFunctions['Dialogue Editor'] = () -> {
+			skipTransitionFades(false);
+			LoadingState.loadAndSwitchState(new DialogueEditorState(), false);
+		};
+
+		optionFunctions['Dialogue Portrait Editor'] = () -> {
+			skipTransitionFades(false);
+			LoadingState.loadAndSwitchState(new DialogueCharacterEditorState(), false);
+		};
+
+		optionFunctions['Note Splash Editor'] = () -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new NoteSplashEditorState());
+		};
+
+		optionFunctions['Player Editor'] = () -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new mikolka.editors.CharSelectEditor());
+		};
+
+		optionFunctions['Test Stickers'] = () -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new mikolka.editors.StickerTest());
+		};
 		
 		#if MODS_ALLOWED
 		textBG = new FlxSprite(0, FlxG.height - 42).makeGraphic(FlxG.width, 42, 0xFF000000);
@@ -136,6 +184,7 @@ class MasterEditorMenu extends ScriptedSubState
 
 		if (controls.ACCEPT)
 		{
+
 			var option:String = options[curSelected];
 			var optionFunc:Void -> Void = optionFunctions[option];
 			
@@ -184,7 +233,6 @@ class MasterEditorMenu extends ScriptedSubState
 			Mods.currentModDirectory = directories[curDirectory];
 			directoryTxt.text = '< Loaded Mod Directory: ' + Mods.currentModDirectory + ' >';
 		}
-		trace(Mods.currentModDirectory);
 		directoryTxt.text = directoryTxt.text.toUpperCase();
 		
 		callOnScripts('onSelectDirectory', [directories[curDirectory], next]);

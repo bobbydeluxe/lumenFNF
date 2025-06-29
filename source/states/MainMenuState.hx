@@ -16,8 +16,10 @@ enum abstract MainMenuColumn(String) to String {
 
 class MainMenuState extends ScriptedState
 {
-	public static var psychEngineVersion:String = '1.0.4'; // This is also used for Discord RPC
-	public static var pSliceVersion = '0.0.3';
+	public static var psychEngineVersion:String = '1.0.4';
+	public static var pSliceVersion:String = '2.3.1';
+	public static var emiForkVersion:String = '0.0.4h';
+
 	public static var curSelected:Int = 0;
 	public static var curColumn:MainMenuColumn = CENTER;
 	var allowMouse:Bool = true; //Turn this off to block mouse movement in menus
@@ -28,21 +30,21 @@ class MainMenuState extends ScriptedState
 	var itemSpacing:Float = 140;
 	var rightItem:MenuItem;
 	var leftItem:MenuItem;
-	var psychVer:FlxText;
-	var emiVer:FlxText;
+
+	var lumenVer:FlxText;
+	var basesVer:FlxText;
 
 	//Centered/Text options
 	var optionShit:Array<String> = [
 		'story_mode',
 		'freeplay',
 		#if MODS_ALLOWED 'mods', #end
-		'credits',
-		'options'
+		'credits'
 	];
 	var menuFunctions:Map<String, MenuItem -> Void> = [];
 
-	var rightOption:String = #if ACHIEVEMENTS_ALLOWED 'achievements' #else null #end;
-	var leftOption:String = null;
+	var leftOption:String = #if ACHIEVEMENTS_ALLOWED 'achievements' #else null #end;
+	var rightOption:String = 'options';
 	
 	var bg:FlxSprite;
 	var magenta:FlxSprite;
@@ -56,6 +58,12 @@ class MainMenuState extends ScriptedState
 		super();
 		openDebugMenu = debug;
 	}
+
+	public function skipTransitionFades(fadeskip:Bool) {
+		FlxTransitionableState.skipNextTransIn = fadeskip;
+		FlxTransitionableState.skipNextTransOut = fadeskip;
+	}
+
 	override function create() {
 		#if MODS_ALLOWED
 		Mods.pushGlobalMods();
@@ -88,13 +96,15 @@ class MainMenuState extends ScriptedState
 		add(magenta);
 
 		menuItems = new FlxTypedSpriteGroup();
-		menuFunctions['story_mode'] ??= (item:MenuItem) -> MusicBeatState.switchState(new StoryMenuState());
+		menuFunctions['story_mode'] ??= (item:MenuItem) -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new StoryMenuState());
+		}
 		menuFunctions['freeplay'] ??= (item:MenuItem) -> {
 			persistentDraw = true;
 			persistentUpdate = false;
 			// Freeplay has its own custom transition
-			FlxTransitionableState.skipNextTransIn = true;
-			FlxTransitionableState.skipNextTransOut = true;
+			skipTransitionFades(true);
 
 			openSubState(new mikolka.vslice.freeplay.FreeplayState());
 			subStateOpened.addOnce(state -> {
@@ -107,9 +117,16 @@ class MainMenuState extends ScriptedState
 				changeItem(0);
 			});
 		}
-		menuFunctions['mods'] ??= (item:MenuItem) -> MusicBeatState.switchState(new ModsMenuState());
-		menuFunctions['credits'] ??= (item:MenuItem) -> MusicBeatState.switchState(new CreditsState());
+		menuFunctions['mods'] ??= (item:MenuItem) -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new ModsMenuState());
+		}
+		menuFunctions['credits'] ??= (item:MenuItem) -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new CreditsState());
+		}
 		menuFunctions['options'] ??= (item:MenuItem) -> {
+			skipTransitionFades(false);
 			MusicBeatState.switchState(new OptionsState());
 			OptionsState.onPlayState = false;
 			if (PlayState.SONG != null) {
@@ -118,19 +135,15 @@ class MainMenuState extends ScriptedState
 				PlayState.stageUI = 'normal';
 			}
 		};
-		#if ACHIEVEMENTS_ALLOWED menuFunctions['achievements'] ??= (item:MenuItem) -> MusicBeatState.switchState(new AchievementsMenuState()); #end
+		#if ACHIEVEMENTS_ALLOWED
+		menuFunctions['achievements'] ??= (item:MenuItem) -> {
+			skipTransitionFades(false);
+			MusicBeatState.switchState(new AchievementsMenuState());
+		};
+		#end
 		
 		for (option in optionShit)
 			addMenuItem(option);
-
-		emiVer = new FlxText(12, FlxG.height - 24, 0, 'Modded by emi3 $pSliceVersion', 11);
-		emiVer.scrollFactor.set();
-		emiVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		add(emiVer);
-		psychVer = new FlxText(12, FlxG.height - 44, 0, 'Psych Engine $psychEngineVersion', 12);
-		psychVer.scrollFactor.set();
-		psychVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		add(psychVer);
 
 		#if ACHIEVEMENTS_ALLOWED
 		// Unlocks "Freaky on a Friday Night" achievement if it's a Friday and between 18:00 PM and 23:59 PM
@@ -169,6 +182,16 @@ class MainMenuState extends ScriptedState
 		positionMenuItems();
 		updateYScroll();
 		add(menuItems);
+
+		lumenVer = new FlxText(12, FlxG.height - 44, 0, 'Lumen Engine [${Version.lumenVersion}]', 12);
+		lumenVer.scrollFactor.set();
+		lumenVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(lumenVer);
+
+		basesVer = new FlxText(12, FlxG.height - 24, 0, 'P-Slice $pSliceVersion | emiPsych $emiForkVersion | Psych Engine $psychEngineVersion');
+		basesVer.scrollFactor.set();
+		basesVer.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(basesVer);
 		
 		super.create();
 	}

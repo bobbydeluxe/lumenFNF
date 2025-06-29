@@ -149,11 +149,7 @@ function setUpDeathProperties(characterName)
 end
 
 function getPropertyFromGameOver(property)
-    if getPropertyFromClass('substates.GameOverSubstate', property) ~= nil then
-        return getPropertyFromClass('substates.GameOverSubstate', property)
-    else
-        return getPropertyFromClass('substates.GameOverSubstate', 'instance.'..property)
-    end
+    getPropertyFromClass('substates.GameOverSubstate', 'instance.'..property)
 end
 
 function setPropertyFromGameOver(property, value)

@@ -1,8 +1,7 @@
 package;
 import psychlua.HScript;
 import psychlua.GlobalScriptHandler;
-import openfl.display.FPS;
-import mikolka.vslice.components.MemoryCounter;
+import debug.FPSCounter as FPS;
 import mikolka.GameBorder;
 import flixel.graphics.FlxGraphic;
 import flixel.FlxGame;
@@ -44,7 +43,6 @@ class Main extends Sprite
 
 	public static var fpsVar:FPS;
 	public static var traces:ScriptTraceDisplay;
-	public static var memoryCounter:MemoryCounter;
 	public static final platform:String = #if mobile "Phones" #else "PCs" #end;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
@@ -160,22 +158,6 @@ class Main extends Sprite
 		{
 			fpsVar.visible = ClientPrefs.data.showFPS;
 		}
-
-		#if !html5
-		// TODO: disabled on HTML5 (todo: find another method that works?)
-		memoryCounter = new MemoryCounter(10, 13, 0xFFFFFF);
-		#if mobile
-		FlxG.game.addChild(memoryCounter);
-	  	#else
-		addChild(memoryCounter);
-		#end
-		if (memoryCounter != null)
-		{
-			memoryCounter.visible = ClientPrefs.data.showFPS;
-		}
-		#end
-
-		
 
 		#if debug
 		flixel.addons.studio.FlxStudio.create();

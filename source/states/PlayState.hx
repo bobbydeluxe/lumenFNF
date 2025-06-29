@@ -3212,13 +3212,7 @@ class PlayState extends ScriptedState
 				var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, direction)))] + 'miss' + postfix;
 				char.playAnim(animToPlay, true);
 			}
-			
-			if (gf != null && char != gf)
-				gf.playComboDropAnim(combo);
-			if (dad != null && char != dad)
-				dad.playComboDropAnim(combo);
-			if (boyfriend != null && char != boyfriend)
-				boyfriend.playComboDropAnim(combo);
+			//combo animation logic was here but FAILED ! ! so im removing it - bobbyDX
 		}
 		vocals.volume = 0;
 	}
@@ -3331,13 +3325,6 @@ class PlayState extends ScriptedState
 			if (!note.isSustainNote) {
 				combo ++;
 				popUpScore(note);
-				
-				if (gf != null && char != gf)
-					gf.playComboAnim(combo);
-				if (dad != null && char != dad)
-					dad.playComboAnim(combo);
-				if (boyfriend != null && char != boyfriend)
-					boyfriend.playComboAnim(combo);
 			}
 			var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
 			if (guitarHeroSustains && note.isSustainNote) gainHealth = false;

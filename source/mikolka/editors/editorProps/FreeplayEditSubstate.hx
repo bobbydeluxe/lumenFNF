@@ -5,7 +5,7 @@ import mikolka.vslice.freeplay.BGScrollingText;
 import mikolka.funkin.freeplay.FreeplayStyle;
 import mikolka.funkin.freeplay.FreeplayStyleRegistry;
 import shaders.AngleMask;
-import mikolka.vslice.freeplay.BackingCard;
+import mikolka.vslice.freeplay.backcards.BackingCard;
 
 class FreeplayEditSubstate extends MusicBeatSubstate
 {

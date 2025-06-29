@@ -1285,8 +1285,8 @@ class FreeplayState extends ScriptedSubState
 
 	function tryOpenCharSelect():Void
 	{
-		// Check if we have ACCESS to character select!
-		// trace('Is Pico unlocked? ${PlayerRegistry.instance.fetchEntry('pico')?.isUnlocked()}');
+		// Check if we have ACCESS to character select! - mikolka
+		// haha no pico unlock check that shit's pointless - bobbyDX
 		trace('Number of characters: ${PlayerRegistry.instance.countUnlockedCharacters()}');
 
 		if (PlayerRegistry.instance.countUnlockedCharacters() > 1)
@@ -1846,7 +1846,7 @@ class FreeplayState extends ScriptedSubState
 
 	override function beatHit(beat:Int)
 	{
-		backingCard?.beatHit(curBeat);
+		backingCard.beatHit(beat);
 
 		super.beatHit(beat);
 	}

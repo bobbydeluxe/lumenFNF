@@ -1,6 +1,8 @@
 package psychlua;
 
 import flixel.FlxObject;
+import substates.StickerSubState;
+import mikolka.compatibility.ModsHelper;
 
 class CustomSubstate extends ScriptedSubState {
 	public static var name:String = 'unnamed';
@@ -58,6 +60,17 @@ class CustomSubstate extends ScriptedSubState {
 	public override function create() {
 		CustomSubstate.name = stateName;
 		CustomSubstate.instance = this;
+
+		if (stickerSubState != null)
+			{
+			  //this.persistentUpdate = true;
+			  //this.persistentDraw = true;
+		
+			  openSubState(stickerSubState);
+			  ModsHelper.clearStoredWithoutStickers();
+			  stickerSubState.degenStickers();
+			  //FlxG.sound.playMusic(Paths.music('freakyMenu'));
+			}
 		
 		if (Std.isOfType(_parentState, ScriptedSubState)) {
 			parentState = cast _parentState;
@@ -105,10 +118,16 @@ class CustomSubstate extends ScriptedSubState {
 		}
 	}
 	
-	public function new(name:String) {
+	var stickerSubState:StickerSubState;
+	public function new(name:String, ?stickers:StickerSubState = null) {
 		super();
 		stateName = name;
 		multiScript = false;
+
+		if (stickers != null)
+		{
+			stickerSubState = stickers;
+		}
 	}
 	
 	public override function update(elapsed:Float) {

@@ -44,6 +44,9 @@ class ScriptedCard extends BackingCard
 					hscript.set('confirmGlow2',this.confirmGlow2);
 					hscript.set('confirmTextGlow',this.confirmTextGlow);
 					hscript.set('cardGlow',this.cardGlow);
+					hscript.set('djText1', currentCharacter.getFreeplayDJText(1));
+					hscript.set('djText2', currentCharacter.getFreeplayDJText(2));
+					hscript.set('djText3', currentCharacter.getFreeplayDJText(3));
 
 					if (hscript.exists('onCreate'))
 					{
@@ -87,7 +90,7 @@ class ScriptedCard extends BackingCard
 	{
 		super.beatHit(curBeat);
 		if (hscript?.exists('beatHit'))
-			hscript.call('beatHit');
+			hscript.call('beatHit', [curBeat]);
 	}
 	public override function disappear() {
 		super.disappear();
@@ -107,7 +110,7 @@ class ScriptedCard extends BackingCard
 	public override function applyExitMovers(?exitMovers:ExitMoverData, ?exitMoversCharSel:ExitMoverData) {
 		super.applyExitMovers(exitMovers, exitMoversCharSel);
 		if (hscript?.exists('applyExitMovers'))
-			hscript.call('applyExitMovers',[exitMovers,exitMoversCharSel]);
+			hscript.call('applyExitMovers', [exitMovers,exitMoversCharSel]);
 	}
 	public override function destroy() {
 		hscript?.destroy();
