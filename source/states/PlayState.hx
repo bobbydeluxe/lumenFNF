@@ -1891,12 +1891,16 @@ class PlayState extends ScriptedState
 	// Health icon updaters
 	public dynamic function updateIconsScale(elapsed:Float)
 	{
-		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.exp(-elapsed * 9 * playbackRate));
-		iconP1.scale.set(mult, mult);
+		// Custom base exponential function: base^(-elapsed * factor * playbackRate)
+		var base:Float = (Math.sqrt(5)/2) + 2; // golden ratio plus 1.5. i love custom exponential functions - bobbyDX
+		var factor:Float = 9.0;
+
+		var multP1:Float = FlxMath.lerp(1, iconP1.scale.x, Math.pow(base, -elapsed * factor * playbackRate));
+		iconP1.scale.set(multP1, multP1);
 		iconP1.updateHitbox();
 
-		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, Math.exp(-elapsed * 9 * playbackRate));
-		iconP2.scale.set(mult, mult);
+		var multP2:Float = FlxMath.lerp(1, iconP2.scale.x, Math.pow(base, -elapsed * factor * playbackRate));
+		iconP2.scale.set(multP2, multP2);
 		iconP2.updateHitbox();
 	}
 

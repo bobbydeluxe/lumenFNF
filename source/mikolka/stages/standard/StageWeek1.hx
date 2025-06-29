@@ -9,7 +9,6 @@ import objects.Note;
 // so these don't get wiped
 import shaders.AdjustColorShader;
 import shaders.AdjustColorScreenspace;
-import shaders.WiggleEffectRuntime;
 
 class StageWeek1 extends BaseStage
 {

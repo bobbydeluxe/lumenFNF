@@ -26,15 +26,12 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 	<!-- Compiles mod support for P-Slice. Feel free to disable if you're making a source mod -->
 	<define name="MODS_ALLOWED" if="desktop || mobile" />
 
-	<!-- Adds support for Psuch's lua/HScript files-->
+	<!-- Adds support for Psych's lua/HScript files-->
 	<define name="HSCRIPT_ALLOWED" if="desktop || mobile"/>
 	<define name="LUA_ALLOWED" if="cpp" />
 
 	<!-- Enables Discord's Rich Presence integration-->
 	<define name="DISCORD_ALLOWED" if="desktop" unless="hl"/>
-	
-	<!-- Adds a Base game content to your build. Feel free to disable if you're making a source mod. -->
-	<!-- <define name="BASE_GAME_FILES" /> -->
 
 	<!-- Adds support for touchscreen devices (like mobiles)-->
 	<define name="TOUCH_CONTROLS_ALLOWED" if="mobile || web || debug" />
@@ -80,7 +77,7 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 	<set name="BUILD_DIR" value="export/release" unless="debug" />
 	<set name="BUILD_DIR" value="export/32bit" if="32bits" />
 
-	<classpath name="source" />
+	<source path="source" />
 
 	<!-- __________________________ Game Assets & Etc. __________________________ -->
 
@@ -112,16 +109,8 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 		<assets path="assets/translations" rename="assets" exclude="*.mp3"  unless="web"/>
 	</section>
 
-	<section if="BASE_GAME_FILES">
-		<assets path="assets/base_game/shared/weeks" rename="assets/shared/weeks" embed='true' if="web"/>
-		<assets path="assets/base_game/shared/data" rename="assets/shared/data" embed='true' if="web"/>
-		<assets path="assets/base_game/shared/registry" rename="assets/shared/registry" embed='true' if="web"/>
-		<assets path="assets/base_game" rename="assets" exclude="*.mp3" embed='false' if="web"/>
-		<assets path="assets/base_game" rename="assets" exclude="*.mp3"  unless="web"/>
-	</section>
-
 	<section if="MODS_ALLOWED">
-		<assets path='example_mods' rename='mods' embed='false' />
+		<assets path='mods' embed='false' />
 	</section>
 	<assets path='art/readme.txt' rename='do NOT readme.txt' unless="mobile" />
 
@@ -146,29 +135,29 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="flixel"/>
-	<haxelib name="flixel-addons"/>
-	<haxelib name="tjson"/>
+	<haxelib name="lime" version="8.2.2" />
+	<haxelib name="openfl" version="9.4.1" />
+
+	<haxelib name="flixel" version="6.0.0"/>
+	<haxelib name="flixel-addons" version="3.3.2"/>
+	<haxelib name="tjson" version="1.4.0"/>
 	<haxelib name="FlxPartialSound" version="git"/>
-	<haxelib name="grig.audio" />
-	<haxelib name="funkin.vis" />
+	<haxelib name="grig.audio" version="git" />
+	<haxelib name="funkin.vis" version="git" />
 
 	<!--Psych stuff needed-->
 	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="hscript-iris" if="HSCRIPT_ALLOWED"/>
+	<haxelib name="hscript-iris" version="1.1.3" if="HSCRIPT_ALLOWED"/>
 	<section if="VIDEOS_ALLOWED">
-		<haxelib name="hxCodec" if="linux"/>
-		<haxelib name="hxvlc" unless="linux"/>
+		<haxelib name="hxCodec" version="git" if="linux"/>
+		<haxelib name="hxvlc" version="2.2.2" unless="linux"/>
 	</section>
-	<haxelib name="hxdiscord_rpc" if="DISCORD_ALLOWED"/>
+	<haxelib name="hxdiscord_rpc" version="1.3.0" if="DISCORD_ALLOWED"/>
 
-	<haxelib name="flxanimate"/>
+	<haxelib name="flxanimate" version="git"/>
 
 	<!-- Android Specific-->
 	<haxelib name="extension-androidtools" if="android" />
-	<!-- Category Type for Apple Systems -->
-	<config:ios category_type="public.app-category.music-games" />
-	<config:mac category_type="public.app-category.music-games" />
 
 	<!-- Disable Discord IO Thread -->
 	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="hxdiscord_rpc" />
@@ -231,11 +220,15 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 	<!-- pretty (haxeflixel default), indent, classic (haxe compiler default) -->
 	<haxedef name="message.reporting" value="pretty" />
 
-	<!-- Do whatever you want I'm tired uninstall and install everytime -->
-	<certificate path="key.keystore" password="pslice" alias="psliceport" alias-password="pslice" if="android" unless="debug" />
-
 	<!-- more verbose HScript-->
 	<define name="IRIS_DEBUG" if="debug"/>
 	<haxedef name="hscriptPos" if="HSCRIPT_ALLOWED"/>
 	<define name="SCRIPTS_ALLOWED" if="HSCRIPT_ALLOWED || LUA_ALLOWED" />
+
+	<!-- __________________________________ Icons _______________________________ -->
+
+	<assets path='art/icons/iconOG.png' rename='icon.png' if="linux || mac" />
+	
+	<icon path="art/icons/icon16.png" size='16'/>
+	<icon path="art/icons/iconOG.png" />
 </project>

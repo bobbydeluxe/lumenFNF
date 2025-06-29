@@ -1,0 +1,23 @@
+{
+	"songs": [
+		["Ugh Erect", "tankman", [246, 182, 4]]
+	],
+
+	"colors": ["F9CF51", "B79839"],
+
+	"weekCharacters": [
+		"tankman",
+		"bf",
+		"gf"
+	],
+	"weekBackground": "week7",
+
+	"storyName": "Tankman (ft. JohnnyUtah)",
+	"weekBefore": "week6-erect",
+	"weekName": "Week 7",
+	"startUnlocked": true,
+
+	"hideStoryMode": true,
+	"hideFreeplay": false,
+	"difficulties": "Erect, Nightmare"
+}

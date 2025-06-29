@@ -1,4 +1,0 @@
-Used in Dad Battle 
-Recreation created by Ledonic, inspired from Gostar64
-Value 1: 0/1 = OFF/ON, 2 = Target Dad, 3 = Target BF, 4 = Target GF
-Set offsets, base positions, and other stuff in the event

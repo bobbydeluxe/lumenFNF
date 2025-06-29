@@ -1,0 +1,531 @@
+{
+	"song": {
+		"events": [
+			[
+				0,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					],
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				1951.21951219512,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				3902.43902439024,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				5365.85365853659,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				7804.87804878049,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					],
+					[
+						"Set Camera Bop",
+						"2",
+						"1"
+					]
+				]
+			],
+			[
+				9756.09756097561,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				11707.3170731707,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				13414.6341463415,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				15609.756097561,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				17560.9756097561,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				19512.1951219512,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				21463.4146341463,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				23414.6341463415,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				25365.8536585366,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				27317.0731707317,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				29268.2926829268,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				31219.512195122,
+				[
+					[
+						"Set Camera Bop",
+						"4",
+						"1"
+					]
+				]
+			],
+			[
+				33170.7317073171,
+				[
+					[
+						"Set Camera Zoom",
+						"1.1,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				35121.9512195122,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				37317.0731707317,
+				[
+					[
+						"Set Camera Zoom",
+						"1.2,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				38048.7804878049,
+				[
+					[
+						"Set Camera Zoom",
+						"1.25,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				39024.3902439024,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				41951.2195121951,
+				[
+					[
+						"Set Camera Zoom",
+						"1.1,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				42926.8292682927,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				46829.2682926829,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					],
+					[
+						"Set Camera Zoom",
+						"1.05,stage",
+						"32,expoOut"
+					],
+					[
+						"Set Camera Bop",
+						"2",
+						"1"
+					]
+				]
+			],
+			[
+				48780.4878048781,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				50731.7073170732,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				52682.9268292683,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				54634.1463414634,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				56585.3658536585,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				58536.5853658537,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				60487.8048780488,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				62439.0243902439,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				66341.4634146342,
+				[
+					[
+						"Set Camera Zoom",
+						"1.2,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				67804.8780487805,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				70243.9024390244,
+				[
+					[
+						"Set Camera Zoom",
+						"1.2,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				72195.1219512195,
+				[
+					[
+						"Set Camera Zoom",
+						"1.25,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				74146.3414634146,
+				[
+					[
+						"Set Camera Zoom",
+						"1.2,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				76097.5609756098,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				78048.7804878049,
+				[
+					[
+						"Set Camera Target",
+						"GF,-100",
+						"32,expoOut"
+					],
+					[
+						"Set Camera Zoom",
+						"0.95,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				83902.4390243903,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						"32,expoOut"
+					],
+					[
+						"Set Camera Zoom",
+						"1.05,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				85853.6585365854,
+				[
+					[
+						"Set Camera Target",
+						"GF,-100",
+						"32,expoOut"
+					],
+					[
+						"Set Camera Zoom",
+						"0.95,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				92682.9268292683,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						"32,expoOut"
+					],
+					[
+						"Set Camera Zoom",
+						"1.05,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				93658.5365853659,
+				[
+					[
+						"Set Camera Zoom",
+						"0.95,stage",
+						"32,expoOut"
+					],
+					[
+						"Set Camera Bop",
+						"4",
+						"1"
+					]
+				]
+			],
+			[
+				97560.9756097561,
+				[
+					[
+						"Set Camera Target",
+						"Dad",
+						""
+					]
+				]
+			],
+			[
+				98780.4878048781,
+				[
+					[
+						"Set Camera Target",
+						"BF",
+						""
+					]
+				]
+			],
+			[
+				99512.1951219512,
+				[
+					[
+						"Set Camera Zoom",
+						"1.05,stage",
+						"32,expoOut"
+					]
+				]
+			],
+			[
+				101463.414634146,
+				[
+					[
+						"Set Camera Zoom",
+						"1.15,stage",
+						"32,expoOut"
+					]
+				]
+			]
+		]
+	}
+}

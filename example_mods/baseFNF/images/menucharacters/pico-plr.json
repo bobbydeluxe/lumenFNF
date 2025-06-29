@@ -1,9 +1,0 @@
-{
-	"idle_anim": "idle",
-	"image": "Menu_Pico",
-	"position": [50, 0],
-	"flipX": false,
-	"antialiasing": true,
-	"scale": 1,
-	"confirm_anim": "confirm"
-}

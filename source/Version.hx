@@ -4,7 +4,7 @@ package;
 
 class Version {
     // Year, Month, Day
-    public static final dateParts:Array<Int> = [2025, 6, 28];
+    public static final dateParts:Array<Int> = [2025, 6, 29];
 
     // Build number for the day (e.g., 1 = first build of the day)
     public static final buildNum:Int = 1;
@@ -17,6 +17,6 @@ class Version {
         return '$year-$month-$day';
     }
 
-    // Final version string: "2025-06-28 Build 1"
+    // Final version string like "2025-06-28 Build 1"
     public static final lumenVersion:String = getFormatted() + ' Build ' + buildNum;
 }
