@@ -3,7 +3,7 @@ package psychlua;
 import substates.StickerSubState;
 import mikolka.compatibility.ModsHelper;
 
-class CustomState extends ScriptedState {
+class CustomState extends ScriptedState implements PsychUIEventHandler.PsychUIEvent {
 	public var stateName:String;
 	
 	#if LUA_ALLOWED
