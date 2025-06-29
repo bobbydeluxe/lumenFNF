@@ -35,7 +35,7 @@
 		}
 	],
 	"no_antialiasing": false,
-	"image": "characters/BOYFRIEND_DEAD",
+	"image": "characters/gameover/BF_dead",
 	"position": [
 		0,
 		350

@@ -6,11 +6,11 @@ class HealthIcon extends FlxSprite
 	private var isPlayer:Bool = false;
 	private var char:String = '';
 
-	public function new(char:String = 'face', isPlayer:Bool = false, ?allowGPU:Bool = true)
+	public function new(char:String = 'face', isPlayer:Bool = false, ?pixil:Bool = false, ?allowGPU:Bool = true)
 	{
 		super();
 		this.isPlayer = isPlayer;
-		changeIcon(char, allowGPU);
+		changeIcon(char, pixil, allowGPU);
 		scrollFactor.set();
 	}
 
@@ -23,7 +23,7 @@ class HealthIcon extends FlxSprite
 	}
 
 	private var iconOffsets:Array<Float> = [0, 0];
-	public function changeIcon(char:String, ?allowGPU:Bool = true) {
+	public function changeIcon(char:String, ?pixil:Bool = false, ?allowGPU:Bool = true) {
 		if(this.char != char) {
 			var name:String = 'icons/' + char;
 			if(!Paths.fileExists('images/' + name + '.png', IMAGE)) name = 'icons/icon-' + char; //Older versions of psych engine's support
@@ -42,6 +42,10 @@ class HealthIcon extends FlxSprite
 
 			if(char.endsWith('-pixel'))
 				antialiasing = false;
+			else if (pixil)
+				antialiasing = false;
+				// in case i wanna do that effect from fnf sonic jam
+				// the intro in the fresh sonic mix showcase thing - bobbyDX
 			else
 				antialiasing = ClientPrefs.data.antialiasing;
 		}

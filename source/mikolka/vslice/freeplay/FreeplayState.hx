@@ -4,20 +4,14 @@ import mikolka.vslice.freeplay.obj.CapsuleOptionsMenu;
 import mikolka.compatibility.FunkinControls;
 import mikolka.vslice.charSelect.CharSelectSubState;
 import openfl.filters.ShaderFilter;
-import mikolka.vslice.freeplay.backcards.PicoCard;
-import mikolka.vslice.freeplay.backcards.NewCharacterCard;
-import mikolka.vslice.freeplay.backcards.PicoCard;
 import mikolka.funkin.freeplay.FreeplayStyleRegistry;
-import mikolka.vslice.freeplay.backcards.BoyfriendCard;
 import shaders.BlueFade;
 import mikolka.funkin.freeplay.FreeplayStyle;
-import mikolka.vslice.freeplay.backcards.BackingCard;
 import mikolka.vslice.freeplay.DJBoyfriend.FreeplayDJ;
 import mikolka.compatibility.ModsHelper;
 import mikolka.compatibility.VsliceOptions;
 import mikolka.compatibility.FunkinCamera;
 import mikolka.vslice.freeplay.pslice.BPMCache;
-import mikolka.vslice.freeplay.pslice.FreeplayColorTweener;
 import mikolka.compatibility.FreeplaySongData;
 import mikolka.compatibility.FreeplayHelpers;
 import mikolka.compatibility.FunkinPath as Paths;
@@ -47,6 +41,9 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+
+import mikolka.vslice.freeplay.backcards.BackingCard;
+import mikolka.vslice.freeplay.backcards.ScriptedCard;
 
 using mikolka.funkin.custom.FunkinTools;
 using mikolka.funkin.utils.ArrayTools;
@@ -95,7 +92,7 @@ typedef FromResultsParams =
 /**
  * The state for the freeplay menu, allowing the player to select any song to play.
  */
-class FreeplayState extends MusicBeatSubstate
+class FreeplayState extends ScriptedSubState
 {
 	//
 	// Params
@@ -272,22 +269,18 @@ class FreeplayState extends MusicBeatSubstate
 			ModsHelper.loadModDir(saveBox.mod_dir);
 		// We build a bunch of sprites BEFORE create() so we can guarantee they aren't null later on.
 		// ? but doing it here, because psych 0.6.3 can destroy graphics created in the constructor
-		if (VsliceOptions.FP_CARDS)
+		
+		switch (currentCharacterId)
 		{
-			switch (currentCharacterId)
-			{
-				case(PlayerRegistry.instance.hasNewCharacter()) => true:
-					backingCard = new NewCharacterCard(currentCharacter);
-				case 'bf':
-					backingCard = new BoyfriendCard(currentCharacter);
-				case 'pico':
-					backingCard = new PicoCard(currentCharacter);
-				default:
-					backingCard = new BoyfriendCard(currentCharacter); // new BackingCard(currentCharacter);
-			}
+			case (VsliceOptions.LOW_QUALITY) => true:
+				backingCard = null;
+			#if HSCRIPT_ALLOWED
+			case (ScriptedCard.hasCustomCard(currentCharacterId)) => true:
+				backingCard = new ScriptedCard(currentCharacter, currentCharacterId, stickerSubState == null);
+			#end
+			default:
+				backingCard = new BackingCard(currentCharacter);
 		}
-		else
-			backingCard = new BoyfriendCard(currentCharacter);
 
 		albumRoll = new AlbumRoll();
 		fp = new FreeplayScore(460, 60, 7, 100, styleData);
@@ -310,6 +303,8 @@ class FreeplayState extends MusicBeatSubstate
 
 		BPMCache.instance.clearCache(); // for good measure
 		// ? end of init
+
+		preCreate();
 
 		super.create();
 		var diffIdsTotalModBinds:Map<String, String> = ["easy" => "", "normal" => "", "hard" => ""];
@@ -1290,8 +1285,8 @@ class FreeplayState extends MusicBeatSubstate
 
 	function tryOpenCharSelect():Void
 	{
-		// Check if we have ACCESS to character select!
-		trace('Is Pico unlocked? ${PlayerRegistry.instance.fetchEntry('pico')?.isUnlocked()}');
+		// Check if we have ACCESS to character select! - mikolka
+		// haha no pico unlock check that shit's pointless - bobbyDX
 		trace('Number of characters: ${PlayerRegistry.instance.countUnlockedCharacters()}');
 
 		if (PlayerRegistry.instance.countUnlockedCharacters() > 1)
@@ -1476,6 +1471,8 @@ class FreeplayState extends MusicBeatSubstate
 
 	override function update(elapsed:Float):Void
 	{
+		preUpdate(elapsed);
+
 		super.update(elapsed);
 
 		if (charSelectHint != null)
@@ -1529,7 +1526,12 @@ class FreeplayState extends MusicBeatSubstate
 				#if TOUCH_CONTROLS_ALLOWED
 				removeTouchPad();
 				#end
-				FreeplayHelpers.openGameplayChanges(this);
+
+				var gameplayChangesCam = new FlxCamera(0, 0, FlxG.width, FlxG.height);
+				gameplayChangesCam.bgColor = FlxColor.TRANSPARENT;
+				FlxG.cameras.add(gameplayChangesCam, false);
+				
+				FreeplayHelpers.openGameplayChanges(this, gameplayChangesCam);
 			}
 			else if (controls.RESET #if TOUCH_CONTROLS_ALLOWED || touchPad?.buttonY.justPressed #end && curSelected != 0)
 			{
@@ -1644,6 +1646,8 @@ class FreeplayState extends MusicBeatSubstate
 
 		if (dj != null)
 			FlxG.watch.addQuick('dj-anim', dj.getCurrentAnimation());
+
+		postUpdate(elapsed);
 	}
 
 	function handleInputs(elapsed:Float):Void
@@ -1840,11 +1844,11 @@ class FreeplayState extends MusicBeatSubstate
 		}
 	}
 
-	override function beatHit()
+	override function beatHit(beat:Int)
 	{
-		backingCard?.beatHit(curBeat);
+		backingCard.beatHit(beat);
 
-		super.beatHit();
+		super.beatHit(beat);
 	}
 
 	public override function destroy():Void
@@ -2210,11 +2214,9 @@ class FreeplayState extends MusicBeatSubstate
 			FlxG.sound.music.pause(); // muting previous track must be done NOW
 			FlxTimer.wait(FADE_IN_DELAY, playCurSongPreview.bind(daSongCapsule)); // Wait a little before trying to pull a Inst file
 
-			tweenCurSongColor(daSongCapsule);
+			//tweenCurSongColor(daSongCapsule);
 			grpCapsules.members[curSelected].selected = true;
 		}
-		else if (prepForNewRank)
-			tweenCurSongColor(daSongCapsule);
 	}
 
 	public function playCurSongPreview(?daSongCapsule:SongMenuItem):Void
@@ -2263,21 +2265,11 @@ class FreeplayState extends MusicBeatSubstate
 		}
 	}
 
-	public function tweenCurSongColor(daSongCapsule:SongMenuItem)
-	{ // H1
-		if (Std.isOfType(backingCard, BoyfriendCard))
-		{
-			var newColor:FlxColor = (curSelected == 0) ? 0xFFFFD863 : daSongCapsule.songData.color;
-			var bfCard = cast(backingCard, BoyfriendCard);
-			bfCard.colorEngine?.tweenColor(newColor);
-		}
-	}
-
 	/**
 	 * Build an instance of `FreeplayState` that is above the `MainMenuState`.
 	 * @return The MainMenuState with the FreeplayState as a substate.
 	 */
-	public static function build(?params:FreeplayStateParams, ?stickers:StickerSubState):MusicBeatState
+	public static function build(?params:FreeplayStateParams, ?stickers:StickerSubState):ScriptedState
 	{
 		var result:MainMenuState;
 		if (params?.fromResults?.playRankAnim)

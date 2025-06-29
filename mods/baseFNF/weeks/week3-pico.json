@@ -1,0 +1,25 @@
+{
+	"songs": [
+		["Pico (Pico Mix)", "pico", [148, 22, 83]],
+		["Philly Nice (Pico Mix)", "pico", [148, 22, 83]],
+		["Blammed (Pico Mix)", "pico", [148, 22, 83]]
+	],
+
+	"colors": ["F9CF51", "B79839"],
+
+	"weekCharacters": [
+		"pico",
+		"pico-plr",
+		"nene"
+	],
+	"weekBackground": "week3",
+
+	"storyName": "Pico",
+	"weekBefore": "week2-pico",
+	"weekName": "Week 3",
+	"startUnlocked": true,
+
+	"hideStoryMode": true,
+	"hideFreeplay": false,
+	"difficulties": "Easy, Normal, Hard"
+}

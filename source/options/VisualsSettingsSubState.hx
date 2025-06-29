@@ -4,20 +4,16 @@ import objects.Note;
 import objects.StrumNote;
 import objects.NoteSplash;
 import objects.Alphabet;
-import options.Option;
 
 class VisualsSettingsSubState extends BaseOptionsMenu
 {
-	public static var pauseMusics:Array<String> = ['None', 'Tea Time', 'Breakfast', 'Breakfast (Pico)'];
 	var noteOptionID:Int = -1;
 	var notes:FlxTypedGroup<StrumNote>;
 	var splashes:FlxTypedGroup<NoteSplash>;
 	var noteY:Float = 90;
-	public function new()
-	{
-		title = Language.getPhrase('visuals_menu', 'Visuals Settings');
-		rpcTitle = 'Visuals Settings Menu'; //for Discord Rich Presence
-
+	public function new() {
+		super(Language.getPhrase('visuals_menu', 'Visual Settings'), 'Visual Settings Menu');
+		
 		// for note skins and splash skins
 		notes = new FlxTypedGroup<StrumNote>();
 		splashes = new FlxTypedGroup<NoteSplash>();
@@ -44,7 +40,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 
 			noteSkins.insert(0, ClientPrefs.defaultData.noteSkin); //Default skin always comes first
 			var option:Option = new Option('Note Skins:',
-				"Select your preferred Note skin.",
+				"Select your prefered Note skin.",
 				'noteSkin',
 				STRING,
 				noteSkins);
@@ -53,7 +49,6 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			noteOptionID = optionsArray.length - 1;
 		}
 		
-		if (PlayState.SONG != null) PlayState.SONG.splashSkin = null; // Fix this component not working when entering from a song!
 		var noteSplashes:Array<String> = Mods.mergeAllTextsNamed('images/noteSplashes/list.txt');
 		if(noteSplashes.length > 0)
 		{
@@ -62,7 +57,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 
 			noteSplashes.insert(0, ClientPrefs.defaultData.splashSkin); //Default skin always comes first
 			var option:Option = new Option('Note Splashes:',
-				"Select your preferred Note Splash variation or turn it off.",
+				"Select your prefered Note Splash variation.",
 				'splashSkin',
 				STRING,
 				noteSplashes);
@@ -70,23 +65,8 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			option.onChange = onChangeSplashSkin;
 		}
 
-		var holdSkins:Array<String> = Mods.mergeAllTextsNamed('images/holdCovers/list.txt');
-		if(holdSkins.length > 0)
-		{
-			if(!holdSkins.contains(ClientPrefs.data.holdSkin))
-				ClientPrefs.data.holdSkin = ClientPrefs.defaultData.holdSkin; //Reset to default if saved splashskin couldnt be found
-			holdSkins.remove(ClientPrefs.defaultData.holdSkin);
-			holdSkins.insert(0, ClientPrefs.defaultData.holdSkin); //Default skin always comes first
-			var option:Option = new Option('Hold Splashes:',
-				"Select your preferred Hold Splash variation or turn it off.",
-				'holdSkin',
-				STRING,
-				holdSkins);
-			addOption(option);
-		}
-
 		var option:Option = new Option('Note Splash Opacity',
-			'How much transparent should the Note Splashes be.',
+			'Changes the transparency of the Note Splashes.',
 			'splashAlpha',
 			PERCENT);
 		option.scrollSpeed = 1.6;
@@ -96,17 +76,6 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		option.onChange = playNoteSplashes;
-
-		var option:Option = new Option('Note Hold Splash Opacity',
-			'How much transparent should the Note Hold Splash be.\n0% disables it.',
-			'holdSplashAlpha',
-			PERCENT);
-		option.scrollSpeed = 1.6;
-		option.minValue = 0.0;
-		option.maxValue = 1;
-		option.changeValue = 0.1;
-		option.decimals = 1;
-		addOption(option);
 
 		var option:Option = new Option('Hide HUD',
 			'If checked, hides most HUD elements.',
@@ -128,19 +97,19 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Camera Zooms',
-			"If unchecked, the camera won't zoom in on a beat hit.",
+			"If checked, the camera will pulse on beat hits.",
 			'camZooms',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Score Text Grow on Hit',
-			"If unchecked, disables the Score text growing\neverytime you hit a note.",
+			"If checked, the score display will grow every time you hit a note.",
 			'scoreZoom',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Health Bar Opacity',
-			'How much transparent should the health bar and icons be.',
+			'Changes the transparency of the health bar and icons.',
 			'healthBarAlpha',
 			PERCENT);
 		option.scrollSpeed = 1.6;
@@ -150,33 +119,26 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 		
+		#if !mobile
 		var option:Option = new Option('FPS Counter',
-			'If unchecked, hides FPS Counter.',
+			'If checked, an FPS counter shows at the top left corner of the screen.',
 			'showFPS',
 			BOOL);
 		addOption(option);
 		option.onChange = onChangeFPSCounter;
-
-		#if sys
-		var option:Option = new Option('VSync',
-			'If checked, Enables VSync fixing any screen tearing at the cost of capping the FPS to screen refresh rate.\n(Must restart the game to have an effect)',
-			'vsync',
-			BOOL);
-		option.onChange = onChangeVSync;
-		addOption(option);
 		#end
 		
 		var option:Option = new Option('Pause Music:',
 			"What song do you prefer for the Pause Screen?",
 			'pauseMusic',
 			STRING,
-			pauseMusics);
+			['None', 'Tea Time', 'Breakfast', 'Breakfast (Pico)']);
 		addOption(option);
 		option.onChange = onChangePauseMusic;
 		
 		#if CHECK_FOR_UPDATES
 		var option:Option = new Option('Check for Updates',
-			'On Release builds, turn this on to check for updates when you start the game.',
+			'If checked, you will be notified of future updates for this engine.',
 			'checkForUpdates',
 			BOOL);
 		addOption(option);
@@ -184,19 +146,18 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 
 		#if DISCORD_ALLOWED
 		var option:Option = new Option('Discord Rich Presence',
-			"Uncheck this to prevent accidental leaks, it will hide the Application from your \"Playing\" box on Discord",
+			"If checked, the game will show on your Discord Activity Status.",
 			'discordRPC',
 			BOOL);
 		addOption(option);
 		#end
 
 		var option:Option = new Option('Combo Stacking',
-			"If unchecked, Ratings and Combo won't stack, saving on System Memory and making them easier to read",
+			"If unchecked, Ratings and the Combo Counter won't stack, making them easier to read.",
 			'comboStacking',
 			BOOL);
 		addOption(option);
-
-		super();
+		
 		add(notes);
 		add(splashes);
 	}
@@ -250,6 +211,9 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			changeNoteSkin(note);
 			note.centerOffsets();
 			note.centerOrigin();
+			
+			note.playAnim('confirm', true);
+			note.resetAnim = note.animation.curAnim.numFrames * note.animation.curAnim.frameDuration;
 		});
 	}
 
@@ -265,79 +229,74 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 	}
 
 	function onChangeSplashSkin()
-		{
-			var skin:String = NoteSplash.defaultNoteSplash + NoteSplash.getSplashSkinPostfix();
-			for (splash in splashes)
-				splash.loadSplash(skin);
-	
-			playNoteSplashes();
-		}
-	
-		function playNoteSplashes()
-		{
-			var rand:Int = 0;
-			if (splashes.members[0] != null && splashes.members[0].maxAnims > 1)
-				rand = FlxG.random.int(0, splashes.members[0].maxAnims - 1); // For playing the same random animation on all 4 splashes
-	
-			for (splash in splashes)
-			{
-				splash.revive();
-	
-				splash.spawnSplashNote(0, 0, splash.ID, null, false);
-				if (splash.maxAnims > 1)
-					splash.noteData = splash.noteData % Note.colArray.length + (rand * Note.colArray.length);
-	
-				var anim:String = splash.playDefaultAnim();
-				var conf = splash.config.animations.get(anim);
-				var offsets:Array<Float> = [0, 0];
-	
-				var minFps:Int = 22;
-				var maxFps:Int = 26;
-				if (conf != null)
-				{
-					offsets = conf.offsets;
-	
-					minFps = conf.fps[0];
-					if (minFps < 0) minFps = 0;
-	
-					maxFps = conf.fps[1];
-					if (maxFps < 0) maxFps = 0;
-				}
-	
-				splash.offset.set(10, 10);
-				if (offsets != null)
-				{
-					splash.offset.x += offsets[0];
-					splash.offset.y += offsets[1];
-				}
-	
-				if (splash.animation.curAnim != null)
-					splash.animation.curAnim.frameRate = FlxG.random.int(minFps, maxFps);
-			}
-		}
-	
-		override function destroy()
-		{
-			if(changedMusic && !OptionsState.onPlayState) FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
-			Note.globalRgbShaders = [];
-			super.destroy();
-		}
+	{
+		var skin:String = NoteSplash.defaultNoteSplash + NoteSplash.getSplashSkinPostfix();
+		for (splash in splashes)
+			splash.loadSplash(skin);
 
+		playNoteSplashes();
+	}
+
+	function playNoteSplashes()
+	{
+		var rand:Int = 0;
+		if (splashes.members[0] != null && splashes.members[0].maxAnims > 1)
+			rand = FlxG.random.int(0, splashes.members[0].maxAnims - 1); // For playing the same random animation on all 4 splashes
+		
+		notes.forEachAlive(function(note:StrumNote) {
+			note.playAnim('confirm', true);
+			note.resetAnim = note.animation.curAnim.numFrames * note.animation.curAnim.frameDuration;
+		});
+
+		for (splash in splashes)
+		{
+			splash.revive();
+
+			splash.spawnSplashNote(0, 0, splash.ID, null, false);
+			if (splash.maxAnims > 1)
+				splash.noteData = splash.noteData % Note.colArray.length + (rand * Note.colArray.length);
+
+			var anim:String = splash.playDefaultAnim();
+			var conf = splash.config.animations.get(anim);
+			var offsets:Array<Float> = [0, 0];
+
+			var minFps:Int = 22;
+			var maxFps:Int = 26;
+			if (conf != null)
+			{
+				offsets = conf.offsets;
+
+				minFps = conf.fps[0];
+				if (minFps < 0) minFps = 0;
+
+				maxFps = conf.fps[1];
+				if (maxFps < 0) maxFps = 0;
+			}
+
+			splash.offset.set(10, 10);
+			if (offsets != null)
+			{
+				splash.offset.x += offsets[0];
+				splash.offset.y += offsets[1];
+			}
+
+			if (splash.animation.curAnim != null)
+				splash.animation.curAnim.frameRate = FlxG.random.int(minFps, maxFps);
+		}
+	}
+
+	override function destroy()
+	{
+		if(changedMusic && !OptionsState.onPlayState) FlxG.sound.playMusic(Paths.music('freakyMenu'), 1, true);
+		Note.globalRgbShaders = [];
+		super.destroy();
+	}
+
+	#if !mobile
 	function onChangeFPSCounter()
 	{
 		if(Main.fpsVar != null)
 			Main.fpsVar.visible = ClientPrefs.data.showFPS;
-		if(Main.memoryCounter != null)
-			Main.memoryCounter.visible = ClientPrefs.data.showFPS;
-	}
-
-	#if sys
-	function onChangeVSync()
-	{
-		var file:String = StorageUtil.rootDir + "vsync.txt";
-		if(FileSystem.exists(file))
-			FileSystem.deleteFile(file);
-		File.saveContent(file, Std.string(ClientPrefs.data.vsync));
 	}
 	#end
 }

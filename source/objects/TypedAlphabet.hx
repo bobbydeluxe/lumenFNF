@@ -87,6 +87,6 @@ class TypedAlphabet extends Alphabet
 		finishedText = true;
 		
 		if(onFinish != null) onFinish();
-		_timeToUpdate = 0;
+		_timeToUpdate -= delay;
 	}
 }

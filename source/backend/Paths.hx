@@ -26,7 +26,7 @@ import backend.Mods;
 @:access(openfl.display.BitmapData)
 class Paths
 {
-	inline public static var SOUND_EXT = "ogg";//#if web "mp3" #else "ogg" #end;
+	inline public static var SOUND_EXT = #if web "mp3" #else "ogg" #end;
 	inline public static var VIDEO_EXT = "mp4";
 
 	public static function excludeAsset(key:String) {
@@ -34,7 +34,7 @@ class Paths
 			dumpExclusions.push(key);
 	}
 
-	public static var dumpExclusions:Array<String> = ['assets/shared/music/freakyMenu.$SOUND_EXT',"assets/shared/images/cursor-default.png", 'assets/shared/mobile/touchpad/bg.png'];
+	public static var dumpExclusions:Array<String> = ['assets/shared/music/freakyMenu.$SOUND_EXT'];
 	// haya I love you for the base cache dump I took to the max
 	public static function clearUnusedMemory()
 	{
@@ -51,9 +51,6 @@ class Paths
 
 		// run the garbage collector for good measure lmfao
 		System.gc();
-		#if cpp
-		cpp.NativeGc.run(true);
-		#end
 	}
 
 	// define the locally tracked assets
@@ -162,8 +159,6 @@ class Paths
 			if(FileSystem.exists(modded)) return modded;
 		}
 		#end
-		if(parentfolder == "mobile")
-			return getSharedPath('mobile/$file');
 
 		if (parentfolder != null)
 			return getFolderPath(file, parentfolder);
@@ -219,7 +214,6 @@ class Paths
 	inline static public function inst(song:String, ?modsAllowed:Bool = true):Sound
 		return returnSound('${formatToSongPath(song)}/Inst', 'songs', modsAllowed);
 
-	
 	inline static public function voices(song:String, postfix:String = null, ?modsAllowed:Bool = true):Sound
 	{
 		var songKey:String = '${formatToSongPath(song)}/Voices';
@@ -317,17 +311,9 @@ class Paths
 			for(mod in Mods.getGlobalMods())
 				if (FileSystem.exists(mods('$mod/$modKey')))
 					return true;
-				#if linux
-				else if (FileSystem.exists(findFile('$mod/$modKey')))
-					return true;
-				#end
 
 			if (FileSystem.exists(mods(Mods.currentModDirectory + '/' + modKey)) || FileSystem.exists(mods(modKey)))
 				return true;
-			#if linux
-			else if (FileSystem.exists(findFile(modKey)))
-				return true;
-			#end
 		}
 		#end
 		return (OpenFlAssets.exists(getPath(key, type, parentFolder, false)));
@@ -383,7 +369,6 @@ class Paths
 
 	inline static public function getSparrowAtlas(key:String, ?parentFolder:String = null, ?allowGPU:Bool = true):FlxAtlasFrames
 	{
-		if(key.contains('psychic')) trace(key, parentFolder, allowGPU);
 		var imageLoaded:FlxGraphic = image(key, parentFolder, allowGPU);
 		#if MODS_ALLOWED
 		var xmlExists:Bool = false;
@@ -453,7 +438,7 @@ class Paths
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
+				return FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 			}
 		}
 		localTrackedAssets.push(file);
@@ -462,7 +447,7 @@ class Paths
 
 	#if MODS_ALLOWED
 	inline static public function mods(key:String = '')
-		return #if mobile Sys.getCwd() + #end 'mods/' + key;
+		return 'mods/' + key;
 
 	inline static public function modsJson(key:String)
 		return modFolders('data/' + key + '.json');
@@ -492,14 +477,6 @@ class Paths
 			var fileToCheck:String = mods(Mods.currentModDirectory + '/' + key);
 			if(FileSystem.exists(fileToCheck))
 				return fileToCheck;
-			#if linux
-			else
-			{
-				var newPath:String = findFile(key);
-				if (newPath != null)
-					return newPath;
-			}
-			#end
 		}
 
 		for(mod in Mods.getGlobalMods())
@@ -507,74 +484,14 @@ class Paths
 			var fileToCheck:String = mods(mod + '/' + key);
 			if(FileSystem.exists(fileToCheck))
 				return fileToCheck;
-			#if linux
-			else
-			{
-				var newPath:String = findFile(key);
-				if (newPath != null)
-					return newPath;
-			}
-			#end
 		}
-		return #if mobile Sys.getCwd() + #end ('mods/' + key);
+		return 'mods/' + key;
 	}
-
-	#if linux
-	static function findFile(key:String):String {
-		var targetParts:Array<String> = key.replace('\\', '/').split('/');
-		if (targetParts.length == 0) return null;
-
-		var baseDir:String = targetParts.shift();
-		var searchDirs:Array<String> = [
-			mods(Mods.currentModDirectory + '/' + baseDir),
-			mods(baseDir)
-		];
-
-		for (part in targetParts) {
-			if (part == '') continue;
-
-			var nextDir:String = findNodeInDirs(searchDirs, part);
-			if (nextDir == null) {
-				return null;
-			}
-
-			searchDirs = [nextDir];
-		}
-
-		return searchDirs[0];
-	}
-
-	static function findNodeInDirs(dirs:Array<String>, key:String):String {
-		for (dir in dirs) {
-			var node:String = findNode(dir, key);
-			if (node != null) {
-				return dir + '/' + node;
-			}
-		}
-		return null;
-	}
-
-	static function findNode(dir:String, key:String):String {
-		try {
-			var allFiles:Array<String> = NativeFileSystem.readDirectory(dir);
-			var fileMap:Map<String, String> = new Map();
-
-			for (file in allFiles) {
-				fileMap.set(file.toLowerCase(), file);
-			}
-
-			return fileMap.get(key.toLowerCase());
-		} catch (e:Dynamic) {
-			return null;
-		}
-	}
-	#end
 	#end
 
 	#if flxanimate
 	public static function loadAnimateAtlas(spr:FlxAnimate, folderOrImg:Dynamic, spriteJson:Dynamic = null, animationJson:Dynamic = null)
 	{
-		#if sys
 		var changedAnimJson = false;
 		var changedAtlasJson = false;
 		var changedImage = false;
@@ -640,9 +557,6 @@ class Paths
 		//trace(spriteJson);
 		//trace(animationJson);
 		spr.loadAtlasEx(folderOrImg, spriteJson, animationJson);
-		#else
-		spr.loadAtlas(folderOrImg);
-		#end
 	}
 	#end
 }

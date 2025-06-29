@@ -1,10 +1,7 @@
 package;
-#if HSCRIPT_ALLOWED
-import crowplexus.iris.Iris;
-import psychlua.HScript.HScriptInfos;
-#end
-import openfl.display.FPS;
-import mikolka.vslice.components.MemoryCounter;
+import psychlua.HScript;
+import psychlua.GlobalScriptHandler;
+import debug.FPSCounter as FPS;
 import mikolka.GameBorder;
 import flixel.graphics.FlxGraphic;
 import flixel.FlxGame;
@@ -17,6 +14,8 @@ import openfl.events.Event;
 import openfl.display.StageScaleMode;
 import lime.app.Application;
 import states.TitleState;
+import backend.ScriptedState;
+import debug.ScriptTraceDisplay;
 #if COPYSTATE_ALLOWED
 import states.CopyState;
 #end
@@ -30,25 +29,9 @@ import lime.graphics.Image;
 @:cppFileCode('#define GAMEMODE_AUTO')
 #end
 
-#if windows
-@:buildXml('
-<target id="haxe">
-	<lib name="wininet.lib" if="windows" />
-	<lib name="dwmapi.lib" if="windows" />
-</target>
-')
-@:cppFileCode('
-	#define GAMEMODE_AUTO
-#include <windows.h>
-#include <winuser.h>
-#pragma comment(lib, "Shell32.lib")
-extern "C" HRESULT WINAPI SetCurrentProcessExplicitAppUserModelID(PCWSTR AppID);
-')
-#end
-
 class Main extends Sprite
 {
-	var game = {
+	public static final game = {
 		width: 1280, // WINDOW width
 		height: 720, // WINDOW height
 		initialState: TitleState, // initial game state
@@ -59,7 +42,7 @@ class Main extends Sprite
 	};
 
 	public static var fpsVar:FPS;
-	public static var memoryCounter:MemoryCounter;
+	public static var traces:ScriptTraceDisplay;
 	public static final platform:String = #if mobile "Phones" #else "PCs" #end;
 
 	// You can pretty much ignore everything from here on - your code should go in your states.
@@ -80,11 +63,8 @@ class Main extends Sprite
 		#end
 		backend.CrashHandler.init();
 
-		#if windows
-		// DPI Scaling fix for windows 
-		// this shouldn't be needed for other systems
-		// Credit to YoshiCrafter29 for finding this function
-		untyped __cpp__("SetProcessDPIAware();");
+		#if (cpp && windows)
+		backend.Native.fixScaling();
 		#end
 
 		if (stage != null)
@@ -134,65 +114,11 @@ class Main extends Sprite
 		Mods.loadTopMod();
 
 		FlxG.save.bind('funkin', CoolUtil.getSavePath());
-
+		Difficulty.resetList();
 		Highscore.load();
 
-		#if HSCRIPT_ALLOWED
-		Iris.warn = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(WARN, x, pos);
-			var newPos:HScriptInfos = cast pos;
-			if (newPos.showLine == null) newPos.showLine = true;
-			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
-			#if LUA_ALLOWED
-			if (newPos.isLua == true) {
-				msgInfo += 'HScript:';
-				newPos.showLine = false;
-			}
-			#end
-			if (newPos.showLine == true) {
-				msgInfo += '${newPos.lineNumber}:';
-			}
-			msgInfo += ' $x';
-			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('WARNING: $msgInfo', FlxColor.YELLOW);
-		}
-		Iris.error = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(ERROR, x, pos);
-			var newPos:HScriptInfos = cast pos;
-			if (newPos.showLine == null) newPos.showLine = true;
-			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
-			#if LUA_ALLOWED
-			if (newPos.isLua == true) {
-				msgInfo += 'HScript:';
-				newPos.showLine = false;
-			}
-			#end
-			if (newPos.showLine == true) {
-				msgInfo += '${newPos.lineNumber}:';
-			}
-			msgInfo += ' $x';
-			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('ERROR: $msgInfo', FlxColor.RED);
-		}
-		Iris.fatal = function(x, ?pos:haxe.PosInfos) {
-			Iris.logLevel(FATAL, x, pos);
-			var newPos:HScriptInfos = cast pos;
-			if (newPos.showLine == null) newPos.showLine = true;
-			var msgInfo:String = (newPos.funcName != null ? '(${newPos.funcName}) - ' : '')  + '${newPos.fileName}:';
-			#if LUA_ALLOWED
-			if (newPos.isLua == true) {
-				msgInfo += 'HScript:';
-				newPos.showLine = false;
-			}
-			#end
-			if (newPos.showLine == true) {
-				msgInfo += '${newPos.lineNumber}:';
-			}
-			msgInfo += ' $x';
-			if (PlayState.instance != null)
-				PlayState.instance.addTextToDebug('FATAL: $msgInfo', 0xFFBB0000);
-		}
-		#end
+		HScript.init();
+		GlobalScriptHandler.init();
 
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();
@@ -214,6 +140,9 @@ class Main extends Sprite
 
 		addChild(gameObject);
 
+		traces = new ScriptTraceDisplay();
+		addChild(traces);
+
 		fpsVar = new FPS(10, 3, 0xFFFFFF);
 		#if mobile
 		FlxG.game.addChild(fpsVar);
@@ -230,22 +159,6 @@ class Main extends Sprite
 			fpsVar.visible = ClientPrefs.data.showFPS;
 		}
 
-		#if !html5
-		// TODO: disabled on HTML5 (todo: find another method that works?)
-		memoryCounter = new MemoryCounter(10, 13, 0xFFFFFF);
-		#if mobile
-		FlxG.game.addChild(memoryCounter);
-	  	#else
-		addChild(memoryCounter);
-		#end
-		if (memoryCounter != null)
-		{
-			memoryCounter.visible = ClientPrefs.data.showFPS;
-		}
-		#end
-
-		
-
 		#if debug
 		flixel.addons.studio.FlxStudio.create();
 		#end
@@ -254,8 +167,7 @@ class Main extends Sprite
 		FlxG.autoPause = false;
 		FlxG.mouse.visible = false;
 		#end
-
-		FlxG.fixedTimestep = false;
+		
 		FlxG.game.focusLostFramerate = #if mobile 30 #else 60 #end;
 		#if web
 		FlxG.keys.preventDefaultKeys.push(TAB);
@@ -275,8 +187,7 @@ class Main extends Sprite
 		#end
 
 		// shader coords fix
-		FlxG.signals.gameResized.add(function(w, h)
-		{
+		FlxG.signals.gameResized.add((w:Int, h:Int) -> {
 			if (FlxG.cameras != null)
 			{
 				for (cam in FlxG.cameras.list)

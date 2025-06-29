@@ -1,0 +1,56 @@
+[
+	{
+		"save": "tutorial_nomiss",
+		"name": "That's How You Do It",
+		"description": "Beat the tutorial on Hard with no misses",
+		"hidden": "false"
+	},
+	{
+		"save": "week1_nomiss",
+		"name": "More Like Daddy Queerest",
+		"description": "Beat Week 1 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "week2_nomiss",
+		"name": "IT IS THE SPOOKY MONTH",
+		"description": "Beat Week 2 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "week3_nomiss",
+		"name": "Pico Funny",
+		"description": "Beat Week 3 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "week4_nomiss",
+		"name": "Mommy Must Murder",
+		"description": "Beat Week 4 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "week5_nomiss",
+		"name": "Yuletide Joy",
+		"description": "Beat Week 5 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "week6_nomiss-pixel",
+		"name": "A Visual Novelty",
+		"description": "Beat Week 6 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "week7_nomiss",
+		"name": "God Effing Damn It!",
+		"description": "Beat Week 7 on Hard with no misses",
+		"hidden": "false"
+	},
+    {
+		"save": "wknd1_nomiss",
+		"name": "Yo, Really Think So?",
+		"description": "Beat Weekend 1 on Hard with no misses",
+		"hidden": "false"
+	}
+]

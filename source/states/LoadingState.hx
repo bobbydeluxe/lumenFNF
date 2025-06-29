@@ -1,7 +1,7 @@
 package states;
 
-import lime.app.Promise;
 import lime.app.Future;
+import sys.thread.FixedThreadPool;
 import haxe.Json;
 import lime.utils.Assets;
 import openfl.display.BitmapData;
@@ -17,35 +17,40 @@ import backend.Song;
 import backend.StageData;
 import objects.Character;
 
-#if sys 
-//import sys.thread.Thread;
+import sys.thread.Thread;
 import sys.thread.Mutex;
-#end 
 
 import objects.Note;
 import objects.NoteSplash;
 
-#if HSCRIPT_ALLOWED
-import psychlua.HScript;
-import crowplexus.iris.Iris;
-import crowplexus.hscript.Expr.Error as IrisError;
-import crowplexus.hscript.Printer;
+#if LUA_ALLOWED
+import psychlua.FunkinLua;
+import psychlua.LuaUtils;
+#end
+#if SCRIPTS_ALLOWED
+import psychlua.GlobalScriptHandler;
 #end
 
-class LoadingState extends MusicBeatState
+#if cpp
+@:headerCode('
+#include <iostream>
+#include <thread>
+')
+#end
+class LoadingState extends ScriptedState
 {
 	public static var loaded:Int = 0;
 	public static var loadMax:Int = 0;
 
 	static var originalBitmapKeys:Map<String, String> = [];
 	static var requestedBitmaps:Map<String, BitmapData> = [];
-	#if sys
 	static var mutex:Mutex;
-	#end
+	static var threadPool:FixedThreadPool = null;
 
 	function new(target:FlxState, stopMusic:Bool)
 	{
 		this.target = target;
+		this.multiScript = false;
 		this.stopMusic = stopMusic;
 		
 		super();
@@ -60,16 +65,18 @@ class LoadingState extends MusicBeatState
 
 	var barGroup:FlxSpriteGroup;
 	var bar:FlxSprite;
+	var barBack:FlxSprite;
 	var barWidth:Int = 0;
 	var intendedPercent:Float = 0;
 	var curPercent:Float = 0;
 	var stateChangeDelay:Float = 0;
-
+	
+	var bg:FlxSprite;
 	#if PSYCH_WATERMARKS
 	var logo:FlxSprite;
 	var pessy:FlxSprite;
 	var loadingText:FlxText;
-
+	
 	var timePassed:Float;
 	var shakeFl:Float;
 	var shakeMult:Float = 0;
@@ -80,67 +87,27 @@ class LoadingState extends MusicBeatState
 	#else
 	var funkay:FlxSprite;
 	#end
-
-	#if HSCRIPT_ALLOWED
-	var hscript:HScript;
-	#end
+	
 	override function create()
-	{
+	{	
 		persistentUpdate = true;
 		barGroup = new FlxSpriteGroup();
 		add(barGroup);
-
-		var barBack:FlxSprite = new FlxSprite(0, 660).makeGraphic(1, 1, FlxColor.BLACK);
+		
+		barBack = new FlxSprite(0, 660).makeGraphic(1, 1, FlxColor.BLACK);
 		barBack.scale.set(FlxG.width - 300, 25);
 		barBack.updateHitbox();
 		barBack.screenCenter(X);
 		barGroup.add(barBack);
-
+		
 		bar = new FlxSprite(barBack.x + 5, barBack.y + 5).makeGraphic(1, 1, FlxColor.WHITE);
 		bar.scale.set(0, 15);
 		bar.updateHitbox();
 		barGroup.add(bar);
 		barWidth = Std.int(barBack.width - 10);
-
-		#if HSCRIPT_ALLOWED
-		if(Mods.currentModDirectory != null && Mods.currentModDirectory.trim().length > 0)
-		{
-			var scriptPath:String = 'mods/${Mods.currentModDirectory}/data/LoadingScreen.hx'; //mods/My-Mod/data/LoadingScreen.hx
-			if(FileSystem.exists(scriptPath))
-			{
-				try
-				{
-					hscript = new HScript(null, scriptPath);
-					hscript.set('getLoaded', function() return loaded);
-					hscript.set('getLoadMax', function() return loadMax);
-					hscript.set('barBack', barBack);
-					hscript.set('bar', bar);
-	
-					if(hscript.exists('onCreate'))
-					{
-						hscript.call('onCreate');
-						trace('initialized hscript interp successfully: $scriptPath');
-						return super.create();
-					}
-					else
-					{
-						trace('"$scriptPath" contains no \"onCreate" function, stopping script.');
-					}
-				}
-				catch(e:IrisError)
-				{
-					var pos:HScriptInfos = cast {fileName: scriptPath, showLine: false};
-					Iris.error(Printer.errorToString(e, false), pos);
-					var hscript:HScript = cast (Iris.instances.get(scriptPath), HScript);
-				}
-				if(hscript != null) hscript.destroy();
-				hscript = null;
-			}
-		}
-		#end
-
+		
 		#if PSYCH_WATERMARKS // PSYCH LOADING SCREEN
-		var bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		bg = new FlxSprite(0, 0, Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.setGraphicSize(Std.int(FlxG.width));
 		bg.color = 0xFFD16FFF;
@@ -162,7 +129,7 @@ class LoadingState extends MusicBeatState
 		addBehindBar(logo);
 
 		#else // BASE GAME LOADING SCREEN
-		var bg = new FlxSprite().makeGraphic(1, 1, 0xFFCAFF4D);
+		bg = new FlxSprite().makeGraphic(1, 1, 0xffcaff4d);
 		bg.scale.set(FlxG.width, FlxG.height);
 		bg.updateHitbox();
 		bg.screenCenter();
@@ -174,14 +141,61 @@ class LoadingState extends MusicBeatState
 		funkay.updateHitbox();
 		addBehindBar(funkay);
 		#end
+		
+		preCreate();
 		super.create();
 
-		if (stateChangeDelay <= 0 && checkLoaded())
-		{
+		if (stateChangeDelay <= 0 && checkLoaded()) {
 			dontUpdate = true;
 			onLoad();
 		}
 	}
+	
+	public function getLoaded():Int {
+		return loaded;
+	}
+	public function getLoadMax():Int {
+		return loadMax;
+	}
+	
+	var folderNameLol:String = '';
+	var stateNameLol:String = 'LoadingScreen';
+	override function getFolderName():String {
+		return folderNameLol;
+	}
+	override function customStateName():String {
+		return stateNameLol;
+	}
+	override function _preCreate():Void {
+		#if SCRIPTS_ALLOWED
+		scriptFolder = 'data';
+		startStateScripts(); // try data/LoadingScreen.hx
+		
+		if (!loadedScripts) {
+			scriptFolder = 'scripts';
+			folderNameLol = 'states';
+			stateNameLol = 'LoadingState';
+			startStateScripts(); // try scripts/states/LoadingState.hx
+		}
+		#end
+		
+		GlobalScriptHandler.call('onCreateState', [this, Type.getClass(this)]);
+	}
+	#if LUA_ALLOWED
+	public override function implementLua(lua:FunkinLua):Void {
+		lua.addLocalCallback('getLoaded', function() return loaded);
+		lua.addLocalCallback('getLoadMax', function() return loadMax);
+		lua.addLocalCallback('addBehindBar', function(tag:String) {
+			var sprite:FlxBasic = LuaUtils.getObjectDirectly(tag);
+			if (sprite == null) {
+				FunkinLua.luaTrace('addBehindBar: Couldnt find object: $tag', false, false, ERROR);
+				return;
+			}
+			
+			addBehindBar(sprite);
+		});
+	}
+	#end
 
 	function addBehindBar(obj:flixel.FlxBasic)
 	{
@@ -193,6 +207,8 @@ class LoadingState extends MusicBeatState
 	{
 		super.update(elapsed);
 		if (dontUpdate) return;
+		
+		preUpdate(elapsed);
 
 		if (!transitioning)
 		{
@@ -217,14 +233,6 @@ class LoadingState extends MusicBeatState
 			bar.scale.x = barWidth * curPercent;
 			bar.updateHitbox();
 		}
-		
-		#if HSCRIPT_ALLOWED
-		if(hscript != null)
-		{
-			if(hscript.exists('onUpdate')) hscript.call('onUpdate', [elapsed]);
-			return;
-		}
-		#end
 
 		#if PSYCH_WATERMARKS // PSYCH LOADING SCREEN
 		timePassed += elapsed;
@@ -296,29 +304,18 @@ class LoadingState extends MusicBeatState
 			FlxTween.tween(pessy, {y: 10}, 0.65, {ease: FlxEase.quadOut});
 		}
 		#end
+		
+		postUpdate(elapsed);
 	}
-
-	#if HSCRIPT_ALLOWED
-	override function destroy()
-	{
-		if(hscript != null)
-		{
-			if(hscript.exists('onDestroy')) hscript.call('onDestroy');
-			hscript.destroy();
-		}
-		hscript = null;
-		super.destroy();
-	}
-	#end
 	
 	var finishedLoading:Bool = false;
 	function onLoad()
 	{
 		_loaded();
-
+		
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
-
+		
 		FlxG.camera.visible = false;
 		MusicBeatState.switchState(target);
 		transitioning = true;
@@ -333,7 +330,9 @@ class LoadingState extends MusicBeatState
 		isIntrusive = false;
 
 		FlxTransitionableState.skipNextTransIn = true;
-		#if sys mutex = null; #end
+		if (threadPool != null) threadPool.shutdown(); // kill all workers safely
+		threadPool = null;
+		mutex = null;
 	}
 
 	public static function checkLoaded():Bool
@@ -369,7 +368,7 @@ class LoadingState extends MusicBeatState
 		#end
 
 		LoadingState.isIntrusive = intrusive;
-		//_startPool();
+		_startPool();
 		loadNextDirectory();
 
 		if(intrusive)
@@ -385,7 +384,7 @@ class LoadingState extends MusicBeatState
 				_loaded();
 				break;
 			}
-			#if sys else Sys.sleep(0.001); #end
+			else Sys.sleep(0.001);
 		}
 		return target;
 	}
@@ -403,6 +402,17 @@ class LoadingState extends MusicBeatState
 
 	static var initialThreadCompleted:Bool = true;
 	static var dontPreloadDefaultVoices:Bool = false;
+	static function _startPool()
+	{
+		#if MULTITHREADED_LOADING
+		// Due to the Main thread and Discord thread, we decrease it by 2.
+		var threadCount:Int = Std.int(Math.max(1, getCPUThreadsCount() - #if DISCORD_ALLOWED 2 #else 1 #end));
+		#else
+		var threadCount:Int = 1;
+		#end
+		threadPool = new FixedThreadPool(threadCount);
+	}
+
 	public static function prepareToSong()
 	{
 		if(PlayState.SONG == null)
@@ -418,7 +428,7 @@ class LoadingState extends MusicBeatState
 			return;
 		}
 
-		//_startPool();
+		_startPool();
 		imagesToPrepare = [];
 		soundsToPrepare = [];
 		musicToPrepare = [];
@@ -560,18 +570,18 @@ class LoadingState extends MusicBeatState
 			if (player2 != player1)
 			{
 				threadsMax++;
-				new Future(() -> {
+				threadPool.run(() -> {
 					try { preloadCharacter(player2, prefixVocals); } catch (e:Dynamic) {}
 					completedThread();
-				},true);
+				});
 			}
 			if (!stageData.hide_girlfriend && gfVersion != player2 && gfVersion != player1)
 			{
 				threadsMax++;
-				new Future(() -> {
+				threadPool.run(() -> {
 					try { preloadCharacter(gfVersion); } catch (e:Dynamic) {}
 					completedThread();
-				},true);
+				});
 			}
 
 			if(threadsCompleted == threadsMax)
@@ -608,7 +618,7 @@ class LoadingState extends MusicBeatState
 			{
 				for (subfolder in Mods.directoriesWithFile(Paths.getSharedPath(), '$prefix/$nam'))
 				{
-					for (file in NativeFileSystem.readDirectory(subfolder))
+					for (file in FileSystem.readDirectory(subfolder))
 					{
 						if(file.endsWith(ext))
 						{
@@ -643,9 +653,7 @@ class LoadingState extends MusicBeatState
 
 	public static function startThreads()
 	{
-		#if sys
 		mutex = new Mutex();
-		#end
 		loadMax = imagesToPrepare.length + soundsToPrepare.length + musicToPrepare.length + songsToPrepare.length;
 		loaded = 0;
 
@@ -655,7 +663,7 @@ class LoadingState extends MusicBeatState
 
 	static function _threadFunc()
 	{
-		//_startPool();
+		_startPool();
 		for (sound in soundsToPrepare) initThread(() -> preloadSound('sounds/$sound'), 'sound $sound');
 		for (music in musicToPrepare) initThread(() -> preloadSound('music/$music'), 'music $music');
 		for (song in songsToPrepare) initThread(() -> preloadSound(song, 'songs', true, false), 'song $song');
@@ -667,18 +675,18 @@ class LoadingState extends MusicBeatState
 	static function initThread(func:Void->Dynamic, traceData:String)
 	{
 		// trace('scheduled $func in threadPool');
-		#if (debug && sys)
+		#if debug
 		var threadSchedule = Sys.time();
 		#end
-		new Future(() -> {
-			#if (debug && sys)
+		threadPool.run(() -> {
+			#if debug
 			var threadStart = Sys.time();
 			trace('$traceData took ${threadStart - threadSchedule}s to start preloading');
 			#end
 
 			try {
 				if (func() != null) {
-					#if (debug && sys)
+					#if debug
 					var diff = Sys.time() - threadStart;
 					trace('finished preloading $traceData in ${diff}s');
 					#end
@@ -690,7 +698,7 @@ class LoadingState extends MusicBeatState
 			// mutex.acquire();
 			loaded++;
 			// mutex.release();
-		},true);
+		});
 	}
 
 	inline private static function preloadCharacter(char:String, ?prefixVocals:String)
@@ -762,20 +770,20 @@ class LoadingState extends MusicBeatState
 			if (#if sys FileSystem.exists(file) || #end OpenFlAssets.exists(file, SOUND))
 			{
 				var sound:Sound = #if sys Sound.fromFile(file) #else OpenFlAssets.getSound(file, false) #end;
-				#if sys mutex.acquire(); #end
+				mutex.acquire();
 				Paths.currentTrackedSounds.set(file, sound);
-				#if sys mutex.release(); #end
+				mutex.release();
 			}
 			else if (beepOnNull)
 			{
 				trace('SOUND NOT FOUND: $key, PATH: $path');
 				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
+				return FlxAssets.getSoundAddExtension('flixel/sounds/beep');
 			}
 		}
-		#if sys mutex.acquire();#end
+		mutex.acquire();
 		Paths.localTrackedAssets.push(file);
-		#if sys mutex.release(); #end
+		mutex.release();
 
 		return Paths.currentTrackedSounds.get(file);
 	}
@@ -795,13 +803,14 @@ class LoadingState extends MusicBeatState
 				{
 					#if sys
 					var bitmap:BitmapData = BitmapData.fromFile(file);
-					mutex.acquire();
 					#else
 					var bitmap:BitmapData = OpenFlAssets.getBitmapData(file, false);
 					#end
+
+					mutex.acquire();
 					requestedBitmaps.set(file, bitmap);
 					originalBitmapKeys.set(file, requestKey);
-					#if sys mutex.release(); #end
+					mutex.release();
 					return bitmap;
 				}
 				else trace('no such image $key exists');
@@ -816,4 +825,15 @@ class LoadingState extends MusicBeatState
 
 		return null;
 	}
+	
+	#if cpp
+	@:functionCode('
+		return std::thread::hardware_concurrency();
+    	')
+	@:noCompletion
+    	public static function getCPUThreadsCount():Int
+    	{
+        	return -1;
+    	}
+    	#end
 }

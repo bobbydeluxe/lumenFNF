@@ -2,6 +2,7 @@ package mikolka.funkin.custom;
 
 import lime.utils.Assets;
 import openfl.utils.Assets as OpenFlAssets;
+import openfl.display.BitmapData;
 
 class NativeFileSystem {
     public static inline function getContent(path:String) {
@@ -38,4 +39,43 @@ class NativeFileSystem {
             return dirs;
             #end
         }
+    
+    public static function getBitmap(path:String):Null<BitmapData>
+	{
+		#if nativesys_profile var timeStart = Sys.time(); #end
+		var isModded = path.startsWith("mods");
+
+		#if OPENFL_LOOKUP
+		if (#if NATIVE_LOOKUP !isModded && #end OpenFlAssets.exists(path, IMAGE))
+		{
+			var result = OpenFlAssets.getBitmapData(path);
+			#if nativesys_profile
+			var timeEnd = Sys.cpuTime() - timeStart;
+			if (timeEnd > 1.2)
+				trace('Getting native bitmap ${path} took: $timeEnd');
+			#end
+			return result;
+		}
+		#end
+
+		#if NATIVE_LOOKUP
+		#if OPENFL_LOOKUP
+		if (!isModded)
+			return null;
+		#end
+		var sys_path = getPathLike(path);
+		if (sys_path != null)
+		{
+			var result = BitmapData.fromFile(sys_path);
+			#if nativesys_profile
+			var timeEnd = Sys.cpuTime() - timeStart;
+			if (timeEnd > 1.2)
+				trace('Getting system bitmap ${path} took: $timeEnd');
+			#end
+			return result;
+		}
+		#end
+
+		return null;
+	}
 }

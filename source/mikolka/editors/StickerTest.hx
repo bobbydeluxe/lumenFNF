@@ -3,11 +3,6 @@ package mikolka.editors;
 import mikolka.compatibility.FunkinControls;
 import mikolka.compatibility.ModsHelper;
 import substates.StickerSubState;
-#if !LEGACY_PSYCH
-import states.editors.MasterEditorMenu;
-#else
-import editors.MasterEditorMenu;
-#end
 
 class StickerTest extends MusicBeatState {
     private var stickerSet:String;
@@ -16,7 +11,7 @@ class StickerTest extends MusicBeatState {
 	var stickerSetInput:PsychUIInputText;
 	var stickerPackInput:PsychUIInputText;
 
-	public function new(?stickers:StickerSubState = null,set:String = "stickers-set-1",pack:String = "all"){
+	public function new(?stickers:StickerSubState = null,set:String = "stickers-set-base",pack:String = "all"){
         stickerPack = pack;
         stickerSet = set;
         if (stickers != null)
@@ -86,11 +81,7 @@ class StickerTest extends MusicBeatState {
                 if(#if TOUCH_CONTROLS_ALLOWED touchPad.buttonB.justPressed || #end controls.BACK){
                     FlxG.sound.playMusic(Paths.music('freakyMenu'));
                     FlxG.mouse.visible = false;
-                    #if LEGACY_PSYCH
-                    MusicBeatState.switchState(new MasterEditorMenu());
-                    #else
-                    MusicBeatState.startTransition(new MasterEditorMenu());
-                    #end
+                    MusicBeatState.switchState(new states.MainMenuState(false, true));
                 }
             }
             else FunkinControls.disableVolume();

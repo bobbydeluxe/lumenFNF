@@ -4,6 +4,7 @@ import backend.ui.PsychUIBox.UIStyleData;
 
 class PsychUIDropDownMenu extends PsychUIInputText
 {
+	public static final REVEAL_EVENT = "dropdown_reveal";
 	public static final CLICK_EVENT = "dropdown_click";
 
 	public var list(default, set):Array<String> = [];
@@ -103,52 +104,16 @@ class PsychUIDropDownMenu extends PsychUIInputText
 
 		if(lastFocus != PsychUIInputText.focusOn)
 		{
-			showDropDown(PsychUIInputText.focusOn == this);
+			var isFocused:Bool = (PsychUIInputText.focusOn == this);
+			if (isFocused && broadcastDropDownEvent)
+				PsychUIEventHandler.event(REVEAL_EVENT, this);
+			showDropDown(isFocused);
 		}
 		else if(PsychUIInputText.focusOn == this)
 		{
 			var wheel:Int = FlxG.mouse.wheel;
 			if(FlxG.keys.justPressed.UP) wheel++;
 			if(FlxG.keys.justPressed.DOWN) wheel--;
-			/*#if FLX_TOUCH
-			for (touch in FlxG.touches.list)
-			{
-				var moveY:Int = 0;
-				var addition:Int = 0;
-				var curY:Int = 0;
-				var prevY:Int = 0;
-
-				if (touch.pressed)
-				{
-					curY = touch.y;
-
-					// these might need to be swaped idk i can't test
-					if (curY > prevY)
-						addition++;
-					else
-						addition--;
-
-					// change the option every 10 pixels you move
-					if (addition >= 10 || addition <= 10)
-					{
-						// these here might also need to be swapped
-						if (addition >= 10)
-							moveY++
-						else
-							moveY--;
-
-						addition = 0;
-					}
-
-					prevY = curY;
-				}
-
-				wheel += moveY;
-
-				if (touch.justReleased)
-					moveY = addition = curY = prevY = 0;
-			}
-			#end*/
 			if(wheel != 0) showDropDown(true, curScroll - wheel, _curFilter);
 		}
 	}

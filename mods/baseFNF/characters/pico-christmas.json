@@ -1,0 +1,87 @@
+{
+	"animations": [
+		{
+			"loop": false,
+			"offsets": [-1, 5],
+			"fps": 24,
+			"anim": "idle",
+			"indices": [],
+			"name": "Pico Idle Dance"
+		},
+		{
+			"loop": false,
+			"offsets": [60, 28],
+			"fps": 24,
+			"anim": "singLEFTmiss",
+			"indices": [],
+			"name": "Pico NOTE LEFT miss"
+		},
+		{
+			"loop": false,
+			"offsets": [-98, 51],
+			"fps": 24,
+			"anim": "singRIGHTmiss",
+			"indices": [],
+			"name": "Pico Note Right Miss"
+		},
+		{
+			"loop": false,
+			"offsets": [40, -35],
+			"fps": 24,
+			"anim": "singDOWNmiss",
+			"indices": [],
+			"name": "Pico Down Note MISS"
+		},
+		{
+			"loop": false,
+			"offsets": [10, 65],
+			"fps": 24,
+			"anim": "singUPmiss",
+			"indices": [],
+			"name": "pico Up note miss"
+		},
+		{
+			"offsets": [-94, 3],
+			"loop": false,
+			"fps": 24,
+			"anim": "singRIGHT",
+			"indices": [],
+			"name": "Pico Note Right xmas"
+		},
+		{
+			"offsets": [63, -9],
+			"loop": false,
+			"fps": 24,
+			"anim": "singLEFT",
+			"indices": [],
+			"name": "Pico NOTE LEFT xmas"
+		},
+		{
+			"offsets": [16, 27],
+			"loop": false,
+			"fps": 24,
+			"anim": "singUP",
+			"indices": [],
+			"name": "pico Up note xmas"
+		},
+		{
+			"offsets": [51, -79],
+			"loop": false,
+			"fps": 24,
+			"anim": "singDOWN",
+			"indices": [],
+			"name": "Pico Down Note xmas"
+		}
+	],
+	"vocals_file": "",
+	"no_antialiasing": false,
+	"image": "characters/xmas/picoChristmas",
+	"position": [-50, 300],
+	"healthicon": "pico",
+	"flip_x": true,
+	"healthbar_colors": [183, 216, 85],
+	"camera_position": [160, 40],
+	"sing_duration": 4,
+	"scale": 1,
+	"_editor_isPlayer": true
+}

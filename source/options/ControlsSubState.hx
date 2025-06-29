@@ -1,8 +1,6 @@
 package options;
 
 import backend.InputFormatter;
-import flixel.addons.display.FlxBackdrop;
-import flixel.addons.display.FlxGridOverlay;
 import objects.AttachedSprite;
 
 import flixel.input.keyboard.FlxKey;
@@ -10,8 +8,7 @@ import flixel.input.gamepad.FlxGamepad;
 import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.gamepad.FlxGamepadManager;
 
-class ControlsSubState extends MusicBeatSubstate
-{
+class ControlsSubState extends MusicBeatSubstate { // TODO: scriptable?
 	var curSelected:Int = 0;
 	var curAlt:Bool = false;
 
@@ -33,12 +30,6 @@ class ControlsSubState extends MusicBeatSubstate
 		[true, 'Accept', 'accept', 'Accept'],
 		[true, 'Back', 'back', 'Back'],
 		[true, 'Pause', 'pause', 'Pause'],
-		[false],
-		[false, 'P-SLICE'],
-		[true,"Chr menu","char_select","Character Menu"],
-		[true,"FP left","bar_left","Freeplay left"],
-		[true,"FP right","bar_right","Freeplay right"],
-		[true,"Favorite","favorite","Freeplay favorite"],
 		[false],
 		[false, 'VOLUME'],
 		[false, 'Mute', 'volume_mute', 'Volume Mute'],
@@ -68,14 +59,10 @@ class ControlsSubState extends MusicBeatSubstate
 	
 	public function new()
 	{
-		controls.isInSubstate = true;
-
 		super();
-
-		#if DISCORD_ALLOWED
-		DiscordClient.changePresence("Controls Menu", null);
-		#end
-
+		
+		rpcDetails = 'Controls Menu';
+		
 		options.push([true]);
 		options.push([true]);
 		options.push([true, defaultKey]);
@@ -85,13 +72,7 @@ class ControlsSubState extends MusicBeatSubstate
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.screenCenter();
 		add(bg);
-
-		var grid:FlxBackdrop = new FlxBackdrop(FlxGridOverlay.createGrid(80, 80, 160, 160, true, 0x33FFFFFF, 0x0));
-		grid.velocity.set(40, 40);
-		grid.alpha = 0;
-		FlxTween.tween(grid, {alpha: 1}, 0.5, {ease: FlxEase.quadOut});
-		add(grid);
-
+		
 		grpDisplay = new FlxTypedGroup<Alphabet>();
 		add(grpDisplay);
 		grpOptions = new FlxTypedGroup<Alphabet>();
@@ -99,7 +80,7 @@ class ControlsSubState extends MusicBeatSubstate
 		grpBlacks = new FlxTypedGroup<AttachedSprite>();
 		add(grpBlacks);
 		selectSpr = new AttachedSprite();
-		selectSpr.makeGraphic(250, 78, FlxColor.WHITE);
+		selectSpr.makeGraphic(1, 1, FlxColor.WHITE);
 		selectSpr.copyAlpha = false;
 		selectSpr.alpha = 0.75;
 		add(selectSpr);
@@ -118,9 +99,6 @@ class ControlsSubState extends MusicBeatSubstate
 		add(text);
 
 		createTexts();
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('NONE', 'B');
-		#end
 	}
 
 	var lastID:Int = 0;
@@ -151,7 +129,7 @@ class ControlsSubState extends MusicBeatSubstate
 					var str:String = option[1];
 					var keyStr:String = option[2];
 					if(isDefaultKey) str = Language.getPhrase(str);
-					var text:Alphabet = new Alphabet(475, 300, !isDisplayKey ? Language.getPhrase('key_$keyStr', str) : Language.getPhrase('keygroup_$str', str), !isDisplayKey);
+					var text:Alphabet = new Alphabet(320, 300, !isDisplayKey ? Language.getPhrase('key_$keyStr', str) : Language.getPhrase('keygroup_$str', str), !isDisplayKey);
 					text.isMenuItem = true;
 					text.changeX = false;
 					text.distancePerItem.y = 60;
@@ -161,7 +139,13 @@ class ControlsSubState extends MusicBeatSubstate
 
 					if(!isDisplayKey)
 					{
-						text.alignment = RIGHT;
+						text.scaleY = .82;
+						if (isCentered) {
+							text.scaleX = text.scaleY;
+						} else {
+							text.scaleX = Math.min(text.scaleY, (320 - 50) / text.width);
+							text.alignment = RIGHT;
+						}
 						grpOptions.add(text);
 						curOptions.push(i);
 						curOptionsValid.push(myID);
@@ -205,9 +189,10 @@ class ControlsSubState extends MusicBeatSubstate
 			else
 				key = InputFormatter.getGamepadName((gmpds[n] != null) ? gmpds[n] : NONE);
 
-			var attach:Alphabet = new Alphabet(560 + n * 300, 248, key, false);
+			var attach:Alphabet = new Alphabet(400 + n * 420, 265, key, false);
 			attach.isMenuItem = true;
 			attach.changeX = false;
+			attach.scaleY = .75;
 			attach.distancePerItem.y = 60;
 			attach.targetY = text.targetY;
 			attach.ID = Math.floor(grpBinds.length / 2);
@@ -216,16 +201,16 @@ class ControlsSubState extends MusicBeatSubstate
 			grpBinds.add(attach);
 
 			playstationCheck(attach);
-			attach.scaleX = Math.min(1, 230 / attach.width);
+			attach.scaleX = Math.min(attach.scaleY, (420 - 30) / attach.width);
 			//attach.text = key;
 
 			// spawn black bars at the right of the key name
 			var black:AttachedSprite = new AttachedSprite();
-			black.makeGraphic(250, 78, FlxColor.BLACK);
+			black.makeGraphic(410, 68, FlxColor.BLACK);
 			black.alphaMult = 0.4;
-			black.sprTracker = text;
-			black.yAdd = -6;
-			black.xAdd = 75 + n * 300;
+			black.sprTracker = attach;
+			black.yAdd = 30;
+			black.xAdd = -15;
 			grpBlacks.add(black);
 		}
 	}
@@ -254,23 +239,8 @@ class ControlsSubState extends MusicBeatSubstate
 	function updateBind(num:Int, text:String)
 	{
 		var bind:Alphabet = grpBinds.members[num];
-		var attach:Alphabet = new Alphabet(350 + (num % 2) * 300, 248, text, false);
-		attach.isMenuItem = true;
-		attach.changeX = false;
-		attach.distancePerItem.y = 60;
-		attach.targetY = bind.targetY;
-		attach.ID = bind.ID;
-		attach.x = bind.x;
-		attach.y = bind.y;
-		
-		playstationCheck(attach);
-		attach.scaleX = Math.min(1, 230 / attach.width);
-		//attach.text = text;
-
-		bind.kill();
-		grpBinds.remove(bind);
-		grpBinds.insert(num, attach);
-		bind.destroy();
+		bind.text = text;
+		playstationCheck(bind);
 	}
 
 	var binding:Bool = false;
@@ -291,9 +261,8 @@ class ControlsSubState extends MusicBeatSubstate
 
 		if(!binding)
 		{
-			if(#if TOUCH_CONTROLS_ALLOWED touchPad.buttonB.justPressed || #end FlxG.keys.justPressed.ESCAPE || FlxG.gamepads.anyJustPressed(B))
+			if(FlxG.keys.justPressed.ESCAPE || FlxG.gamepads.anyJustPressed(B))
 			{
-				controls.isInSubstate = false;
 				close();
 				return;
 			}
@@ -319,11 +288,8 @@ class ControlsSubState extends MusicBeatSubstate
 					bindingText = new Alphabet(FlxG.width / 2, 160, Language.getPhrase('controls_rebinding', 'Rebinding {1}', [options[curOptions[curSelected]][3]]), false);
 					bindingText.alignment = CENTERED;
 					add(bindingText);
-
-					final escape:String = (controls.mobileC) ? "B" : "ESC";
-					final backspace:String = (controls.mobileC) ? "C" : "Backspace";
 					
-					bindingText2 = new Alphabet(FlxG.width / 2, 340, Language.getPhrase('controls_rebinding2', 'Hold {1} to Cancel\nHold {2} to Delete', [escape, backspace]), true);
+					bindingText2 = new Alphabet(FlxG.width / 2, 340, Language.getPhrase('controls_rebinding2', 'Hold ESC to Cancel\nHold Backspace to Delete'), true);
 					bindingText2.alignment = CENTERED;
 					add(bindingText2);
 
@@ -528,12 +494,19 @@ class ControlsSubState extends MusicBeatSubstate
 
 	function updateAlt(?doSwap:Bool = false)
 	{
-		if(doSwap)
-		{
+		if(doSwap) {
 			curAlt = !curAlt;
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 		}
-		selectSpr.sprTracker = grpBlacks.members[Math.floor(curSelected * 2) + (curAlt ? 1 : 0)];
-		selectSpr.visible = (selectSpr.sprTracker != null);
+		
+		var selectedBG:AttachedSprite = grpBlacks.members[Math.floor(curSelected * 2) + (curAlt ? 1 : 0)];
+		selectSpr.sprTracker = selectedBG;
+		selectSpr.visible = false;
+		
+		if (selectSpr.sprTracker != null) {
+			selectSpr.scale.set(selectedBG.width, selectedBG.height);
+			selectSpr.updateHitbox();
+			selectSpr.visible = true;
+		}
 	}
 }

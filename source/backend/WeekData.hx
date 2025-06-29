@@ -18,6 +18,7 @@ typedef WeekFile =
 	var hideStoryMode:Bool;
 	var hideFreeplay:Bool;
 	var difficulties:String;
+	var colors:Array<String>; // New colors array
 }
 
 class WeekData {
@@ -37,17 +38,14 @@ class WeekData {
 	public var hideStoryMode:Bool;
 	public var hideFreeplay:Bool;
 	public var difficulties:String;
+	public var colors:Array<String>; // New colors array
 
 	public var fileName:String;
 
 	public static function createWeekFile():WeekFile {
 		var weekFile:WeekFile = {
 			songs: [["Bopeebo", "face", [146, 113, 253]], ["Fresh", "face", [146, 113, 253]], ["Dad Battle", "face", [146, 113, 253]]],
-			#if BASE_GAME_FILES
 			weekCharacters: ['dad', 'bf', 'gf'],
-			#else
-			weekCharacters: ['bf', 'bf', 'gf'],
-			#end
 			weekBackground: 'stage',
 			weekBefore: 'tutorial',
 			storyName: 'Your New Week',
@@ -56,7 +54,8 @@ class WeekData {
 			hiddenUntilUnlocked: false,
 			hideStoryMode: false,
 			hideFreeplay: false,
-			difficulties: ''
+			difficulties: '',
+			colors: ['FFFFFF', '8C9CFF'] // Default colors
 		};
 		return weekFile;
 	}
@@ -64,10 +63,11 @@ class WeekData {
 	// HELP: Is there any way to convert a WeekFile to WeekData without having to put all variables there manually? I'm kind of a noob in haxe lmao
 	public function new(weekFile:WeekFile, fileName:String) {
 		// here ya go - MiguelItsOut
-		var fields = Reflect.fields(#if js js.lib.Object.getPrototypeOf(this) #else this #end);	
-		for (field in Reflect.fields(weekFile))
-			if(fields.contains(field)) // Reflect.hasField() won't fucking work :/
+		var fields:Array<String> = Reflect.fields(this);
+		for (field in Reflect.fields(weekFile)) {
+			if (fields.contains(field))
 				Reflect.setProperty(this, field, Reflect.getProperty(weekFile, field));
+		}
 
 		this.fileName = fileName;
 	}
@@ -125,7 +125,7 @@ class WeekData {
 					}
 				}
 
-				for (file in NativeFileSystem.readDirectory(directory))
+				for (file in FileSystem.readDirectory(directory))
 				{
 					var path = haxe.io.Path.join([directory, file]);
 					if (!FileSystem.isDirectory(path) && file.endsWith('.json'))
@@ -161,7 +161,7 @@ class WeekData {
 		}
 	}
 
-	private static function getWeekFile(path:String):WeekFile {
+	public static function getWeekFile(path:String):WeekFile {
 		var rawJson:String = null;
 		#if MODS_ALLOWED
 		if(FileSystem.exists(path)) {

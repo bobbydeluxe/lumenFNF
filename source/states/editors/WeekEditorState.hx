@@ -14,7 +14,6 @@ import objects.HealthIcon;
 import objects.MenuCharacter;
 import objects.MenuItem;
 
-import states.editors.MasterEditorMenu;
 import states.editors.content.Prompt;
 
 class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.PsychUIEvent
@@ -44,8 +43,9 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 		txtWeekTitle.alpha = 0.7;
 		
 		var ui_tex = Paths.getSparrowAtlas('campaign_menu_UI_assets');
-		var bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFF9CF51);
+		var bgYellow:FlxSprite = new FlxSprite(0, 56).makeGraphic(FlxG.width, 386, 0xFFFFFFFF);
 		bgSprite = new FlxSprite(0, 56);
+		bgSprite.color = 0xFF8C9CFF;
 		bgSprite.antialiasing = ClientPrefs.data.antialiasing;
 
 		weekThing = new MenuItem(0, bgSprite.y + 396, weekFileName);
@@ -99,10 +99,6 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 
 		FlxG.mouse.visible = true;
 
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('UP_DOWN', 'B');
-		#end
-
 		super.create();
 	}
 
@@ -119,16 +115,13 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 		UI_box.selectedName = 'Week';
 		add(UI_box);
 
-		#if !mobile
 		var loadWeekButton:PsychUIButton = new PsychUIButton(0, 650, "Load Week", function() loadWeek());
 		loadWeekButton.screenCenter(X);
 		loadWeekButton.x -= 120;
 		add(loadWeekButton);
-		#end
 		
 		var freeplayButton:PsychUIButton = new PsychUIButton(0, 650, "Freeplay", function() MusicBeatState.switchState(new WeekEditorFreeplayState(weekFile)));
 		freeplayButton.screenCenter(X);
-		#if mobile freeplayButton.x -= 120; #end
 		add(freeplayButton);
 	
 		var saveWeekButton:PsychUIButton = new PsychUIButton(0, 650, "Save Week", function() saveWeek(weekFile));
@@ -327,11 +320,10 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 			missingFileText.text = 'MISSING FILE: images/storymenu/' + assetName + '.png';
 		}
 		recalculateStuffPosition();
-
-		#if DISCORD_ALLOWED
-		// Updating Discord Rich Presence
-		DiscordClient.changePresence("Week Editor", "Editting: " + weekFileName);
-		#end
+		
+		rpcDetails = 'Week Editor';
+		rpcState = 'Editing $weekFileName';
+		updatePresence();
 	}
 	
 	public function UIEvent(id:String, sender:Dynamic) {
@@ -405,11 +397,11 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 		if(PsychUIInputText.focusOn == null)
 		{
 			ClientPrefs.toggleVolumeKeys(true);
-			if(FlxG.keys.justPressed.ESCAPE #if TOUCH_CONTROLS_ALLOWED || touchPad.buttonB.justPressed #end)
+			if(FlxG.keys.justPressed.ESCAPE)
 			{
 				if(!unsavedProgress)
 				{
-					MusicBeatState.switchState(new MasterEditorMenu());
+					MusicBeatState.switchState(new states.MainMenuState(true));
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				}
 				else openSubState(new ExitConfirmationPrompt(function() unsavedProgress = false));
@@ -504,16 +496,11 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 		var data:String = haxe.Json.stringify(weekFile, "\t");
 		if (data.length > 0)
 		{
-			#if mobile
-			unsavedProgress = false;
-			StorageUtil.saveContent('$weekFileName.json', data);
-			#else
 			_file = new FileReference();
 			_file.addEventListener(#if desktop Event.SELECT #else Event.COMPLETE #end, onSaveComplete);
 			_file.addEventListener(Event.CANCEL, onSaveCancel);
 			_file.addEventListener(IOErrorEvent.IO_ERROR, onSaveError);
 			_file.save(data, weekFileName + ".json");
-			#end
 		}
 	}
 	
@@ -600,9 +587,6 @@ class WeekEditorFreeplayState extends MusicBeatState implements PsychUIEventHand
 
 		addEditorBox();
 		changeSelection();
-		#if TOUCH_CONTROLS_ALLOWED
-		addTouchPad('UP_DOWN', 'B');
-		#end
 		super.create();
 	}
 	
@@ -622,21 +606,18 @@ class WeekEditorFreeplayState extends MusicBeatState implements PsychUIEventHand
 		blackBlack.alpha = 0.6;
 		add(blackBlack);
 
-		#if !mobile
 		var loadWeekButton:PsychUIButton = new PsychUIButton(0, 685, "Load Week", function() {
 			WeekEditorState.loadWeek();
 		});
 		loadWeekButton.screenCenter(X);
 		loadWeekButton.x -= 120;
 		add(loadWeekButton);
-		#end
 		
 		var storyModeButton:PsychUIButton = new PsychUIButton(0, 685, "Story Mode", function() {
 			MusicBeatState.switchState(new WeekEditorState(weekFile));
 			
 		});
 		storyModeButton.screenCenter(X);
-		#if mobile storyModeButton.x -= 120; #end
 		add(storyModeButton);
 	
 		var saveWeekButton:PsychUIButton = new PsychUIButton(0, 685, "Save Week", function() {
@@ -773,7 +754,7 @@ class WeekEditorFreeplayState extends MusicBeatState implements PsychUIEventHand
 		else
 		{
 			ClientPrefs.toggleVolumeKeys(true);
-			if(FlxG.keys.justPressed.ESCAPE #if TOUCH_CONTROLS_ALLOWED || touchPad.buttonB.justPressed #end) {
+			if(FlxG.keys.justPressed.ESCAPE) {
 				if(!WeekEditorState.unsavedProgress)
 				{
 					MusicBeatState.switchState(new MasterEditorMenu());

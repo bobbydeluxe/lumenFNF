@@ -5,6 +5,10 @@ import Sys.sleep;
 import sys.thread.Thread;
 import lime.app.Application;
 
+#if LUA_ALLOWED
+import psychlua.FunkinLua;
+#end
+
 import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
 
@@ -13,7 +17,7 @@ import flixel.util.FlxStringUtil;
 class DiscordClient
 {
 	public static var isInitialized:Bool = false;
-	private inline static final _defaultID:String = "1272667686081527838";
+	private inline static final _defaultID:String = "863222024192262205";
 	public static var clientID(default, set):String = _defaultID;
 	private static var presence:DiscordPresence = new DiscordPresence();
 	// hides this field from scripts and reflection in general
@@ -53,7 +57,8 @@ class DiscordClient
 			message += '($user)';
 
 		trace(message);
-		changePresence();
+		if (FlxG.state is MusicBeatSubstate)
+			cast(FlxG.state, MusicBeatSubstate).updatePresence();
 	}
 
 	private static function onError(errorCode:Int, message:cpp.ConstCharStar):Void
@@ -68,11 +73,11 @@ class DiscordClient
 
 	public static function initialize()
 	{
-		var discordHandlers:DiscordEventHandlers = #if (hxdiscord_rpc > "1.2.4") new DiscordEventHandlers(); #else DiscordEventHandlers.create(); #end
+		var discordHandlers:DiscordEventHandlers = new DiscordEventHandlers();
 		discordHandlers.ready = cpp.Function.fromStaticFunction(onReady);
-		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
 		discordHandlers.errored = cpp.Function.fromStaticFunction(onError);
-		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), #if (hxdiscord_rpc > "1.2.4") false #else 1 #end, null);
+		discordHandlers.disconnected = cpp.Function.fromStaticFunction(onDisconnected);
+		Discord.Initialize(clientID, cpp.RawPointer.addressOf(discordHandlers), true, null);
 
 		if(!isInitialized) trace("Discord Client initialized");
 
@@ -108,7 +113,7 @@ class DiscordClient
 		presence.details = details;
 		presence.smallImageKey = smallImageKey;
 		presence.largeImageKey = largeImageKey;
-		presence.largeImageText = 'Engine Version: ${states.MainMenuState.pSliceVersion} (${states.MainMenuState.psychEngineVersion})';
+		presence.largeImageText = "Engine Version: " + Version.lumenVersion;
 		// Obtained times are in milliseconds so they are divided so Discord can use it
 		presence.startTimestamp = Std.int(startTimestamp / 1000);
 		presence.endTimestamp = Std.int(endTimestamp / 1000);
@@ -154,10 +159,9 @@ class DiscordClient
 	#end
 
 	#if LUA_ALLOWED
-	public static function addLuaCallbacks(lua:State)
-	{
-		Lua_helper.add_callback(lua, "changeDiscordPresence", changePresence);
-		Lua_helper.add_callback(lua, "changeDiscordClientID", function(?newID:String) {
+	public static function implement():Void {
+		FunkinLua.registerFunction("changeDiscordPresence", changePresence);
+		FunkinLua.registerFunction("changeDiscordClientID", function(?newID:String) {
 			if(newID == null) newID = _defaultID;
 			clientID = newID;
 		});
@@ -180,7 +184,7 @@ private final class DiscordPresence
 
 	function new()
 	{
-		__presence = #if (hxdiscord_rpc > "1.2.4") new DiscordRichPresence(); #else DiscordRichPresence.create(); #end
+		__presence = new DiscordRichPresence();
 	}
 
 	public function toString():String
@@ -191,8 +195,8 @@ private final class DiscordPresence
 			LabelValuePair.weak("smallImageKey", smallImageKey),
 			LabelValuePair.weak("largeImageKey", largeImageKey),
 			LabelValuePair.weak("largeImageText", largeImageText),
-			LabelValuePair.weak("startTimestamp", startTimestamp),
-			LabelValuePair.weak("endTimestamp", endTimestamp)
+			LabelValuePair.weak("startTimestamp", cast startTimestamp),
+			LabelValuePair.weak("endTimestamp", cast endTimestamp)
 		]);
 	}
 
@@ -248,22 +252,22 @@ private final class DiscordPresence
 
 	@:noCompletion inline function get_startTimestamp():Int
 	{
-		return __presence.startTimestamp;
+		return cast __presence.startTimestamp;
 	}
 
 	@:noCompletion inline function set_startTimestamp(value:Int):Int
 	{
-		return __presence.startTimestamp = value;
+		return cast (__presence.startTimestamp = value);
 	}
 
 	@:noCompletion inline function get_endTimestamp():Int
 	{
-		return __presence.endTimestamp;
+		return cast __presence.endTimestamp;
 	}
 
 	@:noCompletion inline function set_endTimestamp(value:Int):Int
 	{
-		return __presence.endTimestamp = value;
+		return cast (__presence.endTimestamp = value);
 	}
 }
 #end

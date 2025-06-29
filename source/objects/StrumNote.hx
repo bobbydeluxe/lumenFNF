@@ -55,8 +55,9 @@ class StrumNote extends FlxSprite
 		if(PlayState.SONG != null && PlayState.SONG.arrowSkin != null && PlayState.SONG.arrowSkin.length > 1) skin = PlayState.SONG.arrowSkin;
 		else skin = Note.defaultNoteSkin;
 
-		var customSkin:String = skin + Note.getNoteSkinPostfix();
-		if(Paths.fileExists('images/$customSkin.png', IMAGE)) skin = customSkin;
+		var customSkin:String = PlayState.uiPrefix + skin + Note.getNoteSkinPostfix();
+		if(Paths.fileExists('images/$customSkin.png', IMAGE))
+			skin = customSkin;
 
 		texture = skin; //Load texture and anims
 		scrollFactor.set();
@@ -68,12 +69,14 @@ class StrumNote extends FlxSprite
 		var lastAnim:String = null;
 		if(animation.curAnim != null) lastAnim = animation.curAnim.name;
 
+		var skinTexture:String = texture; // i thought i was gonna do more with this, oh well
+
 		if(PlayState.isPixelStage)
 		{
-			loadGraphic(Paths.image('pixelUI/' + texture));
+			loadGraphic(Paths.image(skinTexture));
 			width = width / 4;
 			height = height / 5;
-			loadGraphic(Paths.image('pixelUI/' + texture), true, Math.floor(width), Math.floor(height));
+			loadGraphic(Paths.image(skinTexture), true, Math.floor(width), Math.floor(height));
 
 			antialiasing = false;
 			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
@@ -104,7 +107,7 @@ class StrumNote extends FlxSprite
 		}
 		else
 		{
-			frames = Paths.getSparrowAtlas(texture);
+			frames = Paths.getSparrowAtlas(skinTexture);
 			animation.addByPrefix('green', 'arrowUP');
 			animation.addByPrefix('blue', 'arrowDOWN');
 			animation.addByPrefix('purple', 'arrowLEFT');

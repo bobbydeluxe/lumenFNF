@@ -21,9 +21,7 @@ class AttractState extends MusicBeatSubstate
 {
   #if html5
   var ATTRACT_VIDEO_PATH:String = Paths.video("commercials/"+FlxG.random.getObject([
-    'toyCommercial',
-    'kickstarterTrailer',
-    'erectSamplers'
+    'baseVideo'
   ]));
   #else
    var ATTRACT_VIDEO_PATH:String = '';

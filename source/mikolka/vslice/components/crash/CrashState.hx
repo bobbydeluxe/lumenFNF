@@ -32,8 +32,6 @@ class CrashState extends FlxState
 	{
 		if (Main.fpsVar != null)
 			Main.fpsVar.visible = false;
-		if (Main.memoryCounter != null)
-			Main.memoryCounter.visible = false;
 		super.create();
 		var previousScreen = new FlxSprite(0, 0, screenBelow);
 		previousScreen.setGraphicSize(FlxG.width,FlxG.height);
