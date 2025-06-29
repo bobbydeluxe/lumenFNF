@@ -4,6 +4,8 @@ import flixel.addons.display.FlxPieDial;
 
 #if hxvlc
 import hxvlc.flixel.FlxVideoSprite;
+#elseif hxcodec
+import hxcodec.flixel.FlxVideoSprite;
 #end
 
 class VideoSprite extends FlxSpriteGroup {

@@ -13,6 +13,8 @@ haxelib install hscript-iris 1.1.3
 haxelib install tjson 1.4.0
 haxelib install hxdiscord_rpc 1.3.0
 haxelib install hxvlc 2.2.2 --skip-dependencies
+haxelib set lime 8.2.2
+haxelib set openfl 9.4.1
 haxelib git flxanimate https://github.com/Psych-Slice/FlxAnimate.git 42f1b5d193b4345ca7d6933380ab3105985b44a3
 haxelib git linc_luajit https://github.com/superpowers04/linc_luajit 1906c4a96f6bb6df66562b3f24c62f4c5bba14a7
 haxelib git funkin.vis https://github.com/FunkinCrew/funkVis 22b1ce089dd924f15cdc4632397ef3504d464e90
