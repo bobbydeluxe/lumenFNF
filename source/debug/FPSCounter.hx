@@ -33,7 +33,7 @@ class FPSCounter extends TextField
 		selectable = false;
 		mouseEnabled = false;
 		shader = new debug.ScriptTraceDisplay.SimpleOutlineShader();
-		defaultTextFormat = new TextFormat(Paths.font('comicz.ttf'), 16, color);
+		defaultTextFormat = new TextFormat(Paths.font('vcr.ttf'), 16, color);
 		autoSize = LEFT;
 		multiline = true;
 		text = "FPS: ";

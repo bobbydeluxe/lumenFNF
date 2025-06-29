@@ -1,7 +1,0 @@
-{
-    "name": "Base FNF: Complete Mix",
-    "description": "A faithful port of the original Friday Night Funkin' content, including all base weeks and official remixes.\nComes pre-installed with Lumen Engine.",
-    "restart": false,
-    "runsGlobally": true,
-    "color": [255, 31, 188]
-}

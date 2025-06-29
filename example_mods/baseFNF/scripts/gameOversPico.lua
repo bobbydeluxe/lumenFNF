@@ -145,6 +145,11 @@ function setUpDeathProperties(characterName)
         useGfOverlay = false
         setPropertyFromGameOver('characterName', 'pico-holding-nene-dead')
         setPropertyFromGameOver('deathSoundName', 'fnf_loss_sfx-pico-and-nene')
+    elseif stringEndsWith(characterName, 'blazin') then
+        useRetrySprite = false
+        useGfOverlay = false
+        setPropertyFromGameOver('characterName', 'pico-blazin')
+        setPropertyFromGameOver('deathSoundName', 'fnf_loss_sfx-pico-gutpunch')
     end
 end
 

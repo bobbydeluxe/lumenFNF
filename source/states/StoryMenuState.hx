@@ -464,7 +464,7 @@ class StoryMenuState extends ScriptedState
 			WeekData.setDirectoryFromWeek(leWeek);
 
 			var leName:String = Language.getPhrase('storyname_${leWeek.fileName}', leWeek.storyName);
-			txtWeekTitle.text = leName.toUpperCase();
+			txtWeekTitle.text = leName;
 			txtWeekTitle.x = FlxG.width - (txtWeekTitle.width + 10);
 
 			var unlocked:Bool = !weekIsLocked(leWeek.fileName);
@@ -531,8 +531,6 @@ class StoryMenuState extends ScriptedState
 		{
 			txtTracklist.text += stringThing[i] + '\n';
 		}
-
-		txtTracklist.text = txtTracklist.text.toUpperCase();
 
 		txtTracklist.screenCenter(X);
 		txtTracklist.x -= FlxG.width * 0.35;

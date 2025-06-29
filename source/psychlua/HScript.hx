@@ -255,6 +255,7 @@ class HScript extends Iris {
 		#if flxanimate
 		set('FlxAnimate', FlxAnimate);
 		#end
+		set('ScriptMemBank', psychlua.ScriptMemBank);
 
 		// Functions & Variables
 		var variableMap:Map<String, Dynamic> = getVariables();

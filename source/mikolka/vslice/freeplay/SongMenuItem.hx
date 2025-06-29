@@ -62,16 +62,12 @@ class SongMenuItem extends FlxSpriteGroup
   // var diffRatingSprite:FlxSprite;
   public var bpmText:FlxSprite;
   public var difficultyText:FlxSprite;
-  public var weekType:FlxSprite;
 
   public var newText:FlxSprite;
 
-  // public var weekType:FlxSprite;
   public var bigNumbers:Array<CapsuleNumber> = [];
 
   public var smallNumbers:Array<CapsuleNumber> = [];
-
-  public var weekNumbers:Array<CapsuleNumber> = [];
 
   var impactThing:FunkinSprite;
 
@@ -97,15 +93,6 @@ class SongMenuItem extends FlxSpriteGroup
     difficultyText = new FlxSprite(414, 87).loadGraphic(Paths.image('freeplay/freeplayCapsule/difficultytext'));
     difficultyText.setGraphicSize(Std.int(difficultyText.width * 0.9));
     add(difficultyText);
-
-    weekType = new FlxSprite(291, 87);
-    weekType.frames = Paths.getSparrowAtlas('freeplay/freeplayCapsule/weektypes');
-
-    weekType.animation.addByPrefix('WEEK', 'WEEK text instance 1', 24, false);
-    weekType.animation.addByPrefix('WEEKEND', 'WEEKEND text instance 1', 24, false);
-
-    weekType.setGraphicSize(Std.int(weekType.width * 0.9));
-    add(weekType);
 
     newText = new FlxSprite(454, 9);
     newText.frames = Paths.getSparrowAtlas('freeplay/freeplayCapsule/new');
@@ -222,15 +209,6 @@ class SongMenuItem extends FlxSpriteGroup
     favIcon.blend = BlendMode.ADD;
     add(favIcon);
 
-    //? Added another week num. I should really make 3 of them
-    var weekNumber:CapsuleNumber = new CapsuleNumber(355, 88.5, false, 0);
-    var weekNumber2:CapsuleNumber = new CapsuleNumber(365, 88.5, false, 0);
-    add(weekNumber);
-    add(weekNumber2);
-
-    weekNumbers.push(weekNumber);
-    weekNumbers.push(weekNumber2);
-
     setVisibleGrp(false);
   }
 
@@ -243,46 +221,10 @@ class SongMenuItem extends FlxSpriteGroup
     }
   }
 
-  // no way to grab weeks rn, so this needs to be done :/
-  //? removed this shit
-  // negative values mean weekends
+  // removing this bc it looks UGLY
   function checkWeek(id:Int):Void
   {
-    // trace(name);
-    var weekNum:Int = id;
-
-    
-    //? code to handle multiple week digits
-    if (weekNum == 0)
-    {
-      weekType.visible = false;
-      weekNumbers[0].visible = false;
-      weekNumbers[1].visible = false;
-    }
-    else if(weekNum<10)
-    {
-      weekType.visible = true;
-      weekNumbers[0].visible = true;
-      weekNumbers[1].visible = false;
-      weekNumbers[0].digit = Std.int(Math.abs(weekNum));
-    }
-    else 
-    {
-      weekType.visible = true;
-      weekNumbers[0].visible = true;
-      weekNumbers[1].visible = true;
-      weekNumbers[1].digit = Std.int(Math.abs(weekNum%10));
-      weekNumbers[0].digit = Std.int(Math.abs(weekNum/10));
-    }
-    if (weekNum > 0)
-    {
-      weekType.animation.play('WEEK', true);
-    }
-    else
-    {
-      weekType.animation.play('WEEKEND', true);
-      weekNumbers[0].offset.x -= 35;
-    }
+    // nothin
   }
 
   /**
