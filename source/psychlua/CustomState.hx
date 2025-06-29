@@ -72,4 +72,8 @@ class CustomState extends ScriptedState implements PsychUIEventHandler.PsychUIEv
 	public override function customStateName():String {
 		return stateName;
 	}
+
+	public function UIEvent(id:String, sender:Dynamic) {
+		callOnScripts('onUIEvent', [id, sender]);
+	}
 }
