@@ -7,7 +7,7 @@ why did i make this? i just thought p-slice was a bit too hardcoding-oriented, a
 essentially a crossover between psych forks
 
 ## credits:
-- bobbyDX [me] - creator of this engine
+- bobbyDX [me] - creator of this fork
 - Ledonic - contributed greatly to the base game content modpack
 - ashley/emi3/victoria [whatever you want to call her] - creator of the [psych fork](https://github.com/inky03/PsychEngineMod) that the scripting system is based on
 - mikolka9144 - creator of the [p-slice engine](https://github.com/Psych-Slice/P-Slice/) that this engine is based on
