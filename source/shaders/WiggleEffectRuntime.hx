@@ -1,7 +1,5 @@
 package shaders;
 
-package shaders;
-
 import flixel.addons.display.FlxRuntimeShader;
 import openfl.Assets;
 
