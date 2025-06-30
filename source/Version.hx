@@ -4,10 +4,10 @@ package;
 
 class Version {
     // Year, Month, Day
-    public static final dateParts:Array<Int> = [2025, 6, 29];
+    public static final dateParts:Array<Int> = [2025, 6, 30];
 
     // Build number for the day (e.g., 1 = first build of the day)
-    public static final buildNum:Int = 3;
+    public static final buildNum:Int = 1;
 
     // Returns version string like "2025-06-28"
     public static function getFormatted():String {
