@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="dialogueBox-school.png">
+<SubTexture name="normalEntrance0000" x="204" y="209" width="202" height="14" frameX="-22" frameY="-62" frameWidth="249" frameHeight="144" />
+<SubTexture name="normalEntrance0001" x="204" y="180" width="204" height="29" frameX="-22" frameY="-64" frameWidth="249" frameHeight="144" />
+<SubTexture name="normalEntrance0002" x="0" y="180" width="204" height="46" frameX="-22" frameY="-65" frameWidth="249" frameHeight="144" />
+<SubTexture name="normalEntrance0003" x="0" y="122" width="205" height="58" frameX="-22" frameY="-66" frameWidth="249" frameHeight="144" />
+<SubTexture name="normalEntrance0004" x="0" y="122" width="205" height="58" frameX="-22" frameY="-66" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0000" x="0" y="0" width="215" height="63" frameX="-22" frameY="-60" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0001" x="215" y="116" width="202" height="56" frameX="-26" frameY="-69" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0002" x="215" y="0" width="205" height="58" frameX="-20" frameY="-64" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0003" x="215" y="58" width="204" height="58" frameX="-24" frameY="-66" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0004" x="0" y="63" width="206" height="59" frameX="-20" frameY="-66" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0005" x="0" y="63" width="206" height="59" frameX="-22" frameY="-66" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0006" x="0" y="122" width="205" height="58" frameX="-22" frameY="-66" frameWidth="249" frameHeight="144" />
+<SubTexture name="madEntrance0007" x="0" y="122" width="205" height="58" frameX="-22" frameY="-66" frameWidth="249" frameHeight="144" />
+</TextureAtlas>

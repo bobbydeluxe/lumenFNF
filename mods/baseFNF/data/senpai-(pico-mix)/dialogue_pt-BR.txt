@@ -1,0 +1,17 @@
+dad::normal::Ah, uma outra doce donzela, tem agraciada m-
+dad::bwuh::espera
+dad::bwuh::Eca.
+dad::bwuh::Quem são vocês dois?
+gf::normal::Sou Nene.
+gf::normal::Ele é Pico.
+bf::normal::Eae.
+dad::normal::Oh nossa, que roupas inapropriadas...| Quão esquisitas...
+gf::normal::Olha quem fala.
+dad::normal::E trazendo uma arma para a escola?| Quão mal educado!
+dad::normal::Vocês assustaram todas as amáveis rosas que adoram minhas performances, então...
+dad::normal::Mesmo que o seja FALSO, você sabe que isso é no minimo uma suspensão de 3 dias!
+gf::normal::Não aquilo é de verdade-
+dad::normal::Irei gostar em informar o diretor, logo após eu te ensinar o que é mais forte que maneiras ruins...
+dad::normal::A beleza da MÚSICA!
+gf::peeved::...
+bf::peeved::...
