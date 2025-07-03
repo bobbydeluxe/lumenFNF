@@ -32,6 +32,7 @@ class FunkinTools
 		combinedTally.bad = newTally.bad + baseTally.bad;
 		combinedTally.good = newTally.good + baseTally.good;
 		combinedTally.sick = newTally.sick + baseTally.sick;
+		combinedTally.epic = newTally.epic + baseTally.epic;
 		combinedTally.totalNotes = newTally.totalNotes + baseTally.totalNotes;
 		combinedTally.totalNotesHit = newTally.totalNotesHit + baseTally.totalNotesHit;
 		combinedTally.accPoints = newTally.accPoints + baseTally.accPoints;
@@ -57,6 +58,7 @@ class FunkinTools
 			bad: 0,
 			good: 0,
 			sick: 0,
+			epic: 0,
 			totalNotes: 0,
 			totalNotesHit: 0,
 			maxCombo: 0

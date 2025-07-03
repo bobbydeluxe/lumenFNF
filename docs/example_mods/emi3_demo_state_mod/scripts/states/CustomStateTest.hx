@@ -108,7 +108,7 @@ function onUpdate(elapsed:Float):Void {
 		updateToy(toy, elapsed);
 	
 	if (controls.BACK)
-		MusicBeatState.switchState(new MainMenuState(true));
+		MusicBeatState.switchState(new MainMenuState(false, true));
 }
 
 function onBeatHit(beat:Int):Void {

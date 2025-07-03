@@ -21,6 +21,7 @@ class CreditsState extends ScriptedState
 		["Lumen Engine Contributors"],
 		['bobbyDX',				'bobbydx',			'stitched everything together for Lumen Engine',				'https://gamebanana.com/members/3384454',				'fffa66'],
 		['Ledonic',			'ledonic',			'helped with the base game content modpack',					'https://x.com/ledonic852',				'3897FF'],
+		['unholywanderer04', 'unholy', 			'epic rating graphic [taken from unholy engine]', 			 			'https://github.com/Unholywanderer', '		7a83ff'],
 		[""],
 		["P-Slice Engine Team"],
 		['Mikolka9144',			'mikolka',			'The lead for P-Slice',								 'https://gamebanana.com/members/3329541',					'2ebcfa'],

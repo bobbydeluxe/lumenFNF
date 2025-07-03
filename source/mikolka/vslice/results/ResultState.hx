@@ -403,19 +403,22 @@ class ResultState extends EpicSubState
 
     hStuf += 2;
 
-    var tallySick:TallyCounter = new TallyCounter(230, (hStuf * 5) + extraYOffset, params.scoreData.sick, 0xFF89E59E);
+    var tallyEpic:TallyCounter = new TallyCounter(250, (hStuf * 5) + (extraYOffset * 2), params.scoreData.epic, 0xFFE589B7);
+    ratingGrp.add(tallyEpic);
+
+    var tallySick:TallyCounter = new TallyCounter(230, (hStuf * 6) + (extraYOffset * 2), params.scoreData.sick, 0xFF89E59E);
     ratingGrp.add(tallySick);
 
-    var tallyGood:TallyCounter = new TallyCounter(210, (hStuf * 6) + extraYOffset, params.scoreData.good, 0xFF89C9E5);
+    var tallyGood:TallyCounter = new TallyCounter(210, (hStuf * 7) + (extraYOffset * 2), params.scoreData.good, 0xFF89C9E5);
     ratingGrp.add(tallyGood);
 
-    var tallyBad:TallyCounter = new TallyCounter(190, (hStuf * 7) + extraYOffset, params.scoreData.bad, 0xFFE6CF8A);
+    var tallyBad:TallyCounter = new TallyCounter(190, (hStuf * 8) + (extraYOffset * 2), params.scoreData.bad, 0xFFE6CF8A);
     ratingGrp.add(tallyBad);
 
-    var tallyShit:TallyCounter = new TallyCounter(220, (hStuf * 8) + extraYOffset, params.scoreData.shit, 0xFFE68C8A);
+    var tallyShit:TallyCounter = new TallyCounter(190, (hStuf * 9) + (extraYOffset * 2), params.scoreData.shit, 0xFFE68C8A);
     ratingGrp.add(tallyShit);
 
-    var tallyMissed:TallyCounter = new TallyCounter(260, (hStuf * 9) + extraYOffset, params.scoreData.missed, 0xFFC68AE6);
+    var tallyMissed:TallyCounter = new TallyCounter(460, (hStuf * 9) + (extraYOffset * 2), params.scoreData.missed, 0xFFC68AE6);
     ratingGrp.add(tallyMissed);
 
     score.visible = false;
@@ -719,7 +722,8 @@ class ResultState extends EpicSubState
     //         score: 1_234_567,
     //         tallies:
     //           {
-    //             sick: 200,
+    //             epic: 150,
+    //             sick: 50,
     //             good: 0,
     //             bad: 0,
     //             shit: 0,

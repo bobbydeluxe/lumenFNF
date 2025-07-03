@@ -4151,7 +4151,7 @@ class ChartingState extends ScriptedState implements PsychUIEventHandler.PsychUI
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Exit', function()
 		{
 			PlayState.chartingMode = false;
-			MusicBeatState.switchState(new states.MainMenuState(true));
+			MusicBeatState.switchState(new states.MainMenuState(false, true));
 			FlxG.sound.playMusic(Paths.music('freakyMenu'));
 			FlxG.mouse.visible = false;
 		}, btnWid);

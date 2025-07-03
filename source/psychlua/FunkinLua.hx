@@ -1381,25 +1381,6 @@ class FunkinLua {
 	public static function implementGame(game:PlayState):Void {
 		// trace('implement game functions');
 		
-		#if UNHOLYWANDERER04
-		var unholyed:Bool = false;
-		registerFunction(lua, 'unholywanderer04', function() {
-			var fgame:Main.UnholyGame = cast FlxG.game;
-			if (fgame.frameCounter % 2 == 1) {
-				FlxG.resetGame();
-			} else if (!unholyed) {
-				var unholy:FlxSprite = new FlxSprite().loadGraphic(Paths.image('unholywanderer04', 'embed'));
-				unholy.antialiasing = ClientPrefs.data.antialiasing;
-				unholy.setGraphicSize(FlxG.width, FlxG.height);
-				unholy.updateHitbox();
-				unholy.alpha = 0;
-				unholyed = true;
-				game.uiGroup.insert(0, unholy);
-				FlxTween.tween(unholy, {alpha: 1}, 3);
-			}
-		});
-		#end
-		
 		registerFunction('addScore', function(value:Int = 0) {
 			game.songScore += value;
 			game.RecalculateRating();

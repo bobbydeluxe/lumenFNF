@@ -79,7 +79,8 @@ class PlayState extends ScriptedState
 	public static var STRUM_X_MIDDLESCROLL = -278;
 
 	public static var ratingStuff:Array<Dynamic> = [
-		['You Suck!', 0.2], //From 0% to 19%
+		['Abysmal', 0.1], //From 0% to 9%
+		['You Suck!', 0.2], //From 10% to 19%
 		['Shit', 0.4], //From 20% to 39%
 		['Bad', 0.5], //From 40% to 49%
 		['Bruh', 0.6], //From 50% to 59%
@@ -1089,7 +1090,7 @@ class PlayState extends ScriptedState
 		spr.antialiasing = antialias;
 		insert(members.indexOf(noteGroup), spr);
 		FlxTween.tween(spr, {/*y: spr.y + 100,*/ alpha: 0}, Conductor.crochet / 1000, {
-			ease: FlxEase.cubeInOut,
+			ease: FlxEase.circInOut,
 			onComplete: function(twn:FlxTween)
 			{
 				remove(spr);
@@ -1178,10 +1179,11 @@ class PlayState extends ScriptedState
 
 	public dynamic function fullComboFunction()
 	{
-		var sicks:Int = ratingsData[0].hits;
-		var goods:Int = ratingsData[1].hits;
-		var bads:Int = ratingsData[2].hits;
-		var shits:Int = ratingsData[3].hits;
+		var epics:Int = ratingsData[0].hits;
+		var sicks:Int = ratingsData[1].hits;
+		var goods:Int = ratingsData[2].hits;
+		var bads:Int = ratingsData[3].hits;
+		var shits:Int = ratingsData[4].hits;
 
 		ratingFC = "";
 		if(songMisses == 0)
@@ -1891,16 +1893,14 @@ class PlayState extends ScriptedState
 	// Health icon updaters
 	public dynamic function updateIconsScale(elapsed:Float)
 	{
-		// Custom base exponential function: base^(-elapsed * factor * playbackRate)
-		var base:Float = (Math.sqrt(5)/2) + 2; // golden ratio plus 1.5. i love custom exponential functions - bobbyDX
-		var factor:Float = 9.0;
-
-		var multP1:Float = FlxMath.lerp(1, iconP1.scale.x, Math.pow(base, -elapsed * factor * playbackRate));
-		iconP1.scale.set(multP1, multP1);
+		var expBase:Float = (Math.sqrt(5) / 2) + 2;
+		
+		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.pow(expBase, -elapsed * 9 * playbackRate));
+		iconP1.scale.set(mult, mult);
 		iconP1.updateHitbox();
 
-		var multP2:Float = FlxMath.lerp(1, iconP2.scale.x, Math.pow(base, -elapsed * factor * playbackRate));
-		iconP2.scale.set(multP2, multP2);
+		var mult:Float = FlxMath.lerp(1, iconP2.scale.x, Math.pow(expBase, -elapsed * 9 * playbackRate));
+		iconP2.scale.set(mult, mult);
 		iconP2.updateHitbox();
 	}
 
@@ -2496,10 +2496,11 @@ class PlayState extends ScriptedState
           		score: songScore,
 		  		accPoints: accPts,
 				
-          		sick: ratingsData[0].hits,
-            	good: ratingsData[1].hits,
-              	bad: ratingsData[2].hits,
-          		shit: ratingsData[3].hits,
+				epic: ratingsData[0].hits,
+          		sick: ratingsData[1].hits,
+            	good: ratingsData[2].hits,
+              	bad: ratingsData[3].hits,
+          		shit: ratingsData[4].hits,
           		missed: songMisses,
           		combo: combo,
             	maxCombo: maxCombo,

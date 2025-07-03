@@ -14,6 +14,7 @@ abstract Tallies(RawTallies)
         bad: 0,
         good: 0,
         sick: 0,
+        epic: 0,
         totalNotes: 0,
         totalNotesHit: 0,
         maxCombo: 0,
@@ -39,6 +40,7 @@ typedef RawTallies =
   var bad:Int;
   var good:Int;
   var sick:Int;
+  var epic:Int;
   var maxCombo:Int;
 
   var score:Int;
@@ -63,6 +65,7 @@ typedef SaveScoreData =
   var score:Int;
   var accPoints:Float; // Hit points. Divide by all notes to get accuracy
 
+  var epic:Int;
   var sick:Int;
   var good:Int;
   var bad:Int;

@@ -4,7 +4,7 @@ package;
 
 class Version {
     // Year, Month, Day
-    public static final dateParts:Array<Int> = [2025, 7, 1];
+    public static final dateParts:Array<Int> = [2025, 7, 3];
 
     // Build number for the day (e.g., 1 = first build of the day)
     public static final buildNum:Int = 1;
