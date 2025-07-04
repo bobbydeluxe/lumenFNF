@@ -1228,14 +1228,17 @@ class FunkinLua {
 		});
 
 		registerFunction('removeLuaSprite', function(tag:String, destroy:Bool = true, ?group:String = null) {
-			var obj:Dynamic = LuaUtils.getObjectDirectly(tag);
-			if (obj == null || obj.destroy == null)
+			var obj:FlxSprite = LuaUtils.getObjectDirectly(tag);
+			if(obj == null || obj.destroy == null)
 				return;
 			
-			var groupObj:Dynamic = LuaUtils.getObjectDirectly(group);
-			
+			var groupObj:Dynamic = null;
+			if(group == null) groupObj = LuaUtils.getTargetInstance();
+			else groupObj = LuaUtils.getObjectDirectly(group);
+
 			groupObj.remove(obj, true);
-			if (destroy) {
+			if(destroy)
+			{
 				MusicBeatState.getVariables().remove(tag);
 				obj.destroy();
 			}

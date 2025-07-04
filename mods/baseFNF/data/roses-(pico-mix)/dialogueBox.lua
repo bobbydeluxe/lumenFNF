@@ -12,7 +12,7 @@ dialogueBoxData = {
 }
 -- This character will be on the right.
 bfDialogueData = {
-    name = 'boyfriend', -- characterName
+    name = 'pico', -- characterName
     expressions = {
         -- expressionName = {x = offsetX, y = offsetY}
         normal = {x = 0, y = 0}

@@ -15,7 +15,7 @@ bfDialogueData = {
     name = 'boyfriend', -- characterName
     expressions = {
         -- expressionName = {x = offsetX, y = offsetY}
-        normal = {x = 0, y = 0}
+        normal = {x = 0, y = -65}
     }
 }
 -- This character will be on the left.
@@ -68,19 +68,14 @@ function createDialogueBox(isMad)
         setProperty('dialogueBG.alpha', 0.7)
     end
 
-    makeAnimatedLuaSprite('dialogueBox', 'weeb/pixelUI/dialogueBox-school', -20, 40)
-    addAnimationByPrefix('dialogueBox', 'open', 'normalEntrance', 24, false)
-    addAnimationByPrefix('dialogueBox', 'openMad', 'madEntrance', 24, false)
+    makeAnimatedLuaSprite('dialogueBox', 'weeb/pixelUI/dialogueBox-evil', -20, 40)
+    addAnimationByPrefix('dialogueBox', 'open', 'Spirit Textbox spawn instance 1', 24, false)
     setObjectCamera('dialogueBox', 'camHUD')
     scaleObject('dialogueBox', 6 * 0.9, 6 * 0.9)
     screenCenter('dialogueBox', 'x')
     addLuaSprite('dialogueBox', true)
     setProperty('dialogueBox.antialiasing', false)
-    if isMad == true then
-        playAnim('dialogueBox', 'openMad')
-    else
-        playAnim('dialogueBox', 'open')
-    end
+    playAnim('dialogueBox', 'open')
 
     makeAnimatedLuaSprite('portraitLeft', 'weeb/pixelUI/portraits/portrait-'..dadDialogueData.name, 330, 265)
     addAnimationByPrefix('portraitLeft', 'appear', 'portraitEnter', 24, false)
@@ -119,8 +114,7 @@ function createDialogueBox(isMad)
     createInstance('dialogueText', 'flixel.addons.text.FlxTypeText', {200, 495, screenWidth * 0.7, '', 32})
     setObjectCamera('dialogueText', 'camHUD')
     setTextFont('dialogueText', 'pixel-latin.ttf')
-    setTextColor('dialogueText', '3F2021')
-    setTextBorder('dialogueText', 1, 'D89494', 'shadow')
+    setTextColor('dialogueText', 'FFFFFF')
     addInstance('dialogueText', true)
     callMethod('dialogueText.shadowOffset.set', {2, 2})
     runHaxeCode([[
