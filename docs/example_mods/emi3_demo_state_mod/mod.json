@@ -1,7 +1,0 @@
-{
-	"name": "ForkExampleMod",
-	"description": "feature examples for emi's Psych Engine fork\nfork gamebanana id: 591796\n\ndemonstrates:\n+ custom states and substates\n+ state editing (with Lua script)\n+ substate editing (with Hx script)\n+ global scripts\n\nit's kind of cool really",
-	"restart": false,
-	"runsGlobally": true,
-	"color": [255, 128, 225]
-}

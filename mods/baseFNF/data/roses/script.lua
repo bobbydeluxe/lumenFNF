@@ -8,8 +8,8 @@ function onCreate()
 end
 
 function onStartCountdown()
-    if seenCutscene == false and getVar('dialogueFinished') == false then
-        triggerEvent('Set Camera Target', 'GF,50,-80', '0')
+    if isStoryMode and seenCutscene == false and getVar('dialogueFinished') == false then
+        triggerEvent('Set Camera Target', 'dad', '0')
         callScript('data/'..songPath..'/dialogueBox', 'createDialogueBox', {true})
         return Function_Stop
     end

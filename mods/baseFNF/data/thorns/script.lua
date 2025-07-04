@@ -14,8 +14,8 @@ function onCreate()
 end
 
 function onStartCountdown()
-    if seenCutscene == false and getVar('dialogueFinished') == false then
-        triggerEvent('Set Camera Target', 'GF,50,-80', '0')
+    if isStoryMode and seenCutscene == false and getVar('dialogueFinished') == false then
+        triggerEvent('Set Camera Target', 'dad', '0')
         runTimer('dialogueBGFadeIn', 0.83, 5)
         runTimer('screenFadeOut', 0.3)
         return Function_Stop
