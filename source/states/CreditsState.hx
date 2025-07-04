@@ -18,10 +18,13 @@ class CreditsState extends ScriptedState
 	
 	private var creditsStuff:Array<Array<String>> = [];
 	public var defaultList:Array<Array<String>> = [ //Name - Icon name - Description - Link - BG Color
-		["Lumen Engine Contributors"],
+		["Lumen Engine Team"],
 		['bobbyDX',				'bobbydx',			'stitched everything together for Lumen Engine',				'https://gamebanana.com/members/3384454',				'fffa66'],
 		['Ledonic',			'ledonic',			'helped with the base game content modpack',					'https://x.com/ledonic852',				'3897FF'],
+		[''],
+		["Lumen Contributors"],
 		['unholywanderer04', 'unholy', 			'epic rating graphic [taken from unholy engine]', 			 			'https://github.com/Unholywanderer', '		7a83ff'],
+		['SunkyDev31',			'sunky',			'Translated the Week 6 dialogues for Português (Brasil)', 'https://bsky.app/profile/sunkydunky31.bsky.social', 'FF3B25'],
 		[""],
 		["P-Slice Engine Team"],
 		['Mikolka9144',			'mikolka',			'The lead for P-Slice',								 'https://gamebanana.com/members/3329541',					'2ebcfa'],
