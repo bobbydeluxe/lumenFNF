@@ -188,20 +188,6 @@ function onUpdatePost(elapsed)
                 end
             end
         end
-
-        --[[
-            Specific dialogue events here, cause I'm too lazy to implement a system in the script itself.
-            You don't know how long it took me to make the dialogue system in its own, so fuck this.
-        ]]
-        if dialogueData.char == 'dad' and dialogueBoxData.useMusic == true then
-            if dialogueData.expression == 'bwuh' and senpaiDisgusted == false then
-                senpaiDisgusted = true
-                setSoundVolume(nil, 0)
-            elseif dialogueData.expression == 'normal' and senpaiDisgusted == true then
-                senpaiDisgusted = false
-                soundFadeIn(nil, 1, 0, 0.8)
-            end
-        end
     end
 end
 
