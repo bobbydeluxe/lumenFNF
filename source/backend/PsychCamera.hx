@@ -101,7 +101,7 @@ class PsychCamera extends FlxCamera
 			}
 		}
 
-		var expBase = Math.pow((bobbydx.sophie.SFMath.PHI + 1.5), 1.5);
+		var expBase = Math.pow((bobbydx.sophie.SFMath.PHI * 2), (Math.PI / 2.2));
 		var mult:Float = 1 - Math.pow(expBase, -elapsed * followLerp / (1/60));
 		scroll.x += (_scrollTarget.x - scroll.x) * mult;
 		scroll.y += (_scrollTarget.y - scroll.y) * mult;

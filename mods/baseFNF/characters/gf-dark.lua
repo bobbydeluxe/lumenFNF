@@ -32,8 +32,8 @@ function onCreatePost()
     setObjectOrder(characterType..'Light', getObjectOrder(characterType..'Group'))
     addInstance(characterType..'Light')
 
-    addLuaScript('scripts/characters/props/speaker')
-    callScript('scripts/characters/props/speaker', 'createSpeaker', {'gf-dark', 0, 304}) -- {characterName, offsetX, offsetY}
+    addLuaScript('characters/props/speaker')
+    callScript('characters/props/speaker', 'createSpeaker', {'gf-dark', 0, 304}) -- {characterName, offsetX, offsetY}
 end
 
 function onUpdatePost(elapsed)
