@@ -7,7 +7,7 @@ class Version {
     public static final dateParts:Array<Int> = [2025, 7, 3];
 
     // Build number for the day (e.g., 1 = first build of the day)
-    public static final buildNum:Int = 2;
+    public static final buildNum:Int = 3;
 
     // Returns version string like "2025-06-28"
     public static function getFormatted():String {
