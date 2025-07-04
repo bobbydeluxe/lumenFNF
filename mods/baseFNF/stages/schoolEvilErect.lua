@@ -16,27 +16,58 @@ function onCreatePost()
 		// Adds the trail behind the opponent.
 		var dadTrail:FlxTrail = new FlxTrail(dad, null, 4, 24, 0.3, 0.069);
 		game.addBehindDad(dadTrail);
+
+		// SHADER STUFF BELOW
 		
-		function setShaderFrameInfo(objectName:String) {
-			var object:FlxSprite;
-			switch(objectName) {
-				case 'boyfriend':
-                	object = game.boyfriend;
-            	case 'dad':
-                	object = game.dad;
-            	case 'gf':
-                	object = game.gf;
-            	default:
-                	object = game.getLuaObject(objectName);
+		var maskRemaps:Map<String, String> = [
+			"senpai-angry" => "senpai"
+		];
+
+		function getRemappedName(original:String):String
+		{
+			return maskRemaps.exists(original) ? maskRemaps.get(original) : original;
+		}
+		
+		function applyShader(sprite)
+		{
+			var rim = new shaders.AdjustColorScreenspace();
+
+			if (sprite == game.gf)
+			{
+				rim.setAdjustColor(-28, -20, -42, 11);
+				rim.distance = 3;
+				rim.threshold = 0.3;
+			}
+			else
+			{
+				rim.setAdjustColor(-28, -20, -66, 31);
+				rim.distance = 4;
+				rim.threshold = 0.1;
 			}
 
-			object.animation.callback = function(name:String, frameNumber:Int, frameIndex:Int)
-        	{
-				if (object.shader != null) {
-					object.shader.setFloatArray('uFrameBounds', [object.frame.uv.x, object.frame.uv.y, object.frame.uv.width, object.frame.uv.height]);
-            		object.shader.setFloat('angOffset', object.frame.angle * FlxAngle.TO_RAD);
-				}
-        	}
+			rim.color = 0xFF521D4B;
+			rim.antialiasAmt = 0;
+			rim.attachedSprite = sprite;
+
+			var remapped = getRemappedName(sprite.curCharacter);
+
+			if (Paths.fileExists("images/weeb/erect/masks/" + remapped + ".png"))
+			{
+				rim.altMaskImage = Paths.image("weeb/erect/masks/" + remapped).bitmap;
+				rim.maskThreshold = 1;
+				rim.useAltMask = true;
+			}
+
+			sprite.animation.callback = function(anim, frame, index)
+			{
+				rim.updateFrameInfo(sprite.frame);
+			};
+			
+			return rim;
+		}
+
+		for (sprite in [game.dad, game.boyfriend, game.gf]) {
+			sprite.shader = applyShader(sprite);
 		}
 	]])
 

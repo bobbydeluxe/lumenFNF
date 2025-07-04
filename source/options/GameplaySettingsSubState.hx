@@ -2,43 +2,45 @@ package options;
 
 class GameplaySettingsSubState extends BaseOptionsMenu
 {
-	public function new() {
-		super(Language.getPhrase('gameplay_menu', 'Gameplay Settings'), 'Gameplay Settings Menu');
-		
+	public function new()
+	{
+		title = Language.getPhrase('gameplay_menu', 'Gameplay Settings');
+		rpcDetails = 'Gameplay Settings Menu'; //for Discord Rich Presence
+
 		//I'd suggest using "Downscroll" as an example for making your own option since it is the simplest here
 		var option:Option = new Option('Downscroll', //Name
-			'Changes the notes to be located at the bottom instead of the top of the screen.', //Description
+			'If checked, notes go Down instead of Up, simple enough.', //Description
 			'downScroll', //Save data variable name
 			BOOL); //Variable type
 		addOption(option);
 
 		var option:Option = new Option('Middlescroll',
-			'Changes the player notes to be located in the middle of the screen.',
+			'If checked, your notes get centered.',
 			'middleScroll',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Opponent Notes',
-			'Should the opponent\'s notes be shown?',
+			'If unchecked, opponent notes get hidden.',
 			'opponentStrums',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Ghost Tapping',
-			"If checked, you won't get misses from pressing keys while there are no notes able to be hit.",
+			"If checked, you won't get misses from pressing keys\nwhile there are no notes able to be hit.",
 			'ghostTapping',
 			BOOL);
 		addOption(option);
 		
 		var option:Option = new Option('Auto Pause',
-			"If checked, the game will automatically pause when focus is lost.",
+			"If checked, the game automatically pauses if the screen isn't on focus.",
 			'autoPause',
 			BOOL);
 		addOption(option);
 		option.onChange = onChangeAutoPause;
 
 		var option:Option = new Option('Disable Reset Button',
-			"If checked, pressing Reset won't kill the player.",
+			"If checked, pressing Reset won't do anything.",
 			'noReset',
 			BOOL);
 		addOption(option);
@@ -50,7 +52,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Hitsound Volume',
-			'Changes the volume of a tick sound that will play when hitting notes.',
+			'Funny notes does \"Tick!\" when you hit them.',
 			'hitsoundVolume',
 			PERCENT);
 		addOption(option);
@@ -62,7 +64,7 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.onChange = onChangeHitsoundVolume;
 
 		var option:Option = new Option('Rating Offset',
-			'Changes how late/early you have to hit for a "Epic!!"\nHigher values mean you have to hit later.',
+			'Changes how late/early you have to hit for an "Epic!!"\nHigher values mean you have to hit later.',
 			'ratingOffset',
 			INT);
 		option.displayFormat = '%vms';
@@ -72,47 +74,43 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		addOption(option);
 
 		var option:Option = new Option('Epic!! Hit Window',
-			'Changes the amount of time you have\nfor hitting a "Epic!!" in milliseconds.',
+			'Changes the amount of time you have\nfor hitting an "Epic!!" in milliseconds.',
 			'epicWindow',
-			FLOAT);
+			INT);
 		option.displayFormat = '%vms';
 		option.scrollSpeed = 15;
-		option.minValue = 15.0;
-		option.maxValue = 23.0;
-		option.changeValue = 0.1;
-		addOption(option);
+		option.minValue = 15;
+		option.maxValue = 23;
+		addOption(option)
 
 		var option:Option = new Option('Sick! Hit Window',
 			'Changes the amount of time you have\nfor hitting a "Sick!" in milliseconds.',
 			'sickWindow',
-			FLOAT);
+			INT);
 		option.displayFormat = '%vms';
 		option.scrollSpeed = 15;
-		option.minValue = 15.0;
-		option.maxValue = 45.0;
-		option.changeValue = 0.1;
+		option.minValue = 15;
+		option.maxValue = 45;
 		addOption(option);
 
 		var option:Option = new Option('Good Hit Window',
 			'Changes the amount of time you have\nfor hitting a "Good" in milliseconds.',
 			'goodWindow',
-			FLOAT);
+			INT);
 		option.displayFormat = '%vms';
-		option.scrollSpeed = 30;
-		option.minValue = 15.0;
-		option.maxValue = 90.0;
-		option.changeValue = 0.1;
+		option.scrollSpeed = 15;
+		option.minValue = 15;
+		option.maxValue = 90;
 		addOption(option);
 
 		var option:Option = new Option('Bad Hit Window',
 			'Changes the amount of time you have\nfor hitting a "Bad" in milliseconds.',
 			'badWindow',
-			FLOAT);
+			INT);
 		option.displayFormat = '%vms';
-		option.scrollSpeed = 60;
-		option.minValue = 15.0;
-		option.maxValue = 135.0;
-		option.changeValue = 0.1;
+		option.scrollSpeed = 15;
+		option.minValue = 15;
+		option.maxValue = 135;
 		addOption(option);
 
 		var option:Option = new Option('Safe Frames',
@@ -124,6 +122,8 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 		option.maxValue = 10;
 		option.changeValue = 0.1;
 		addOption(option);
+
+		super();
 	}
 
 	function onChangeHitsoundVolume()
