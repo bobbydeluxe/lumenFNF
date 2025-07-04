@@ -12,6 +12,7 @@ haxelib install flixel-tools 1.5.1
 haxelib install hscript-iris 1.1.3
 haxelib install tjson 1.4.0
 haxelib install hxdiscord_rpc 1.3.0
+haxelib git sophie-utils https://github.com/bobbydeluxe/sophie-utils.git --skip-dependencies
 haxelib install hxvlc 2.2.2 --skip-dependencies
 haxelib set lime 8.2.2
 haxelib set openfl 9.4.1

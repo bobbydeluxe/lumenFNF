@@ -57,6 +57,8 @@ import psychlua.LuaUtils;
 import psychlua.HScript;
 #end
 
+import bobbydx.sophie.SFMath;
+
 /**
  * This is where all the Gameplay stuff happens and is managed
  *
@@ -1893,7 +1895,7 @@ class PlayState extends ScriptedState
 	// Health icon updaters
 	public dynamic function updateIconsScale(elapsed:Float)
 	{
-		var expBase:Float = (Math.sqrt(5) / 2) + 2;
+		var expBase:Float = SFMath.PHI + 1.5;
 		
 		var mult:Float = FlxMath.lerp(1, iconP1.scale.x, Math.pow(expBase, -elapsed * 9 * playbackRate));
 		iconP1.scale.set(mult, mult);

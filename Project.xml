@@ -156,6 +156,8 @@ xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/
 
 	<haxelib name="flxanimate" version="git"/>
 
+	<haxelib name="sophie-utils" version="git" />
+
 	<!-- Android Specific-->
 	<haxelib name="extension-androidtools" if="android" />
 
