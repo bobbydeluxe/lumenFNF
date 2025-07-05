@@ -6,6 +6,8 @@ function onCreate()
 	scaleObject('schoolBuildingEvil', 6, 6)
 	addLuaSprite('schoolBuildingEvil')
 	setProperty('schoolBuildingEvil.antialiasing', false)
+
+	setCharScrollFactor()
 end
 
 function onCreatePost()
@@ -116,10 +118,19 @@ function onEvent(eventName, value1, value2, strumTime)
 			runTimer('freaksAnimLength', getProperty('girlfreaksEvil.animation.curAnim.numFrames') / 24)
 		end
 	end
+	if eventName == 'Change Character' then
+		setCharScrollFactor()
+	end
 end
 
 function onTimerCompleted(tag, loops, loopsLeft)
 	if tag == 'freaksAnimLength' then
 		setProperty('girlfreaksEvil.visible', false)
 	end
+end
+
+function setCharScrollFactor()
+	setScrollFactor('dad', 1, 1)
+	setScrollFactor('boyfriend', 1, 1)
+	setScrollFactor('gf', 0.95, 0.95)
 end

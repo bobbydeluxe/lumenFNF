@@ -52,6 +52,8 @@ function onCreate()
 		swapDanceType();
 		hasCreeps = true;
 	end
+
+	setCharScrollFactor()
 end
 
 danceDir = false;
@@ -88,5 +90,17 @@ function creepsDance()
 		playAnim('bgGirls', 'danceRight', true);
 	else
 		playAnim('bgGirls', 'danceLeft', true);
+	end
+end
+
+function setCharScrollFactor()
+	setScrollFactor('dad', 1, 1)
+	setScrollFactor('boyfriend', 1, 1)
+	setScrollFactor('gf', 0.95, 0.95)
+end
+
+function onEvent(e, v1, v2)
+	if e == 'Change Character' then
+		setCharScrollFactor()
 	end
 end

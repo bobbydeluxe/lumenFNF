@@ -575,7 +575,7 @@ class LoadingState extends ScriptedState
 					completedThread();
 				});
 			}
-			if (!stageData.hide_girlfriend && gfVersion != player2 && gfVersion != player1)
+			if (gfVersion != player2 && gfVersion != player1)
 			{
 				threadsMax++;
 				threadPool.run(() -> {

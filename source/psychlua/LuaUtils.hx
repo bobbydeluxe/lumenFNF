@@ -372,7 +372,7 @@ class LuaUtils
 		if (PlayState.instance == null) return null;
 		
 		var stageData:StageFile = StageData.getStageFile(PlayState.SONG.stage);
-		var group:FlxSpriteGroup = (stageData.hide_girlfriend ? PlayState.instance.boyfriendGroup : PlayState.instance.gfGroup);
+		var group:FlxSpriteGroup = (PlayState.instance.gfGroup);
 
 		var pos:Int = PlayState.instance.members.indexOf(group);
 

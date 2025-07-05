@@ -4,7 +4,7 @@ import flixel.FlxObject;
 import substates.StickerSubState;
 import mikolka.compatibility.ModsHelper;
 
-class CustomSubstate extends ScriptedSubState {
+class CustomSubstate extends ScriptedSubState implements PsychUIEventHandler.PsychUIEvent {
 	public static var name:String = 'unnamed';
 	public static var instance:ScriptedSubState;
 	
@@ -156,5 +156,9 @@ class CustomSubstate extends ScriptedSubState {
 		name = 'unnamed';
 		
 		super.destroy();
+	}
+
+	public function UIEvent(id:String, sender:Dynamic) {
+		callOnScripts('onUIEvent', [id, sender]);
 	}
 }

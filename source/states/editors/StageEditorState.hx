@@ -80,8 +80,6 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 
 		loadJsonAssetDirectory();
 		gf = new Character(0, 0, stageJson._editorMeta != null ? stageJson._editorMeta.gf : 'gf');
-		gf.visible = !(stageJson.hide_girlfriend);
-		gf.scrollFactor.set(0.95, 0.95);
 		dad = new Character(0, 0, stageJson._editorMeta != null ? stageJson._editorMeta.dad : 'dad');
 		boyfriend = new Character(0, 0, stageJson._editorMeta != null ? stageJson._editorMeta.boyfriend : 'bf', true);
 
@@ -594,7 +592,6 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 
 	var directoryDropDown:PsychUIDropDownMenu;
 	var uiInputText:PsychUIInputText;
-	var hideGirlfriendCheckbox:PsychUICheckBox;
 	var zoomStepper:PsychUINumericStepper;
 	var cameraSpeedStepper:PsychUINumericStepper;
 	var camDadStepperX:PsychUINumericStepper;
@@ -638,18 +635,7 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 		uiInputText.onChange = function(old:String, cur:String) stageJson.stageUI = uiInputText.text;
 
 		objY += 30;
-		hideGirlfriendCheckbox = new PsychUICheckBox(objX, objY, 'Hide Girlfriend?', 100);
-		hideGirlfriendCheckbox.onClick = function()
-		{
-			stageJson.hide_girlfriend = hideGirlfriendCheckbox.checked;
-			gf.visible = !hideGirlfriendCheckbox.checked;
-			if(focusRadioGroup.checked > -1)
-			{
-				var point = focusOnTarget(focusRadioGroup.labels[focusRadioGroup.checked]);
-				camFollow.setPosition(point.x, point.y);
-			}
-		};
-		hideGirlfriendCheckbox.checked = !gf.visible;
+		// used to be hide girlfriend here but uhh nope ! ! - bobbyDX
 
 		objY += 50;
 		tab_group.add(new FlxText(objX, objY - 18, 100, 'Camera Offsets:'));
@@ -726,8 +712,7 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 			FlxG.camera.followLerp = 0.04 * stageJson.camera_speed;
 		};
 		FlxG.camera.followLerp = 0.04 * cameraSpeedStepper.value;
-
-		tab_group.add(hideGirlfriendCheckbox);
+		
 		tab_group.add(camDadStepperX);
 		tab_group.add(camDadStepperY);
 		tab_group.add(camGfStepperX);
@@ -1159,9 +1144,6 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 	{
 		//input texts
 		uiInputText.text = (stageJson.stageUI != null ? stageJson.stageUI : '');
-		//checkboxes
-		hideGirlfriendCheckbox.checked = (stageJson.hide_girlfriend);
-		gf.visible = !hideGirlfriendCheckbox.checked;
 		//steppers
 		zoomStepper.value = FlxG.camera.zoom = stageJson.defaultZoom;
 		

@@ -20,6 +20,7 @@ function onCreate()
 	makeLuaSprite('schoolStreet', 'weeb/erect/weebStreet', -200, 6)
 	scaleObject('schoolStreet', 6, 6)
 	addLuaSprite('schoolStreet')
+	setScrollFactor('schoolStreet', 0.95, 0.95);
 	setProperty('schoolStreet.antialiasing', false)
 
 	makeLuaSprite('treesBack', 'weeb/erect/weebTreesBack', -200, 6)
@@ -38,6 +39,8 @@ function onCreate()
 	scaleObject('fallingPetals', 6, 6)
 	addLuaSprite('fallingPetals')
 	setProperty('fallingPetals.antialiasing', false)
+
+	setCharScrollFactor()
 end
 
 function onCreatePost()
@@ -93,4 +96,16 @@ function onCreatePost()
 			sprite.shader = applyShader(sprite);
 		}
 	]])
+end
+
+function setCharScrollFactor()
+	setScrollFactor('dad', 1, 1)
+	setScrollFactor('boyfriend', 1, 1)
+	setScrollFactor('gf', 0.95, 0.95)
+end
+
+function onEvent(e, v1, v2)
+	if e == 'Change Character' then
+		setCharScrollFactor()
+	end
 end

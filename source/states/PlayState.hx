@@ -414,14 +414,10 @@ class PlayState extends ScriptedState
 		}
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
-		if (!stageData.hide_girlfriend)
-		{
-			if(SONG.gfVersion == null || SONG.gfVersion.length < 1) SONG.gfVersion = 'gf'; //Fix for the Chart Editor
-			gf = new Character(0, 0, SONG.gfVersion);
-			startCharacterPos(gf);
-			gfGroup.scrollFactor.set(0.95, 0.95);
-			gfGroup.add(gf);
-		}
+		if(SONG.gfVersion == null || SONG.gfVersion.length < 1) SONG.gfVersion = 'gf'; //Fix for the Chart Editor
+		gf = new Character(0, 0, SONG.gfVersion);
+		startCharacterPos(gf);
+		gfGroup.add(gf);
 
 		dad = new Character(0, 0, SONG.player2);
 		startCharacterPos(dad, true);
@@ -433,7 +429,7 @@ class PlayState extends ScriptedState
 		
 		if(stageData.objects != null && stageData.objects.length > 0)
 		{
-			var list:Map<String, FlxSprite> = StageData.addObjectsToState(stageData.objects, !stageData.hide_girlfriend ? gfGroup : null, dadGroup, boyfriendGroup, this);
+			var list:Map<String, FlxSprite> = StageData.addObjectsToState(stageData.objects, gfGroup, dadGroup, boyfriendGroup, this);
 			for (key => spr in list)
 				if(!StageData.reservedNames.contains(key))
 					variables.set(key, spr);
@@ -756,7 +752,6 @@ class PlayState extends ScriptedState
 			case 2:
 				if(gf != null && !gfMap.exists(newCharacter)) {
 					var newGf:Character = new Character(0, 0, newCharacter);
-					newGf.scrollFactor.set(0.95, 0.95);
 					gfMap.set(newCharacter, newGf);
 					gfGroup.add(newGf);
 					startCharacterPos(newGf);
@@ -839,7 +834,6 @@ class PlayState extends ScriptedState
 	function startCharacterPos(char:Character, ?gfCheck:Bool = false) {
 		if(gfCheck && char.curCharacter.startsWith('gf')) { //IF DAD IS GIRLFRIEND, HE GOES TO HER POSITION
 			char.setPosition(GF_X, GF_Y);
-			char.scrollFactor.set(0.95, 0.95);
 			char.danceEveryNumBeats = 2;
 		}
 		char.x += char.positionArray[0];

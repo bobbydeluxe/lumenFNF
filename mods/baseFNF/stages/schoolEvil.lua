@@ -28,6 +28,8 @@ function onCreate()
 		setProperty('bg.antialiasing', false);
 		addLuaSprite('bg', false);
 	end
+
+	setCharScrollFactor()
 end
 
 function onCreatePost()
@@ -46,5 +48,17 @@ end
 function onUpdate(elapsed)
 	if hasGhouls and getProperty('bgGhouls.animation.curAnim.finished') then
 		setProperty('bgGhouls.visible', false);
+	end
+end
+
+function setCharScrollFactor()
+	setScrollFactor('dad', 1, 1)
+	setScrollFactor('boyfriend', 1, 1)
+	setScrollFactor('gf', 0.95, 0.95)
+end
+
+function onEvent(e, v1, v2)
+	if e == 'Change Character' then
+		setCharScrollFactor()
 	end
 end
