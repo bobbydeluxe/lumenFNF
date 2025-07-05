@@ -8,6 +8,7 @@ class Version {
     // HAPPY 249TH AMERICA DAY
 
     // Build number for the day (e.g., 1 = first build of the day)
+    // Only changes if there are source changes [not fixes]
     public static final buildNum:Int = 1;
 
     // Returns version string like "2025-06-28"
